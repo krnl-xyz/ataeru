@@ -1,0 +1,79 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "./generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Facility {
+  id           String @id @default(uuid())
+  facilityName String
+  facilityId   String
+  npi          Int
+  city         String
+  zip          String
+  state        String
+  year         Int
+}
+
+model QualityReport {
+  facilityId            String   @unique
+  facilityName          String
+  msa                   Int
+  msaTitle              String
+  hlmr                  Int
+  hlmrPercentile        Int
+  hcahpsStartDate       DateTime
+  hcahpsEndDate         DateTime
+  compHipKnee           Int
+  compHipKneePercentile Int
+  compStartDate         DateTime
+  compEndDate           DateTime
+  compFootnote          Int
+  proStartDate          DateTime
+  proEndDate            DateTime
+}
+
+model HcahpsHospitalSurvery {
+  facilityId          String   @unique
+  facilityName        String
+  address             String
+  city                String
+  zip                 String
+  state               String
+  telephone           String
+  measureId           String
+  question            String
+  response            String
+  hcahpsAnswerPercen  String
+  completedSurveys    Int
+  responseRatePercent Int
+  startDate           DateTime
+  endDate             DateTime
+}
+
+model HospitalInformation {
+  id                            Int     @id @default(autoincrement())
+  facilityId                    String
+  facilityName                  String
+  address                       String
+  city                          String
+  zip                           String
+  state                         String
+  country                       String
+  telephone                     String
+  hospitalType                  String
+  hospitalOwnership             String
+  hospitalOverallRating         String
+  hospitalOverallRatingFootnote String?
+  emergencyServices             String
+}
