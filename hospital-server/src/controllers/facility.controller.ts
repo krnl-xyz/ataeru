@@ -40,9 +40,9 @@ export const verifyFacilityById = async (req: Request, res: Response, next: Next
       const facility = await prisma.hospitalInformation.findUnique({ where: { id: parseInt(id) } })
       if (!facility) {
          // return res.status(404).json({ message: "Facility not found" })
-         res.status(200).json({ message: "false" })
+         res.status(200).json({ message: false })
       }
-      res.status(200).json({ message: "true" })
+      res.status(200).json({ message: true })
    } catch (error) {
       next(error)
    }
