@@ -1,0 +1,37 @@
+services:
+  frontend:
+    build: ./frontend
+    ports:
+      - "3000:3000"
+    networks:
+      - ataeru
+  db:
+    image: postgres:latest
+    environment:
+      POSTGRES_USER: kaleel
+      POSTGRES_PASSWORD: kaleel
+      POSTGRES_DB: kaleel
+    # volumes:
+    # - db_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    networks:
+      - ataeru
+
+  backend:
+    build: ./hospital-server
+    ports:
+      - "3001:3001"
+    environment:
+      DATABASE_URL: postgresql://kaleel:kaleel@db:5432/kaleel
+    command: sh -c "npx prisma db push && node dist/seed.js ./src/data/Hospital_General_Information.csv && npm run start"
+    depends_on:
+      - db
+    volumes:
+      - ./hospital-server:/app
+    networks:
+      - ataeru
+
+networks:
+  ataeru:
+    driver: bridge

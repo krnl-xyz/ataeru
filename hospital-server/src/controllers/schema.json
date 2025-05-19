@@ -1,0 +1,128 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Hospital Verification API",
+    "description": "API for verifying hospital facilities and checking wallet scores.",
+    "version": "1.0.0"
+  },
+  "servers": [
+    {
+      "url": "https://web2-off-chain.com"
+    }
+  ],
+  "paths": {
+    "/api/facilities/{id}": {
+      "get": {
+        "summary": "Get facility by ID",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "ID of the facility to retrieve",
+            "schema": {
+              "type": "string",
+              "example": "12345"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "example": "12345"
+                    },
+                    "facilityName": {
+                      "type": "string",
+                      "example": "General Hospital"
+                    },
+                    "facilityId": {
+                      "type": "number",
+                      "example": 123456
+                    },
+                    "telephone": {
+                      "type": "string",
+                      "example": "+1-555-555-5555"
+                    },
+                    "address": {
+                      "type": "string",
+                      "example": "123 Main St, Anytown, USA"
+                    },
+                    "city": {
+                      "type": "string",
+                      "example": "Anytown"
+                    },
+                    "state": {
+                      "type": "string",
+                      "example": "CA"
+                    },
+                    "zip": {
+                      "type": "string",
+                      "example": "12345"
+                    },
+                    "country": {
+                      "type": "string",
+                      "example": "USA"
+                    },
+                    "hospitalType": {
+                      "type": "string",
+                      "example": "Acute Care"
+                    },
+                    "hospitalOwnership": {
+                      "type": "string",
+                      "example": "Private"
+                    },
+                    "emergencyServices": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "hospitalOverallRating": {
+                      "type": "string",
+                      "example": "4.5"
+                    },
+                    "hospitalOverallRatingFootnote": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Facility not found"
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "WalletCheckResponse": {
+        "type": "object",
+        "properties": {
+          "wallet_address": {
+            "type": "string"
+          },
+          "score": {
+            "type": "integer"
+          },
+          "status": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  }
+}

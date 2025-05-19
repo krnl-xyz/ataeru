@@ -190,7 +190,7 @@ const config = {
       "value": "prisma-client-js"
     },
     "output": {
-      "value": "/Users/kaleel/Documents/projects/web/doc-backend/prisma/generated/prisma",
+      "value": "/app/prisma/generated/prisma",
       "fromEnvVar": null
     },
     "config": {
@@ -199,12 +199,16 @@ const config = {
     "binaryTargets": [
       {
         "fromEnvVar": null,
-        "value": "darwin-arm64",
+        "value": "linux-arm64-openssl-3.0.x",
         "native": true
+      },
+      {
+        "fromEnvVar": null,
+        "value": "linux-arm64-openssl-3.0.x"
       }
     ],
     "previewFeatures": [],
-    "sourceFilePath": "/Users/kaleel/Documents/projects/web/doc-backend/prisma/schema.prisma",
+    "sourceFilePath": "/app/prisma/schema.prisma",
     "isCustomOutput": true
   },
   "relativeEnvPaths": {
@@ -218,7 +222,6 @@ const config = {
     "db"
   ],
   "activeProvider": "postgresql",
-  "postinstall": false,
   "inlineDatasources": {
     "db": {
       "url": {
@@ -227,8 +230,8 @@ const config = {
       }
     }
   },
-  "inlineSchema": "// This is your Prisma schema file,\n// learn more about it in the docs: https://pris.ly/d/prisma-schema\n\n// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?\n// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init\n\ngenerator client {\n  provider = \"prisma-client-js\"\n  output   = \"./generated/prisma\"\n}\n\ndatasource db {\n  provider = \"postgresql\"\n  url      = env(\"DATABASE_URL\")\n}\n\nmodel Facility {\n  id           String @id @default(uuid())\n  facilityName String\n  facilityId   String\n  npi          Int\n  city         String\n  zip          String\n  state        String\n  year         Int\n}\n\nmodel QualityReport {\n  facilityId            String   @unique\n  facilityName          String\n  msa                   Int\n  msaTitle              String\n  hlmr                  Int\n  hlmrPercentile        Int\n  hcahpsStartDate       DateTime\n  hcahpsEndDate         DateTime\n  compHipKnee           Int\n  compHipKneePercentile Int\n  compStartDate         DateTime\n  compEndDate           DateTime\n  compFootnote          Int\n  proStartDate          DateTime\n  proEndDate            DateTime\n}\n\nmodel HcahpsHospitalSurvery {\n  facilityId          String   @unique\n  facilityName        String\n  address             String\n  city                String\n  zip                 String\n  state               String\n  telephone           String\n  measureId           String\n  question            String\n  response            String\n  hcahpsAnswerPercen  String\n  completedSurveys    Int\n  responseRatePercent Int\n  startDate           DateTime\n  endDate             DateTime\n}\n\nmodel HospitalInformation {\n  id                            Int     @id @default(autoincrement())\n  facilityId                    String\n  facilityName                  String\n  address                       String\n  city                          String\n  zip                           String\n  state                         String\n  country                       String\n  telephone                     String\n  hospitalType                  String\n  hospitalOwnership             String\n  hospitalOverallRating         String\n  hospitalOverallRatingFootnote String?\n  emergencyServices             String\n}\n",
-  "inlineSchemaHash": "042d43ebd719cb87fe8df0da8eaf2050d43de33599f8ffc4c0423aba55b53979",
+  "inlineSchema": "// This is your Prisma schema file,\n// learn more about it in the docs: https://pris.ly/d/prisma-schema\n\n// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?\n// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init\n\ngenerator client {\n  provider      = \"prisma-client-js\"\n  output        = \"./generated/prisma\"\n  binaryTargets = [\"native\", \"linux-arm64-openssl-3.0.x\"]\n}\n\ndatasource db {\n  provider = \"postgresql\"\n  url      = env(\"DATABASE_URL\")\n}\n\nmodel Facility {\n  id           String @id @default(uuid())\n  facilityName String\n  facilityId   String\n  npi          Int\n  city         String\n  zip          String\n  state        String\n  year         Int\n}\n\nmodel QualityReport {\n  facilityId            String   @unique\n  facilityName          String\n  msa                   Int\n  msaTitle              String\n  hlmr                  Int\n  hlmrPercentile        Int\n  hcahpsStartDate       DateTime\n  hcahpsEndDate         DateTime\n  compHipKnee           Int\n  compHipKneePercentile Int\n  compStartDate         DateTime\n  compEndDate           DateTime\n  compFootnote          Int\n  proStartDate          DateTime\n  proEndDate            DateTime\n}\n\nmodel HcahpsHospitalSurvery {\n  facilityId          String   @unique\n  facilityName        String\n  address             String\n  city                String\n  zip                 String\n  state               String\n  telephone           String\n  measureId           String\n  question            String\n  response            String\n  hcahpsAnswerPercen  String\n  completedSurveys    Int\n  responseRatePercent Int\n  startDate           DateTime\n  endDate             DateTime\n}\n\nmodel HospitalInformation {\n  id                            Int     @id @default(autoincrement())\n  facilityId                    String\n  facilityName                  String\n  address                       String\n  city                          String\n  zip                           String\n  state                         String\n  country                       String\n  telephone                     String\n  hospitalType                  String\n  hospitalOwnership             String\n  hospitalOverallRating         String\n  hospitalOverallRatingFootnote String?\n  emergencyServices             String\n}\n",
+  "inlineSchemaHash": "f50e44c7160f8a3b3b981952e6d875d5158dfffdeb290ade7ae2d116e7632344",
   "copyEngine": true
 }
 
@@ -267,8 +270,8 @@ exports.PrismaClient = PrismaClient
 Object.assign(exports, Prisma)
 
 // file annotations for bundling tools to include these files
-path.join(__dirname, "libquery_engine-darwin-arm64.dylib.node");
-path.join(process.cwd(), "prisma/generated/prisma/libquery_engine-darwin-arm64.dylib.node")
+path.join(__dirname, "libquery_engine-linux-arm64-openssl-3.0.x.so.node");
+path.join(process.cwd(), "prisma/generated/prisma/libquery_engine-linux-arm64-openssl-3.0.x.so.node")
 // file annotations for bundling tools to include these files
 path.join(__dirname, "schema.prisma");
 path.join(process.cwd(), "prisma/generated/prisma/schema.prisma")
