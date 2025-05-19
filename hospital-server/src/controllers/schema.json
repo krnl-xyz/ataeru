@@ -7,7 +7,7 @@
   },
   "servers": [
     {
-      "url": "https://web2-off-chain.com"
+      "url": "https://backend-r021.onrender.com"
     }
   ],
   "paths": {
@@ -129,8 +129,7 @@
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "verified": { "type": "boolean" },
-                    "message": { "type": "string" }
+                    "message": { "type": "boolean" }
                   }
                 }
               }

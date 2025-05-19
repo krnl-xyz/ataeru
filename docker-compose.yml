@@ -24,7 +24,7 @@ services:
       - "3001:3001"
     environment:
       DATABASE_URL: postgresql://kaleel:kaleel@db:5432/kaleel
-    command: sh -c "npx prisma db push && node dist/seed.js ./src/data/Hospital_General_Information.csv && npm run start"
+    command: sh -c "npm run build && npx prisma db push && node dist/seed.js ./src/data/Hospital_General_Information.csv && npm run start"
     depends_on:
       - db
     volumes:
