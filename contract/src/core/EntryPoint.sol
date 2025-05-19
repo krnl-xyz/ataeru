@@ -4,14 +4,19 @@ pragma solidity ^0.8.24;
 import "../dataTypes/structs.sol";
 import "../dataTypes/datastructures.sol";
 import "./HospitalRequestFactory.sol";
+import "./KRNL.sol";
 
-contract EntryPoint is DataStructures {
+contract EntryPoint is DataStructures, KRNL {
     address[] public hospitalRequests;
     HospitalRequestFactoryContract public requestFactory;
 
     mapping(bytes32 => address) public hospitalAddressTorequestAddress;
+    mapping(uint256 => bool) public isHospitalVerified;
 
-    constructor(address _requestFactory) {
+    constructor(
+        address _requestFactory,
+        address _tokenAuthorityPublicKey
+    ) KRNL(_tokenAuthorityPublicKey) {
         requestFactory = HospitalRequestFactoryContract(_requestFactory);
     }
 
@@ -30,6 +35,24 @@ contract EntryPoint is DataStructures {
         DonorType _donorType,
         bytes32 indexed dId
     );
+
+    function verify(
+        KrnlPayload memory krnlPayload,
+        uint256 _id
+    ) external onlyAuthorized(krnlPayload, abi.encode(_id)) returns (bool) {
+        KernelResponse[] memory kernelResponses = abi.decode(
+            krnlPayload.kernelResponses,
+            (KernelResponse[])
+        );
+        bool score = false;
+        for (uint i; i < kernelResponses.length; i++) {
+            if (kernelResponses[i].kernelId == 1591) {
+                score = abi.decode(kernelResponses[i].result, (bool));
+            }
+        }
+        isHospitalVerified[_id] = score;
+        return score;
+    }
 
     function registerDonor(
         string memory _name,
