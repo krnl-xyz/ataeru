@@ -1,0 +1,74 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Hospital Verification API",
+    "description": "API for verifying hospital facilities and checking wallet scores.",
+    "version": "1.0.0"
+  },
+  "servers": [
+    {
+      "url": "https://backend-r021.onrender.com"
+    }
+  ],
+  "paths": {
+    "/api/facilities/verify/{id}": {
+      "get": {
+        "summary": "Verify facility by ID",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "ID of the facility to verify",
+            "schema": {
+              "type": "string",
+              "example": "12345"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": { "type": "boolean" }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Facility not found"
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "WalletCheckResponse": {
+        "type": "object",
+        "properties": {
+          "wallet_address": {
+            "type": "string"
+          },
+          "score": {
+            "type": "integer"
+          },
+          "status": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  }
+}

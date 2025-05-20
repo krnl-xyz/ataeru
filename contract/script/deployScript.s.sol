@@ -42,9 +42,9 @@ contract DeployScript is Script {
     address nftReceiptent = 0x3C44CdDdB6a900fa2b585dd299e03d12FA4293BC;
 
     function run() public {
-        vm.createSelectFork(vm.rpcUrl("basechain"));
+        //   vm.createSelectFork(vm.rpcUrl("basechain"));
         vm.startBroadcast();
-        vm.rpcUrl("localchain");
+        //   vm.rpcUrl("localchain");
         oracle = new FixedPriceOracle(_price);
 
         agentFactory = new AiAgentFactory();
@@ -62,7 +62,11 @@ contract DeployScript is Script {
             address(hospitalAddress),
             maxdonors
         );
-        entry = new EntryPoint(address(requestFactory));
+        address _tokenAuthorityPublicKey = address(0);
+        entry = new EntryPoint(
+            address(requestFactory),
+            _tokenAuthorityPublicKey
+        );
         market = new MarketPlace(
             address(hnft),
             address(tokenAddress),
