@@ -8,11 +8,11 @@ const wallet = new ethers.Wallet(privateKey!);
 // ==========================================================
 
 const contractAddress = process.env.NEXT_PUBLIC_ENTRY_POINT_ADDRESS as string; // YOUR CONTRACT ADDRESS
-const provider = new ethers.JsonRpcProvider("https://v0-0-2-rpc.node.lat");
+const provider = new ethers.JsonRpcProvider("https://v0-0-3-rpc.node.lat");
 const signer = new ethers.Wallet(privateKey!, provider);
 
 
-const contractprovider = new ethers.JsonRpcProvider("https://sepolia.drpc.org");
+const contractprovider = new ethers.JsonRpcProvider("https://ethereum-sepolia-rpc.publicnode.com");
 const signerprovider = new ethers.Wallet(privateKey!, contractprovider);
 const contract = new ethers.Contract(contractAddress, contractAbi, signerprovider);
 

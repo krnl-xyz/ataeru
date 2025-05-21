@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useAccount, useReadContract } from 'wagmi';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
@@ -9,6 +9,7 @@ import ContractButton from './contractButton';
 import { contractAddresses, entryPointABI, entryPointAddress } from '@/contract/web3';
 import web3 from 'web3';
 import { callContractProtectedFunction, executeKrnl } from '@/lib/krnl';
+import { set } from 'date-fns';
 
 
 export enum ReceiverType {
@@ -47,6 +48,8 @@ export default function RegistrationModal() {
       documents: [] as File[],
    });
    const account = useAccount();
+   const [userArg, setUserArg] = useState<any[] | null>([formData.name, formData.email, formData.address, web3.utils.padRight(`${formData.phone}`, 16), formData.about, web3.utils.padRight(`${formData.witnessHash}`, 32)]);
+   const [hospitalArg, setHospitalArg] = useState<any[] | null>([account.address, formData.name, formData.email, formData.address, formData.about, formData.phone, web3.utils.padRight(`${formData.witnessHash}`, 32)]);
 
 
    const isRegistered = useReadContract({
@@ -76,8 +79,16 @@ export default function RegistrationModal() {
       }
    };
 
-   const userArgs = [formData.name, formData.email, formData.address, web3.utils.padRight(`${formData.phone}`, 16), formData.about, web3.utils.padRight(`${formData.witnessHash}`, 32)]
-   const hospitalArgs = [account.address, formData.name, formData.email, formData.address, formData.about, formData.phone, web3.utils.padRight(`${formData.witnessHash}`, 32)]
+
+   useEffect(() => {
+      setUserArg([formData.name, formData.email, formData.address, web3.utils.padRight(`${formData.phone}`, 16), formData.about, web3.utils.padRight(`${formData.witnessHash}`, 32)]);
+      setHospitalArg([account.address, formData.name, formData.email, formData.address, formData.about, web3.utils.padRight(`${formData.phone}`, 16), web3.utils.padRight(`${formData.witnessHash}`, 32)]);
+   }, [formData, account.address])
+
+   // console.log(hospitalArg)
+
+   // const userArgs = [formData.name, formData.email, formData.address, web3.utils.padRight(`${formData.phone}`, 16), formData.about, web3.utils.padRight(`${formData.witnessHash}`, 32)]
+   // const hospitalArgs = [account.address, formData.name, formData.email, formData.address, formData.about, formData.phone, web3.utils.padRight(`${formData.witnessHash}`, 32)]
 
    // const handleRegister = async (formData: RegistrationFormData) => {
    //   try {
@@ -333,24 +344,48 @@ export default function RegistrationModal() {
                   )}
 
                   <div className="flex gap-4">
-                     <ContractButton
-                        contractAddress={contractAddresses.entryPointAddress as string}
-                        abi={entryPointABI}
-                        functionName={selectedType === 'user' ? 'registerUser' : 'registerHospital'}
-                        // args={[formData.name, formData.email, formData.address, web3.utils.padRight(`${formData.phone}`, 16), formData.about, web3.utils.padRight(`${formData.witnessHash}`, 32), formData.receiverType]}
-                        args={selectedType === 'user' ? userArgs : hospitalArgs}
-                        onBeforeTrans={async () => {
-                           if (selectedType !== 'user') {
-                              const executeResult = await executeKrnl(formData.hospitalId);
-                              const k = await callContractProtectedFunction(executeResult, formData.hospitalId);
-                              return k;
-                           }
-                           return Promise.resolve();
-                        }}
-                        buttonText="Register"
-                        title="Register as a user or hospital"
-                        description="Register as a user or hospital to access fertility services"
-                     />
+
+
+                     {selectedType === 'user' ?
+
+                        <ContractButton
+                           contractAddress={contractAddresses.entryPointAddress as string}
+                           abi={entryPointABI}
+                           functionName={'registerUser'}
+                           // args={[formData.name, formData.email, formData.address, web3.utils.padRight(`${formData.phone}`, 16), formData.about, web3.utils.padRight(`${formData.witnessHash}`, 32), formData.receiverType]}
+                           args={userArg}
+                           // onBeforeTrans={async () => {
+                           //    if (selectedType !== 'user') {
+                           //       const executeResult = await executeKrnl(formData.hospitalId);
+                           //       const k = await callContractProtectedFunction(executeResult, formData.hospitalId);
+                           //       return k;
+                           //    }
+                           //    return Promise.resolve();
+                           // }}
+                           buttonText="Register"
+                           title="Register as a user"
+                           description="Register as a user to access fertility services"
+                        /> :
+                        <ContractButton
+                           contractAddress={contractAddresses.entryPointAddress as string}
+                           abi={entryPointABI}
+                           functionName={'registerHospital'}
+                           // args={[formData.name, formData.email, formData.address, web3.utils.padRight(`${formData.phone}`, 16), formData.about, web3.utils.padRight(`${formData.witnessHash}`, 32)]}
+                           args={hospitalArg}
+                           // onBeforeTrans={async () => {
+                           //    if (selectedType !== 'user') {
+                           //       const executeResult = await executeKrnl(formData.hospitalId);
+                           //       const k = await callContractProtectedFunction(executeResult, formData.hospitalId);
+                           //       return k;
+                           //    }
+                           //    return Promise.resolve();
+                           // }}
+                           buttonText="Register"
+                           title="Register as hospital"
+                           description="Register as a hospital to access fertility services"
+                        />
+                     }
+
                      <button
                         type="button"
                         onClick={() => setSelectedType(null)}
