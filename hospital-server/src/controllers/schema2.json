@@ -2,7 +2,7 @@
   "openapi": "3.0.3",
   "info": {
     "title": "Hospital Verification API",
-    "description": "API for verifying hospital facilities and checking wallet scores.",
+    "description": "API for verifying hospital facilities.",
     "version": "1.0.0"
   },
   "servers": [
@@ -21,8 +21,7 @@
             "required": true,
             "description": "ID of the facility to verify",
             "schema": {
-              "type": "string",
-              "example": "12345"
+              "type": "number"
             }
           }
         ],
@@ -55,17 +54,11 @@
   },
   "components": {
     "schemas": {
-      "WalletCheckResponse": {
+      "VerifyResponse": {
         "type": "object",
         "properties": {
-          "wallet_address": {
-            "type": "string"
-          },
-          "score": {
-            "type": "integer"
-          },
-          "status": {
-            "type": "string"
+          "message": {
+            "type": "boolean"
           }
         }
       }
