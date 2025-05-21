@@ -8,11 +8,13 @@ const wallet = new ethers.Wallet(privateKey!);
 // ==========================================================
 
 const contractAddress = process.env.NEXT_PUBLIC_ENTRY_POINT_ADDRESS as string; // YOUR CONTRACT ADDRESS
-const provider = new ethers.JsonRpcProvider("https://v0-0-1-rpc.node.lat");
+const provider = new ethers.JsonRpcProvider("https://v0-0-2-rpc.node.lat");
 const signer = new ethers.Wallet(privateKey!, provider);
 
 
-const contract = new ethers.Contract(contractAddress, contractAbi, signer);
+const contractprovider = new ethers.JsonRpcProvider("https://sepolia.drpc.org");
+const signerprovider = new ethers.Wallet(privateKey!, contractprovider);
+const contract = new ethers.Contract(contractAddress, contractAbi, signerprovider);
 
 const abiCoder = new ethers.AbiCoder();
 
@@ -40,9 +42,9 @@ export async function executeKrnl(hospitalId: number) {
       }
    }
    const krnlPayload = await provider.executeKernels(entryId, accessToken, kernelRequestData, functionParams);
+   console.log("Krnl payload: ", krnlPayload);
    return krnlPayload;
 }
-
 
 
 export async function callContractProtectedFunction(executeResult, hospitalId: number) {
