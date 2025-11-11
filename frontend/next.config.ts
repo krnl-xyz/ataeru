@@ -1,3 +1,4 @@
+import { Config } from 'wagmi';
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {

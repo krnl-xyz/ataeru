@@ -16,7 +16,7 @@ export const getFacility = async (req: Request, res: Response, next: NextFunctio
 export const getFacilityById = async (req: Request, res: Response, next: NextFunction) => {
    try {
       const { id } = req.params
-      const facility = await prisma.hospitalInformation.findUnique({ where: { id: parseInt(id) } })
+      const facility = await prisma.hospitalInformation.findUnique({ where: { facilityId: id } })
       res.status(200).json(facility)
    } catch (error) {
       next(error)
@@ -37,12 +37,12 @@ export const getFacilityByName = async (req: Request, res: Response, next: NextF
 export const verifyFacilityById = async (req: Request, res: Response, next: NextFunction) => {
    try {
       const { id } = req.params
-      const facility = await prisma.hospitalInformation.findUnique({ where: { id: parseInt(id) } })
+      const facility = await prisma.hospitalInformation.findUnique({ where: { facilityId: id } })
       if (!facility) {
          // return res.status(404).json({ message: "Facility not found" })
-         res.status(200).json({ message: false })
+         return res.status(200).json({ message: false })
       }
-      res.status(200).json({ message: true })
+      return res.status(200).json({ message: true })
    } catch (error) {
       next(error)
    }

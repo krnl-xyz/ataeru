@@ -3,8 +3,11 @@ import Image from 'next/image';
 import MobileMenu from '@/components/MobileMenu';
 import { ConnectButton } from '@rainbow-me/rainbowkit';
 import RegistrationModal from './RegistrationModal';
-// import { useRouter } from 'next/navigation';
+import LoginModal from './LoginModal';
+import UserProfileDropdown from './UserProfileDropdown';
+import { useAuth } from '@/app/contexts/use-auth';
 import { useAccount } from 'wagmi';
+import { Wallet } from 'lucide-react';
 import Link from 'next/link';
 
 interface HeaderProps {
@@ -13,6 +16,7 @@ interface HeaderProps {
 
 export default function Header({ handleScrollToSection }: HeaderProps) {
   // const router = useRouter();
+  const { isAuthenticated, openLoginModal, openRegistrationModal } = useAuth();
   const { isConnected } = useAccount();
 
   // const scrollToSection = (e: React.MouseEvent<HTMLAnchorElement>, targetId: string) => {
@@ -70,6 +74,24 @@ export default function Header({ handleScrollToSection }: HeaderProps) {
           </div>
         </div>
         <div className="flex items-center gap-3 sm:gap-6">
+          {!isAuthenticated && (
+            <div className="flex gap-2">
+              <button
+                onClick={openLoginModal}
+                className="text-sm bg-gray-100 text-gray-800 px-4 sm:px-5 py-2 rounded-full hover:bg-gray-200"
+              >
+                Login
+              </button>
+              <button
+                onClick={openRegistrationModal}
+                className="text-sm bg-gradient-to-r from-blue-600 to-blue-700 text-white px-4 sm:px-5 py-2 rounded-full hover:opacity-90"
+              >
+                Sign Up
+              </button>
+            </div>
+          )}
+
+          {/* Wallet Connection Button - Show when not authenticated or when authenticated but wallet not connected */}
           <ConnectButton.Custom>
             {({
               account,
@@ -95,7 +117,21 @@ export default function Header({ handleScrollToSection }: HeaderProps) {
                 );
               }
 
-              if (!connected) {
+              // If authenticated, only show wallet button if wallet is not connected
+              if (isAuthenticated && !connected) {
+                return (
+                  <button
+                    onClick={openConnectModal}
+                    className="text-sm bg-gray-100 text-gray-800 px-4 sm:px-5 py-2 rounded-full hover:bg-gray-200 flex items-center gap-2"
+                  >
+                    <Wallet className="h-4 w-4" />
+                    Connect Wallet
+                  </button>
+                );
+              }
+
+              // If not authenticated, show connect wallet button
+              if (!isAuthenticated && !connected) {
                 return (
                   <button
                     onClick={openConnectModal}
@@ -106,7 +142,8 @@ export default function Header({ handleScrollToSection }: HeaderProps) {
                 );
               }
 
-              if (chain.unsupported) {
+              // Show wrong network button if chain is unsupported
+              if (chain && chain.unsupported) {
                 return (
                   <button
                     onClick={openChainModal}
@@ -115,6 +152,16 @@ export default function Header({ handleScrollToSection }: HeaderProps) {
                     Wrong network
                   </button>
                 );
+              }
+
+              // If authenticated, show profile dropdown (which includes wallet info)
+              if (isAuthenticated) {
+                return null; // Profile dropdown will handle wallet display
+              }
+
+              // Not authenticated but wallet connected - show wallet info
+              if (!chain || !account) {
+                return null;
               }
 
               return (
@@ -156,12 +203,19 @@ export default function Header({ handleScrollToSection }: HeaderProps) {
               );
             }}
           </ConnectButton.Custom>
+
+          {/* User Profile Dropdown - Show when authenticated */}
+          {isAuthenticated && <UserProfileDropdown />}
+
           <MobileMenu />
         </div>
       </nav>
 
       {/* Registration Modal */}
       <RegistrationModal />
+
+      {/* Login Modal */}
+      <LoginModal />
 
     </>
   );

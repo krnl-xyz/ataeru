@@ -16,6 +16,11 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+enum UserType {
+  USER
+  MEDICAL_FACILITY
+}
+
 model Facility {
   id           String @id @default(uuid())
   facilityName String
@@ -64,8 +69,7 @@ model HcahpsHospitalSurvery {
 }
 
 model HospitalInformation {
-  id                            Int      @id @default(autoincrement())
-  facilityId                    String
+  facilityId                    String   @id
   facilityName                  String
   address                       String
   city                          String
@@ -78,6 +82,23 @@ model HospitalInformation {
   hospitalOverallRating         String
   hospitalOverallRatingFootnote String?
   emergencyServices             String
+  users                         User[]
+}
+
+model User {
+  id           String   @id @default(uuid())
+  fullname     String
+  email        String   @unique
+  password     String
+  witnesshash  String   @unique
+  phone        String
+  address      String
+  about        String?
+  userType     UserType @default(USER)
+  hospitalId   String
+  hospital     HospitalInformation @relation(fields: [hospitalId], references: [facilityId], onDelete: Cascade)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 }
 
 
