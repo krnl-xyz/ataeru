@@ -64,10 +64,10 @@ importers:
         version: 6.0.0(bufferutil@4.0.9)(encoding@0.1.13)(expo@54.0.23(@babel/core@7.28.5)(bufferutil@4.0.9)(react-native@0.82.1(@babel/core@7.28.5)(@types/react@19.2.3)(bufferutil@4.0.9)(react@19.2.0)(utf-8-validate@5.0.10))(react@19.2.0)(utf-8-validate@5.0.10))(msrcrypto@1.5.8)(react-native@0.82.1(@babel/core@7.28.5)(@types/react@19.2.3)(bufferutil@4.0.9)(react@19.2.0)(utf-8-validate@5.0.10))(utf-8-validate@5.0.10)(web-streams-polyfill@3.3.3)
       '@veramo/data-store':
         specifier: ^6.0.0
-        version: 6.0.0(@sap/hana-client@2.26.25)(bufferutil@4.0.9)(encoding@0.1.13)(reflect-metadata@0.2.2)(sqlite3@5.1.7)(utf-8-validate@5.0.10)
+        version: 6.0.0(@sap/hana-client@2.26.25)(bufferutil@4.0.9)(encoding@0.1.13)(mongodb@6.20.0(socks@2.8.7))(reflect-metadata@0.2.2)(sqlite3@5.1.7)(utf-8-validate@5.0.10)
       '@veramo/did-comm':
         specifier: ^6.0.0
-        version: 6.0.0(@sap/hana-client@2.26.25)(bufferutil@4.0.9)(encoding@0.1.13)(expo@54.0.23(@babel/core@7.28.5)(bufferutil@4.0.9)(react-native@0.82.1(@babel/core@7.28.5)(@types/react@19.2.3)(bufferutil@4.0.9)(react@19.2.0)(utf-8-validate@5.0.10))(react@19.2.0)(utf-8-validate@5.0.10))(react-native@0.82.1(@babel/core@7.28.5)(@types/react@19.2.3)(bufferutil@4.0.9)(react@19.2.0)(utf-8-validate@5.0.10))(reflect-metadata@0.2.2)(sqlite3@5.1.7)(utf-8-validate@5.0.10)
+        version: 6.0.0(@sap/hana-client@2.26.25)(bufferutil@4.0.9)(encoding@0.1.13)(expo@54.0.23(@babel/core@7.28.5)(bufferutil@4.0.9)(react-native@0.82.1(@babel/core@7.28.5)(@types/react@19.2.3)(bufferutil@4.0.9)(react@19.2.0)(utf-8-validate@5.0.10))(react@19.2.0)(utf-8-validate@5.0.10))(mongodb@6.20.0(socks@2.8.7))(react-native@0.82.1(@babel/core@7.28.5)(@types/react@19.2.3)(bufferutil@4.0.9)(react@19.2.0)(utf-8-validate@5.0.10))(reflect-metadata@0.2.2)(sqlite3@5.1.7)(utf-8-validate@5.0.10)
       '@veramo/did-manager':
         specifier: ^6.0.0
         version: 6.0.0
@@ -125,6 +125,9 @@ importers:
       lucide-react:
         specifier: ^0.503.0
         version: 0.503.0(react@19.2.0)
+      mongoose:
+        specifier: ^8.19.3
+        version: 8.19.3(socks@2.8.7)
       next:
         specifier: 15.2.4
         version: 15.2.4(@babel/core@7.28.5)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
@@ -169,7 +172,7 @@ importers:
         version: 1.4.0
       typeorm:
         specifier: ^0.3.22
-        version: 0.3.27(@sap/hana-client@2.26.25)(reflect-metadata@0.2.2)(sqlite3@5.1.7)
+        version: 0.3.27(@sap/hana-client@2.26.25)(mongodb@6.20.0(socks@2.8.7))(reflect-metadata@0.2.2)(sqlite3@5.1.7)
       uuid:
         specifier: ^11.1.0
         version: 11.1.0
@@ -1603,6 +1606,9 @@ packages:
     resolution: {integrity: sha512-w8CVbdkDrVXFJbfBSlDfafDR6BAkpDmv1bC1UJVCoVny5tW2RKAdn9i68Xf7asYT4TnUhl/hN4zfUiKQq9II4g==}
     engines: {node: '>=16.0.0'}
 
+  '@mongodb-js/saslprep@1.3.2':
+    resolution: {integrity: sha512-QgA5AySqB27cGTXBFmnpifAi7HxoGUeezwo6p9dI03MuDB6Pp33zgclqVb6oVK3j6I9Vesg0+oojW2XxB59SGg==}
+
   '@multiformats/base-x@4.0.1':
     resolution: {integrity: sha512-eMk0b9ReBbV23xXU693TAIrLyeO5iTgBZGSJfpqriG8UkYvr/hC9u9pyMlAakDNHWmbhMZCDs6KQO0jzKD8OTw==}
 
@@ -2983,6 +2989,12 @@ packages:
   '@types/uuid@8.3.4':
     resolution: {integrity: sha512-c/I8ZRb51j+pYGAu5CrFMRxqZ2ke4y2grEBO5AUjgSkSk+qT2Ea+OdWElz/OiMf5MNpn2b17kuVBwZLQJXzihw==}
 
+  '@types/webidl-conversions@7.0.3':
+    resolution: {integrity: sha512-CiJJvcRtIgzadHCYXw7dqEnMNRjhGZlYK05Mj9OyktqV8uVT8fD2BFOB7S1uwBE3Kj2Z+4UyPmFw/Ixgw/LAlA==}
+
+  '@types/whatwg-url@11.0.5':
+    resolution: {integrity: sha512-coYR071JRaHa+xoEvvYqvnIHaVqaYrLPbsufM9BF63HkwI5Lgmy2QR8Q5K/lYDYo5AK82wOvSOS0UsLTpTG7uQ==}
+
   '@types/ws@7.4.7':
     resolution: {integrity: sha512-JQbbmxZTZehdc2iszGKs5oC3NFnjeay7mtAWrdt7qNtAVK0g19muApzAy4bm9byz79xa2ZnO/BOBC2R8RC5Lww==}
 
@@ -3792,6 +3804,10 @@ packages:
 
   bser@2.1.1:
     resolution: {integrity: sha512-gQxTNE/GAfIIrmHLUE3oJyp5FO6HRBfhjnw4/wMmA63ZGDJnWBmgY/lyQBpnDUkGmAhbSe39tx2d/iTOAfglwQ==}
+
+  bson@6.10.4:
+    resolution: {integrity: sha512-WIsKqkSC0ABoBJuT1LEX+2HEvNmNKKgnTAyd0fL8qzK4SH2i9NXg+t08YtdZp/V9IZ33cxe3iV4yM0qg8lMQng==}
+    engines: {node: '>=16.20.1'}
 
   buffer-from@1.1.2:
     resolution: {integrity: sha512-E+XQCRwSbaaiChtv6k6Dwgc+bx+Bs6vuKJHHl5kox/BaKbhiXzqQOwK4cO22yElGp2OCmjwVhT3HmxgyPGnJfQ==}
@@ -5474,6 +5490,10 @@ packages:
     resolution: {integrity: sha512-ZZow9HBI5O6EPgSJLUb8n2NKgmVWTwCvHGwFuJlMjvLFqlGG6pjirPhtdsseaLZjSibD8eegzmYpUZwoIlj2cQ==}
     engines: {node: '>=4.0'}
 
+  kareem@2.6.3:
+    resolution: {integrity: sha512-C3iHfuGUXK2u8/ipq9LfjFfXFxAZMQJJq7vLS45r3D9Y2xQ/m4S8zaR4zMLFWh9AsNPXmcFfUDhTEO8UIC/V6Q==}
+    engines: {node: '>=12.0.0'}
+
   keccak@3.0.4:
     resolution: {integrity: sha512-3vKuW0jV8J3XNTzvfyicFR5qvxrSAGl7KIhvgOu5cmWwM7tZRj3fMbj/pfIf4be7aznbc+prBWGjywox/g2Y6Q==}
     engines: {node: '>=10.0.0'}
@@ -5728,6 +5748,9 @@ packages:
   memoize-one@5.2.1:
     resolution: {integrity: sha512-zYiwtZUcYyXKo/np96AGZAckk+FWWsUdJ3cHGGmld7+AhvcWmQyGCYUh1hc4Q/pkOhb65dQR/pqCyK0cOaHz4Q==}
 
+  memory-pager@1.5.0:
+    resolution: {integrity: sha512-ZS4Bp4r/Zoeq6+NLJpP+0Zzm0pR8whtGPf1XExKLJBAczGMnSi3It14OiNCStjQjM6NU1okjQGSxgEZN8eBYKg==}
+
   merge-stream@2.0.0:
     resolution: {integrity: sha512-abv/qOcuPfk3URPfDzmZU1LKmuw8kT+0nIHvKrKgFrwifol/doWcdA4ZqsWQ8ENrFKkd67Mfpo/LovbIUsbt3w==}
 
@@ -5961,6 +5984,48 @@ packages:
 
   modern-ahocorasick@1.1.0:
     resolution: {integrity: sha512-sEKPVl2rM+MNVkGQt3ChdmD8YsigmXdn5NifZn6jiwn9LRJpWm8F3guhaqrJT/JOat6pwpbXEk6kv+b9DMIjsQ==}
+
+  mongodb-connection-string-url@3.0.2:
+    resolution: {integrity: sha512-rMO7CGo/9BFwyZABcKAWL8UJwH/Kc2x0g72uhDWzG48URRax5TCIcJ7Rc3RZqffZzO/Gwff/jyKwCU9TN8gehA==}
+
+  mongodb@6.20.0:
+    resolution: {integrity: sha512-Tl6MEIU3K4Rq3TSHd+sZQqRBoGlFsOgNrH5ltAcFBV62Re3Fd+FcaVf8uSEQFOJ51SDowDVttBTONMfoYWrWlQ==}
+    engines: {node: '>=16.20.1'}
+    peerDependencies:
+      '@aws-sdk/credential-providers': ^3.188.0
+      '@mongodb-js/zstd': ^1.1.0 || ^2.0.0
+      gcp-metadata: ^5.2.0
+      kerberos: ^2.0.1
+      mongodb-client-encryption: '>=6.0.0 <7'
+      snappy: ^7.3.2
+      socks: ^2.7.1
+    peerDependenciesMeta:
+      '@aws-sdk/credential-providers':
+        optional: true
+      '@mongodb-js/zstd':
+        optional: true
+      gcp-metadata:
+        optional: true
+      kerberos:
+        optional: true
+      mongodb-client-encryption:
+        optional: true
+      snappy:
+        optional: true
+      socks:
+        optional: true
+
+  mongoose@8.19.3:
+    resolution: {integrity: sha512-fTAGaIohkk8wCggMuBuqTVD4YrM1/J8cBr1ekqzFqtz65qkLjtX2dcy3NH1e+2rk2365dyrrsPAnt4YTxBhEiQ==}
+    engines: {node: '>=16.20.1'}
+
+  mpath@0.9.0:
+    resolution: {integrity: sha512-ikJRQTk8hw5DEoFVxHG1Gn9T/xcjtdnOKIU1JTmGjZZlg9LST2mBLmcX3/ICIbgJydT2GOc15RnNy5mHmzfSew==}
+    engines: {node: '>=4.0.0'}
+
+  mquery@5.0.0:
+    resolution: {integrity: sha512-iQMncpmEK8R8ncT8HJGsGc9Dsp8xcgYMVSbs5jgnm1lFHTZqMJTUWTDx1LBO8+mK3tPNZWFLBghQEIOULSTHZg==}
+    engines: {node: '>=14.0.0'}
 
   ms@2.0.0:
     resolution: {integrity: sha512-Tpp60P6IUJDTuOq/5Z8cdskzJujfwqfOTkrwIwj7IRISpnkJnT6SyJ4PCPnGMoFjC9ddhal5KVIYtAt97ix05A==}
@@ -6968,6 +7033,9 @@ packages:
     resolution: {integrity: sha512-ZX99e6tRweoUXqR+VBrslhda51Nh5MTQwou5tnUDgbtyM0dBgmhEDtWGP/xbKn6hqfPRHujUNwz5fy/wbbhnpw==}
     engines: {node: '>= 0.4'}
 
+  sift@17.1.3:
+    resolution: {integrity: sha512-Rtlj66/b0ICeFzYTuNvX/EF1igRbbnGSvEyT79McoZa/DeGhMyC5pWKOEsZKnpkqtSeovd5FL/bjHWC3CIIvCQ==}
+
   signal-exit@3.0.7:
     resolution: {integrity: sha512-wnD2ZE+l+SPC/uoS0vXeE9L1+0wuaMqKlfz9AMUo38JsyLSBWSFcHR1Rri62LZc12vLr1gb3jl7iwQhgwpAbGQ==}
 
@@ -7047,6 +7115,9 @@ packages:
   source-map@0.6.1:
     resolution: {integrity: sha512-UjgapumWlbMhkBgzT7Ykc5YXUT46F0iKu8SGXq0bcwP5dz/h0Plj6enJqjz1Zbq2l5WaqYnrVbwWOWMyF3F47g==}
     engines: {node: '>=0.10.0'}
+
+  sparse-bitfield@3.0.3:
+    resolution: {integrity: sha512-kvzhi7vqKTfkh0PZU+2D2PIllw2ymqJKujUcyPMd9Y75Nv4nPbGJZXNhxsgdQab2BmlDct1YnfQCguEvHr7VsQ==}
 
   split-on-first@1.1.0:
     resolution: {integrity: sha512-43ZssAJaMusuKWL8sKUBQXHWOpq8d6CfN/u1p4gUzfJkM05C8rxTmYrkIPTXapZpORA6LkkzcUulJ8FqA7Uudw==}
@@ -7313,6 +7384,10 @@ packages:
 
   tr46@0.0.3:
     resolution: {integrity: sha512-N3WMsuqV66lT30CrXNbEjx4GEwlow3v6rr4mCcv6prnfwhS01rkgyFdjPNBYd9br7LpXV1+Emh01fHnq2Gdgrw==}
+
+  tr46@5.1.1:
+    resolution: {integrity: sha512-hdF5ZgjTqgAntKkklYw0R03MG2x/bSzTtkxmIRw/sTNV8YXsCJ1tfLAX23lhxhHJlEf3CRCOCGGWw3vI3GaSPw==}
+    engines: {node: '>=18'}
 
   ts-api-utils@2.1.0:
     resolution: {integrity: sha512-CUgTZL1irw8u29bzrOD/nH85jqyc74D6SshFgujOIA7osm2Rz7dYH77agkx7H4FBNxDq7Cjf+IjaX/8zwFW+ZQ==}
@@ -7838,6 +7913,10 @@ packages:
     resolution: {integrity: sha512-VlZwKPCkYKxQgeSbH5EyngOmRp7Ww7I9rQLERETtf5ofd9pGeswWiOtogpEO850jziPRarreGxn5QIiTqpb2wA==}
     engines: {node: '>=8'}
 
+  webidl-conversions@7.0.0:
+    resolution: {integrity: sha512-VwddBukDzu71offAQR975unBIGqfKZpM+8ZX6ySk8nYhVoo5CYaZyzt3YBvYtRtO+aoGlqxPg/B87NGVZ/fu6g==}
+    engines: {node: '>=12'}
+
   websocket-driver@0.7.4:
     resolution: {integrity: sha512-b17KeDIQVjvb0ssuSDF2cYXSg2iztliJ4B9WdsuB6J952qCPKmnVq4DyW5motImXHDC1cBT/1UezrJVsKw5zjg==}
     engines: {node: '>=0.8.0'}
@@ -7852,6 +7931,10 @@ packages:
   whatwg-url-without-unicode@8.0.0-3:
     resolution: {integrity: sha512-HoKuzZrUlgpz35YO27XgD28uh/WJH4B0+3ttFqRo//lmq+9T/mIOJ6kqmINI9HpUpz1imRC/nR/lxKpJiv0uig==}
     engines: {node: '>=10'}
+
+  whatwg-url@14.2.0:
+    resolution: {integrity: sha512-De72GdQZzNTUBBChsXueQUnPKDkg/5A5zp7pFDuQAj5UFoENpiACU0wlCvzpAGnTkj++ihpKwKyYewn/XNUbKw==}
+    engines: {node: '>=18'}
 
   whatwg-url@5.0.0:
     resolution: {integrity: sha512-saE57nupxk6v3HY35+jzBwYa0rKSy0XR8JSxZPwgLr7ys0IBzhGviA1/TUGJLmSVqs8pb9AnvICXEuOHLprYTw==}
@@ -10314,6 +10397,10 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
+  '@mongodb-js/saslprep@1.3.2':
+    dependencies:
+      sparse-bitfield: 3.0.3
+
   '@multiformats/base-x@4.0.1': {}
 
   '@napi-rs/wasm-runtime@0.2.12':
@@ -12217,6 +12304,12 @@ snapshots:
 
   '@types/uuid@8.3.4': {}
 
+  '@types/webidl-conversions@7.0.3': {}
+
+  '@types/whatwg-url@11.0.5':
+    dependencies:
+      '@types/webidl-conversions': 7.0.3
+
   '@types/ws@7.4.7':
     dependencies:
       '@types/node': 22.19.0
@@ -12535,7 +12628,7 @@ snapshots:
       - utf-8-validate
       - web-streams-polyfill
 
-  '@veramo/data-store@6.0.0(@sap/hana-client@2.26.25)(bufferutil@4.0.9)(encoding@0.1.13)(reflect-metadata@0.2.2)(sqlite3@5.1.7)(utf-8-validate@5.0.10)':
+  '@veramo/data-store@6.0.0(@sap/hana-client@2.26.25)(bufferutil@4.0.9)(encoding@0.1.13)(mongodb@6.20.0(socks@2.8.7))(reflect-metadata@0.2.2)(sqlite3@5.1.7)(utf-8-validate@5.0.10)':
     dependencies:
       '@veramo/core-types': 6.0.0
       '@veramo/did-discovery': 6.0.0
@@ -12544,7 +12637,7 @@ snapshots:
       '@veramo/utils': 6.0.0(bufferutil@4.0.9)(encoding@0.1.13)(utf-8-validate@5.0.10)
       debug: 4.4.3
       did-jwt-vc: 4.0.16
-      typeorm: 0.3.27(@sap/hana-client@2.26.25)(reflect-metadata@0.2.2)(sqlite3@5.1.7)
+      typeorm: 0.3.27(@sap/hana-client@2.26.25)(mongodb@6.20.0(socks@2.8.7))(reflect-metadata@0.2.2)(sqlite3@5.1.7)
       uuid: 9.0.1
     transitivePeerDependencies:
       - '@google-cloud/spanner'
@@ -12570,7 +12663,7 @@ snapshots:
       - typeorm-aurora-data-api-driver
       - utf-8-validate
 
-  '@veramo/did-comm@6.0.0(@sap/hana-client@2.26.25)(bufferutil@4.0.9)(encoding@0.1.13)(expo@54.0.23(@babel/core@7.28.5)(bufferutil@4.0.9)(react-native@0.82.1(@babel/core@7.28.5)(@types/react@19.2.3)(bufferutil@4.0.9)(react@19.2.0)(utf-8-validate@5.0.10))(react@19.2.0)(utf-8-validate@5.0.10))(react-native@0.82.1(@babel/core@7.28.5)(@types/react@19.2.3)(bufferutil@4.0.9)(react@19.2.0)(utf-8-validate@5.0.10))(reflect-metadata@0.2.2)(sqlite3@5.1.7)(utf-8-validate@5.0.10)':
+  '@veramo/did-comm@6.0.0(@sap/hana-client@2.26.25)(bufferutil@4.0.9)(encoding@0.1.13)(expo@54.0.23(@babel/core@7.28.5)(bufferutil@4.0.9)(react-native@0.82.1(@babel/core@7.28.5)(@types/react@19.2.3)(bufferutil@4.0.9)(react@19.2.0)(utf-8-validate@5.0.10))(react@19.2.0)(utf-8-validate@5.0.10))(mongodb@6.20.0(socks@2.8.7))(react-native@0.82.1(@babel/core@7.28.5)(@types/react@19.2.3)(bufferutil@4.0.9)(react@19.2.0)(utf-8-validate@5.0.10))(reflect-metadata@0.2.2)(sqlite3@5.1.7)(utf-8-validate@5.0.10)':
     dependencies:
       '@noble/curves': 1.9.7
       '@stablelib/aes': 1.0.1
@@ -12578,8 +12671,8 @@ snapshots:
       '@stablelib/gcm': 1.0.2
       '@stablelib/xchacha20poly1305': 1.0.1
       '@veramo/core-types': 6.0.0
-      '@veramo/kv-store': 6.0.0(@sap/hana-client@2.26.25)(bufferutil@4.0.9)(encoding@0.1.13)(reflect-metadata@0.2.2)(sqlite3@5.1.7)(utf-8-validate@5.0.10)
-      '@veramo/mediation-manager': 6.0.0(@sap/hana-client@2.26.25)(bufferutil@4.0.9)(encoding@0.1.13)(reflect-metadata@0.2.2)(sqlite3@5.1.7)(utf-8-validate@5.0.10)
+      '@veramo/kv-store': 6.0.0(@sap/hana-client@2.26.25)(bufferutil@4.0.9)(encoding@0.1.13)(mongodb@6.20.0(socks@2.8.7))(reflect-metadata@0.2.2)(sqlite3@5.1.7)(utf-8-validate@5.0.10)
+      '@veramo/mediation-manager': 6.0.0(@sap/hana-client@2.26.25)(bufferutil@4.0.9)(encoding@0.1.13)(mongodb@6.20.0(socks@2.8.7))(reflect-metadata@0.2.2)(sqlite3@5.1.7)(utf-8-validate@5.0.10)
       '@veramo/message-handler': 6.0.0
       '@veramo/utils': 6.0.0(bufferutil@4.0.9)(encoding@0.1.13)(utf-8-validate@5.0.10)
       cross-fetch: 4.1.0(encoding@0.1.13)
@@ -12686,14 +12779,14 @@ snapshots:
       - supports-color
       - utf-8-validate
 
-  '@veramo/kv-store@6.0.0(@sap/hana-client@2.26.25)(bufferutil@4.0.9)(encoding@0.1.13)(reflect-metadata@0.2.2)(sqlite3@5.1.7)(utf-8-validate@5.0.10)':
+  '@veramo/kv-store@6.0.0(@sap/hana-client@2.26.25)(bufferutil@4.0.9)(encoding@0.1.13)(mongodb@6.20.0(socks@2.8.7))(reflect-metadata@0.2.2)(sqlite3@5.1.7)(utf-8-validate@5.0.10)':
     dependencies:
       '@veramo/core-types': 6.0.0
       '@veramo/utils': 6.0.0(bufferutil@4.0.9)(encoding@0.1.13)(utf-8-validate@5.0.10)
       debug: 4.4.3
       events: 3.3.0
       json-buffer: 3.0.1
-      typeorm: 0.3.27(@sap/hana-client@2.26.25)(reflect-metadata@0.2.2)(sqlite3@5.1.7)
+      typeorm: 0.3.27(@sap/hana-client@2.26.25)(mongodb@6.20.0(socks@2.8.7))(reflect-metadata@0.2.2)(sqlite3@5.1.7)
       uint8arrays: 4.0.10
     transitivePeerDependencies:
       - '@google-cloud/spanner'
@@ -12719,10 +12812,10 @@ snapshots:
       - typeorm-aurora-data-api-driver
       - utf-8-validate
 
-  '@veramo/mediation-manager@6.0.0(@sap/hana-client@2.26.25)(bufferutil@4.0.9)(encoding@0.1.13)(reflect-metadata@0.2.2)(sqlite3@5.1.7)(utf-8-validate@5.0.10)':
+  '@veramo/mediation-manager@6.0.0(@sap/hana-client@2.26.25)(bufferutil@4.0.9)(encoding@0.1.13)(mongodb@6.20.0(socks@2.8.7))(reflect-metadata@0.2.2)(sqlite3@5.1.7)(utf-8-validate@5.0.10)':
     dependencies:
       '@veramo/core-types': 6.0.0
-      '@veramo/kv-store': 6.0.0(@sap/hana-client@2.26.25)(bufferutil@4.0.9)(encoding@0.1.13)(reflect-metadata@0.2.2)(sqlite3@5.1.7)(utf-8-validate@5.0.10)
+      '@veramo/kv-store': 6.0.0(@sap/hana-client@2.26.25)(bufferutil@4.0.9)(encoding@0.1.13)(mongodb@6.20.0(socks@2.8.7))(reflect-metadata@0.2.2)(sqlite3@5.1.7)(utf-8-validate@5.0.10)
       debug: 4.4.3
       uuid: 9.0.1
     transitivePeerDependencies:
@@ -13931,6 +14024,8 @@ snapshots:
     dependencies:
       node-int64: 0.4.0
 
+  bson@6.10.4: {}
+
   buffer-from@1.1.2: {}
 
   buffer@5.7.1:
@@ -14421,7 +14516,7 @@ snapshots:
 
   dotenv-expand@11.0.7:
     dependencies:
-      dotenv: 16.4.7
+      dotenv: 16.6.1
     optional: true
 
   dotenv@16.4.7:
@@ -15972,6 +16067,8 @@ snapshots:
       object.assign: 4.1.7
       object.values: 1.2.1
 
+  kareem@2.6.3: {}
+
   keccak@3.0.4:
     dependencies:
       node-addon-api: 2.0.2
@@ -16232,6 +16329,8 @@ snapshots:
       mimic-fn: 3.1.0
 
   memoize-one@5.2.1: {}
+
+  memory-pager@1.5.0: {}
 
   merge-stream@2.0.0: {}
 
@@ -16698,6 +16797,46 @@ snapshots:
   mkdirp@1.0.4: {}
 
   modern-ahocorasick@1.1.0: {}
+
+  mongodb-connection-string-url@3.0.2:
+    dependencies:
+      '@types/whatwg-url': 11.0.5
+      whatwg-url: 14.2.0
+
+  mongodb@6.20.0(socks@2.8.7):
+    dependencies:
+      '@mongodb-js/saslprep': 1.3.2
+      bson: 6.10.4
+      mongodb-connection-string-url: 3.0.2
+    optionalDependencies:
+      socks: 2.8.7
+
+  mongoose@8.19.3(socks@2.8.7):
+    dependencies:
+      bson: 6.10.4
+      kareem: 2.6.3
+      mongodb: 6.20.0(socks@2.8.7)
+      mpath: 0.9.0
+      mquery: 5.0.0
+      ms: 2.1.3
+      sift: 17.1.3
+    transitivePeerDependencies:
+      - '@aws-sdk/credential-providers'
+      - '@mongodb-js/zstd'
+      - gcp-metadata
+      - kerberos
+      - mongodb-client-encryption
+      - snappy
+      - socks
+      - supports-color
+
+  mpath@0.9.0: {}
+
+  mquery@5.0.0:
+    dependencies:
+      debug: 4.4.3
+    transitivePeerDependencies:
+      - supports-color
 
   ms@2.0.0: {}
 
@@ -17921,6 +18060,8 @@ snapshots:
       side-channel-map: 1.0.1
       side-channel-weakmap: 1.0.2
 
+  sift@17.1.3: {}
+
   signal-exit@3.0.7: {}
 
   signal-exit@4.1.0: {}
@@ -18014,6 +18155,10 @@ snapshots:
   source-map@0.5.7: {}
 
   source-map@0.6.1: {}
+
+  sparse-bitfield@3.0.3:
+    dependencies:
+      memory-pager: 1.5.0
 
   split-on-first@1.1.0: {}
 
@@ -18315,6 +18460,10 @@ snapshots:
 
   tr46@0.0.3: {}
 
+  tr46@5.1.1:
+    dependencies:
+      punycode: 2.3.1
+
   ts-api-utils@2.1.0(typescript@5.9.3):
     dependencies:
       typescript: 5.9.3
@@ -18390,7 +18539,7 @@ snapshots:
       possible-typed-array-names: 1.1.0
       reflect.getprototypeof: 1.0.10
 
-  typeorm@0.3.27(@sap/hana-client@2.26.25)(reflect-metadata@0.2.2)(sqlite3@5.1.7):
+  typeorm@0.3.27(@sap/hana-client@2.26.25)(mongodb@6.20.0(socks@2.8.7))(reflect-metadata@0.2.2)(sqlite3@5.1.7):
     dependencies:
       '@sqltools/formatter': 1.2.5
       ansis: 3.17.0
@@ -18409,6 +18558,7 @@ snapshots:
       yargs: 17.7.2
     optionalDependencies:
       '@sap/hana-client': 2.26.25
+      mongodb: 6.20.0(socks@2.8.7)
       sqlite3: 5.1.7
     transitivePeerDependencies:
       - babel-plugin-macros
@@ -18988,6 +19138,8 @@ snapshots:
   webidl-conversions@5.0.0:
     optional: true
 
+  webidl-conversions@7.0.0: {}
+
   websocket-driver@0.7.4:
     dependencies:
       http-parser-js: 0.5.10
@@ -19004,6 +19156,11 @@ snapshots:
       punycode: 2.3.1
       webidl-conversions: 5.0.0
     optional: true
+
+  whatwg-url@14.2.0:
+    dependencies:
+      tr46: 5.1.1
+      webidl-conversions: 7.0.0
 
   whatwg-url@5.0.0:
     dependencies:
