@@ -69,8 +69,8 @@ export default function SpermDonationForm() {
             Back to Home
           </Link>
           <div className="flex items-center gap-2">
-            <Image src="/images/logo.svg" alt="Ataeru Logo" width={32} height={32} className="w-8 h-8" />
-            <span className="text-xl font-bold text-blue-600">Ataeru</span>
+            <Image src="/images/logo.svg" alt="Synhealth Logo" width={32} height={32} className="w-8 h-8" />
+            <span className="text-xl font-bold text-blue-600">Synhealth</span>
           </div>
         </div>
 
@@ -341,7 +341,7 @@ export default function SpermDonationForm() {
                     <div className="bg-blue-50 p-4 rounded-lg mb-6">
                       <h3 className="font-bold text-blue-800 mb-2">Blockchain Verification</h3>
                       <p className="text-sm text-blue-700">
-                        Ataeru uses blockchain technology to securely verify and store donor information. Your identity will remain anonymous to recipients, but all medical information will be cryptographically verified for authenticity.
+                        Synhealth uses blockchain technology to securely verify and store donor information. Your identity will remain anonymous to recipients, but all medical information will be cryptographically verified for authenticity.
                       </p>
                     </div>
 
@@ -437,7 +437,7 @@ export default function SpermDonationForm() {
                     <p>• Donors must be between 18-45 years old and in good health</p>
                     <p>• Selected donors receive compensation of 0.5 ETH per successful donation</p>
                     <p>• All donor information is securely stored on our blockchain platform</p>
-                    <p>• Questions? Contact us at donors@Ataeru.eth</p>
+                    <p>• Questions? Contact us at donors@Synhealth.eth</p>
                   </div>
                 </div>
               </div>

@@ -20,7 +20,7 @@ const outfit = Outfit({
 // });
 
 export const metadata: Metadata = {
-  title: "Ataeru | Decentralized Family Building",
+  title: "Synhealth | Decentralized Family Building",
   description: "Web3-powered fertility solutions with smart contracts and blockchain verification",
   icons: {
     icon: '/images/logo.svg',

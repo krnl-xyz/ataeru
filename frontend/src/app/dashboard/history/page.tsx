@@ -54,7 +54,7 @@ export default function HistoryPage() {
           location: 'Room 305, East Wing',
           status: 'completed',
           hospital: {
-            name: 'Ataeru Main Center',
+            name: 'Synhealth Main Center',
             imageUrl: 'https://images.unsplash.com/photo-1551190822-a9333d879b1f?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
           },
           doctor: 'Dr. Sarah Johnson',
@@ -82,7 +82,7 @@ export default function HistoryPage() {
           location: 'Procedure Room 4',
           status: 'completed',
           hospital: {
-            name: 'Ataeru Main Center',
+            name: 'Synhealth Main Center',
             imageUrl: '/images/hospital-1.jpg',
           },
           doctor: 'Dr. Michael Chen',
@@ -96,7 +96,7 @@ export default function HistoryPage() {
           location: 'Room 210, West Wing',
           status: 'upcoming',
           hospital: {
-            name: 'Ataeru Main Center',
+            name: 'Synhealth Main Center',
             imageUrl: '/images/hospital-1.jpg',
           },
           doctor: 'Dr. Sarah Johnson',
@@ -109,7 +109,7 @@ export default function HistoryPage() {
           location: 'Procedure Room 2',
           status: 'completed',
           hospital: {
-            name: 'Ataeru Main Center',
+            name: 'Synhealth Main Center',
             imageUrl: 'https://images.unsplash.com/photo-1551190822-a9333d879b1f?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
           },
           doctor: 'Dr. Michael Chen',
@@ -123,7 +123,7 @@ export default function HistoryPage() {
           location: 'Conference Room A',
           status: 'completed',
           hospital: {
-            name: 'Ataeru Legal Department',
+            name: 'Synhealth Legal Department',
           },
           transactionHash: '0x9b8a7c6d5e4f3a2b1c0d9e8f7a6b5c4d3e2f1a0b',
         },
@@ -135,7 +135,7 @@ export default function HistoryPage() {
           location: 'Examination Room 3',
           status: 'completed',
           hospital: {
-            name: 'Ataeru Main Center',
+            name: 'Synhealth Main Center',
             imageUrl: 'https://images.unsplash.com/photo-1551190822-a9333d879b1f?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
           },
           doctor: 'Dr. Emma Rodriguez',
@@ -190,8 +190,8 @@ export default function HistoryPage() {
           <button
             onClick={() => setActiveTab('all')}
             className={`${activeTab === 'all'
-                ? 'border-blue-500 text-blue-600'
-                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+              ? 'border-blue-500 text-blue-600'
+              : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
               } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm`}
           >
             All History
@@ -199,8 +199,8 @@ export default function HistoryPage() {
           <button
             onClick={() => setActiveTab('appointments')}
             className={`${activeTab === 'appointments'
-                ? 'border-blue-500 text-blue-600'
-                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+              ? 'border-blue-500 text-blue-600'
+              : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
               } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm`}
           >
             Appointments
@@ -208,8 +208,8 @@ export default function HistoryPage() {
           <button
             onClick={() => setActiveTab('treatments')}
             className={`${activeTab === 'treatments'
-                ? 'border-blue-500 text-blue-600'
-                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+              ? 'border-blue-500 text-blue-600'
+              : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
               } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm`}
           >
             Treatments
@@ -217,8 +217,8 @@ export default function HistoryPage() {
           <button
             onClick={() => setActiveTab('donations')}
             className={`${activeTab === 'donations'
-                ? 'border-blue-500 text-blue-600'
-                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+              ? 'border-blue-500 text-blue-600'
+              : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
               } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm`}
           >
             Donations
@@ -226,8 +226,8 @@ export default function HistoryPage() {
           <button
             onClick={() => setActiveTab('surrogacy')}
             className={`${activeTab === 'surrogacy'
-                ? 'border-blue-500 text-blue-600'
-                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+              ? 'border-blue-500 text-blue-600'
+              : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
               } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm`}
           >
             Surrogacy

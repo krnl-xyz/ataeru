@@ -26,18 +26,26 @@ export const signup = async (req: Request, res: Response, next: NextFunction) =>
   try {
     const { fullname, email, password, phone, address, about, hospitalId, userType } = req.body;
 
-    // Validate required fields
-    if (!fullname || !email || !password || !phone || !address || !hospitalId) {
-      return res.status(400).json({
-        message: "Missing required fields: fullname, email, password, phone, address, and hospitalId are required",
-      });
-    }
-
     // Validate userType if provided (must be USER or MEDICAL_FACILITY)
     const validUserTypes = ['USER', 'MEDICAL_FACILITY'];
     const finalUserType = userType && validUserTypes.includes(userType.toUpperCase())
       ? userType.toUpperCase()
       : 'USER'; // Default to USER if not provided or invalid
+
+    // Validate required fields
+    // hospitalId is required for USER type, optional for MEDICAL_FACILITY
+    if (!fullname || !email || !password || !phone || !address) {
+      return res.status(400).json({
+        message: "Missing required fields: fullname, email, password, phone, and address are required",
+      });
+    }
+
+    // hospitalId is required for regular USERs, optional for MEDICAL_FACILITY
+    if (finalUserType === 'USER' && !hospitalId) {
+      return res.status(400).json({
+        message: "hospitalId is required for USER type",
+      });
+    }
 
     // Validate password strength (minimum 6 characters)
     if (password.length < 6) {
@@ -65,13 +73,15 @@ export const signup = async (req: Request, res: Response, next: NextFunction) =>
       });
     }
 
-    // Verify that the hospital exists
-    const hospital = await prisma.hospitalInformation.findUnique({
-      where: { facilityId: hospitalId },
-    });
+    // Verify that the hospital exists (only if hospitalId is provided)
+    if (hospitalId) {
+      const hospital = await prisma.hospitalInformation.findUnique({
+        where: { facilityId: hospitalId },
+      });
 
-    if (!hospital) {
-      return res.status(404).json({ message: "Hospital not found" });
+      if (!hospital) {
+        return res.status(404).json({ message: "Hospital not found" });
+      }
     }
 
     // Hash password
@@ -91,7 +101,7 @@ export const signup = async (req: Request, res: Response, next: NextFunction) =>
         address,
         about: about || null,
         userType: finalUserType as 'USER' | 'MEDICAL_FACILITY',
-        hospitalId,
+        hospitalId: hospitalId || null, // Optional for MEDICAL_FACILITY
       },
       select: {
         id: true,
@@ -120,6 +130,22 @@ export const signup = async (req: Request, res: Response, next: NextFunction) =>
             hospitalOverallRating: true,
             hospitalOverallRatingFootnote: true,
             emergencyServices: true,
+          },
+        },
+        registeredHospital: {
+          select: {
+            id: true,
+            name: true,
+            location: true,
+            rating: true,
+            specialties: true,
+            imageUrl: true,
+            isFavorite: true,
+            reviews: true,
+            verified: true,
+            walletAddress: true,
+            createdAt: true,
+            updatedAt: true,
           },
         },
       },
@@ -160,12 +186,9 @@ export const login = async (req: Request, res: Response, next: NextFunction) => 
       });
     }
 
-    // Find user by email (include password for verification)
+    // Find user by email (we need password for verification, so we'll fetch it separately)
     const user = await prisma.user.findUnique({
       where: { email },
-      include: {
-        hospital: true,
-      },
     });
 
     if (!user) {
@@ -183,15 +206,63 @@ export const login = async (req: Request, res: Response, next: NextFunction) => 
       });
     }
 
+    // Fetch user data without password for response
+    const userData = await prisma.user.findUnique({
+      where: { id: user.id },
+      select: {
+        id: true,
+        fullname: true,
+        email: true,
+        witnesshash: true,
+        phone: true,
+        address: true,
+        about: true,
+        userType: true,
+        hospitalId: true,
+        createdAt: true,
+        updatedAt: true,
+        hospital: {
+          select: {
+            facilityId: true,
+            facilityName: true,
+            address: true,
+            city: true,
+            zip: true,
+            state: true,
+            country: true,
+            telephone: true,
+            hospitalType: true,
+            hospitalOwnership: true,
+            hospitalOverallRating: true,
+            hospitalOverallRatingFootnote: true,
+            emergencyServices: true,
+          },
+        },
+        registeredHospital: {
+          select: {
+            id: true,
+            name: true,
+            location: true,
+            rating: true,
+            specialties: true,
+            imageUrl: true,
+            isFavorite: true,
+            reviews: true,
+            verified: true,
+            walletAddress: true,
+            createdAt: true,
+            updatedAt: true,
+          },
+        },
+      },
+    });
+
     // Generate JWT token
     const token = generateToken(user.id, user.email);
 
-    // Return user data (without password)
-    const { password: _, ...userWithoutPassword } = user;
-
     res.status(200).json({
       message: "Login successful",
-      user: userWithoutPassword,
+      user: userData,
       token,
     });
   } catch (error) {
@@ -237,6 +308,22 @@ export const getCurrentUser = async (req: Request, res: Response, next: NextFunc
             hospitalOverallRating: true,
             hospitalOverallRatingFootnote: true,
             emergencyServices: true,
+          },
+        },
+        registeredHospital: {
+          select: {
+            id: true,
+            name: true,
+            location: true,
+            rating: true,
+            specialties: true,
+            imageUrl: true,
+            isFavorite: true,
+            reviews: true,
+            verified: true,
+            walletAddress: true,
+            createdAt: true,
+            updatedAt: true,
           },
         },
       },
@@ -325,6 +412,22 @@ export const updateProfile = async (req: Request, res: Response, next: NextFunct
             hospitalOverallRating: true,
             hospitalOverallRatingFootnote: true,
             emergencyServices: true,
+          },
+        },
+        registeredHospital: {
+          select: {
+            id: true,
+            name: true,
+            location: true,
+            rating: true,
+            specialties: true,
+            imageUrl: true,
+            isFavorite: true,
+            reviews: true,
+            verified: true,
+            walletAddress: true,
+            createdAt: true,
+            updatedAt: true,
           },
         },
       },

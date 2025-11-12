@@ -97,7 +97,7 @@ export default function Dashboard() {
         type: 'appointment',
         title: 'Fertility Consultation',
         date: '2023-11-15',
-        hospital: 'Ataeru Main Center',
+        hospital: 'Synhealth Main Center',
         status: 'Completed'
       },
       {

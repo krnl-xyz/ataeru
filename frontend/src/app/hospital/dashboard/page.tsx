@@ -4,9 +4,14 @@ import { useEffect, useState } from 'react';
 import Image from 'next/image';
 import Footer from '@/components/Footer';
 import DonorRequestModal from '@/components/DonorRequestModal';
+import HospitalVerificationModal from '@/components/HospitalVerificationModal';
 import { useAccount, useReadContract } from 'wagmi';
 import { entryPointABI, entryPointAddress } from '@/contract/web3';
 import { hospitalRequestABI } from '@/contract/web3';
+import { hospitalService, RegisteredHospital } from '@/lib/services/hospital';
+import { useAuth } from '@/app/contexts/use-auth';
+import { toast } from 'sonner';
+import { Shield, ShieldCheck, Building2, MapPin, Star, X, Loader2 } from 'lucide-react';
 
 
 interface DonorRequest {
@@ -101,12 +106,17 @@ interface HospitalInfo {
 // }
 
 export default function HospitalDashboard() {
-  // const { isOnboarded, userType, isHospitalVerified, setIsHospitalVerified } = useAuth();
-  // const router = useRouter();
+  const { user } = useAuth();
   const [activeTab, setActiveTab] = useState('dashboard');
   const [isDonorRequestModalOpen, setIsDonorRequestModalOpen] = useState(false);
   const [donorRequests, setDonorRequests] = useState<DonorRequest[]>([]);
   const { address: account } = useAccount();
+  const [hospital, setHospital] = useState<RegisteredHospital | null>(null);
+  const [isLoadingHospital, setIsLoadingHospital] = useState(true);
+  const [isVerificationModalOpen, setIsVerificationModalOpen] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+  const [editFormData, setEditFormData] = useState<Partial<RegisteredHospital>>({});
+  const [isSaving, setIsSaving] = useState(false);
 
   const { data: hospitalInfo } = useReadContract({
     abi: entryPointABI,
@@ -135,6 +145,68 @@ export default function HospitalDashboard() {
   useEffect(() => {
     setDonorRequests((prev) => [...prev, currentRequest as DonorRequest]);
   }, [currentRequest]);
+
+  // Load hospital data
+  useEffect(() => {
+    if (user?.userType === 'MEDICAL_FACILITY') {
+      loadHospital();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user]);
+
+  const loadHospital = async () => {
+    setIsLoadingHospital(true);
+    try {
+      const hospitalData = await hospitalService.getMyHospital();
+      setHospital(hospitalData);
+      if (hospitalData) {
+        setEditFormData({
+          name: hospitalData.name,
+          location: hospitalData.location,
+          rating: hospitalData.rating,
+          specialties: hospitalData.specialties,
+          imageUrl: hospitalData.imageUrl,
+        });
+      }
+    } catch (error: any) {
+      console.error('Error loading hospital:', error);
+      toast.error('Failed to load hospital data', {
+        description: error.message || 'Please try again later',
+      });
+    } finally {
+      setIsLoadingHospital(false);
+    }
+  };
+
+  const handleSaveChanges = async () => {
+    if (!hospital) return;
+
+    setIsSaving(true);
+    try {
+      const updated = await hospitalService.updateHospital(hospital.id, {
+        name: editFormData.name,
+        location: editFormData.location,
+        rating: editFormData.rating,
+        specialties: editFormData.specialties,
+        imageUrl: editFormData.imageUrl,
+      });
+      setHospital(updated);
+      setIsEditing(false);
+      toast.success('Hospital details updated successfully');
+    } catch (error: any) {
+      console.error('Error updating hospital:', error);
+      toast.error('Failed to update hospital details', {
+        description: error.message || 'Please try again',
+      });
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleVerificationSuccess = async () => {
+    await loadHospital();
+    toast.success('Verification completed successfully');
+  };
 
   console.log(currentRequest);
   // const { data: currentRequest } = useReadContract({
@@ -223,16 +295,37 @@ export default function HospitalDashboard() {
       <main className="flex-grow">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
           <div className="flex justify-between items-center mb-8">
-            <h1 className="text-2xl font-bold text-gray-900">Hospital Dashboard</h1>
+            <div>
+              <h1 className="text-2xl font-bold text-gray-900">Hospital Dashboard</h1>
+              {hospital && (
+                <p className="text-sm text-gray-500 mt-1">{hospital.name}</p>
+              )}
+            </div>
             <div className="flex items-center gap-2">
-              <span className="bg-green-100 text-green-600 text-xs px-2 py-1 rounded-full">Verified</span>
-              <Image
-                src="/images/logo.svg"
-                alt="Hospital Logo"
-                width={40}
-                height={40}
-                className="rounded-full"
-              />
+              {hospital?.isVerified ? (
+                <span className="bg-green-100 text-green-600 text-xs px-3 py-1 rounded-full flex items-center gap-1">
+                  <ShieldCheck className="h-3 w-3" />
+                  Verified
+                </span>
+              ) : (
+                <span className="bg-gray-100 text-gray-600 text-xs px-3 py-1 rounded-full flex items-center gap-1">
+                  <Shield className="h-3 w-3" />
+                  Not Verified
+                </span>
+              )}
+              {hospital?.imageUrl ? (
+                <Image
+                  src={hospital.imageUrl}
+                  alt={hospital.name}
+                  width={40}
+                  height={40}
+                  className="rounded-full object-cover"
+                />
+              ) : (
+                <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center">
+                  <Building2 className="h-5 w-5 text-blue-600" />
+                </div>
+              )}
             </div>
           </div>
 
@@ -496,7 +589,270 @@ export default function HospitalDashboard() {
             </div>
           )}
 
-          {activeTab !== 'dashboard' && (
+          {activeTab === 'settings' && (
+            <div className="space-y-6">
+              {isLoadingHospital ? (
+                <div className="bg-white rounded-xl border border-gray-200 p-8 text-center">
+                  <Loader2 className="h-8 w-8 animate-spin text-blue-600 mx-auto mb-4" />
+                  <p className="text-gray-600">Loading hospital information...</p>
+                </div>
+              ) : !hospital ? (
+                <div className="bg-white rounded-xl border border-gray-200 p-8 text-center">
+                  <Building2 className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                  <h3 className="text-lg font-medium text-gray-900 mb-2">No Hospital Registered</h3>
+                  <p className="text-gray-600 mb-6">
+                    Please register your hospital first to access settings.
+                  </p>
+                </div>
+              ) : (
+                <div className="bg-white rounded-xl overflow-hidden">
+                  {/* Verification Status */}
+                  <div className="rounded-lg border bg-gray-200 mx-4 px-4 py-2">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <h3 className="font-medium text-gray-900 mb-1">Verification Status</h3>
+                        <p className="text-sm text-gray-600">
+                          {hospital.isVerified
+                            ? 'Your hospital has been verified and is trusted by patients.'
+                            : 'Verify your hospital to build trust and credibility with patients.'}
+                        </p>
+                        {hospital.verificationDate && (
+                          <p className="text-xs text-gray-500 mt-1">
+                            Verified on {new Date(hospital.verificationDate).toLocaleDateString()}
+                          </p>
+                        )}
+                      </div>
+                      {!hospital.isVerified && (
+                        <button
+                          onClick={() => setIsVerificationModalOpen(true)}
+                          className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 flex items-center gap-2"
+                        >
+                          Verify Now
+                        </button>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="px-6 py-4 flex justify-between items-center">
+                    <div></div>
+                    {!isEditing ? (
+                      <button
+                        onClick={() => setIsEditing(true)}
+                        className="px-4 py-2 text-black underline rounded-lg text-sm"
+                      >
+                        Edit Details
+                      </button>
+                    ) : (
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => {
+                            setIsEditing(false);
+                            setEditFormData({
+                              name: hospital.name,
+                              location: hospital.location,
+                              rating: hospital.rating,
+                              specialties: hospital.specialties,
+                              imageUrl: hospital.imageUrl,
+                            });
+                          }}
+                          className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 text-sm"
+                        >
+                          Cancel
+                        </button>
+                        <button
+                          onClick={handleSaveChanges}
+                          disabled={isSaving}
+                          className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 text-sm disabled:opacity-50"
+                        >
+                          {isSaving ? 'Saving...' : 'Save Changes'}
+                        </button>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="p-6 space-y-6">
+
+                    <div className="md:col-span-2">
+
+                      {hospital.imageUrl && (
+                        <div className="mb-2">
+                          <Image
+                            src={hospital.imageUrl}
+                            alt={hospital.name}
+                            width={100}
+                            height={100}
+                            className="rounded-lg border border-gray-200 w-full h-full object-cover"
+                          />
+                        </div>
+                      )}
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Image URL
+                      </label>
+                      {isEditing ? (
+                        <input
+                          type="url"
+                          value={editFormData.imageUrl || ''}
+                          onChange={(e) => setEditFormData({ ...editFormData, imageUrl: e.target.value })}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                          placeholder="https://..."
+                        />
+                      ) : (
+                        <div className="text-gray-900 text-sm break-all">{hospital.imageUrl || 'No image URL set'}</div>
+                      )}
+                    </div>
+                    {/* Hospital Information */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Hospital Name
+                        </label>
+                        {isEditing ? (
+                          <input
+                            type="text"
+                            value={editFormData.name || ''}
+                            onChange={(e) => setEditFormData({ ...editFormData, name: e.target.value })}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                          />
+                        ) : (
+                          <div className="text-gray-900 font-medium">{hospital.name}</div>
+                        )}
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Location
+                        </label>
+                        {isEditing ? (
+                          <input
+                            type="text"
+                            value={editFormData.location || ''}
+                            onChange={(e) => setEditFormData({ ...editFormData, location: e.target.value })}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                            placeholder="e.g., Boston, MA"
+                          />
+                        ) : (
+                          <div className="text-gray-900 flex items-center gap-1">
+                            {hospital.location}
+                          </div>
+                        )}
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Rating
+                        </label>
+                        {isEditing ? (
+                          <input
+                            type="number"
+                            min="0"
+                            max="5"
+                            step="0.1"
+                            value={editFormData.rating || 0}
+                            onChange={(e) => setEditFormData({ ...editFormData, rating: parseFloat(e.target.value) || 0 })}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                          />
+                        ) : (
+                          <div className="text-gray-900 flex items-center gap-1">
+                            <Star className="h-4 w-4 text-yellow-400 fill-current" />
+                            {hospital.rating.toFixed(1)} / 5.0
+                          </div>
+                        )}
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Wallet Address
+                        </label>
+                        <div className="text-gray-900 font-mono text-sm">{hospital.walletAddress}</div>
+                      </div>
+
+
+                      <div className="md:col-span-2">
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Specialties
+                        </label>
+                        {isEditing ? (
+                          <div className="space-y-2">
+                            <div className="flex flex-wrap gap-2">
+                              {editFormData.specialties?.map((specialty, index) => (
+                                <span
+                                  key={index}
+                                  className="inline-flex items-center gap-1 px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm"
+                                >
+                                  {specialty}
+                                  <button
+                                    onClick={() => {
+                                      const newSpecialties = editFormData.specialties?.filter((_, i) => i !== index) || [];
+                                      setEditFormData({ ...editFormData, specialties: newSpecialties });
+                                    }}
+                                    className="hover:text-blue-900"
+                                  >
+                                    <X className="h-3 w-3" />
+                                  </button>
+                                </span>
+                              ))}
+                            </div>
+                            <input
+                              type="text"
+                              placeholder="Add specialty and press Enter"
+                              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                              onKeyDown={(e) => {
+                                if (e.key === 'Enter') {
+                                  e.preventDefault();
+                                  const value = e.currentTarget.value.trim();
+                                  if (value && !editFormData.specialties?.includes(value)) {
+                                    setEditFormData({
+                                      ...editFormData,
+                                      specialties: [...(editFormData.specialties || []), value],
+                                    });
+                                    e.currentTarget.value = '';
+                                  }
+                                }
+                              }}
+                            />
+                          </div>
+                        ) : (
+                          <div className="flex flex-wrap gap-2">
+                            {hospital.specialties.length > 0 ? (
+                              hospital.specialties.map((specialty, index) => (
+                                <span
+                                  key={index}
+                                  className="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm"
+                                >
+                                  {specialty}
+                                </span>
+                              ))
+                            ) : (
+                              <span className="text-gray-500 text-sm">No specialties listed</span>
+                            )}
+                          </div>
+                        )}
+                      </div>
+
+                      <div className="md:col-span-2 pt-4 border-t border-gray-200">
+                        <div className="grid grid-cols-2 gap-4 text-sm">
+                          <div>
+                            <span className="text-gray-500">Created:</span>
+                            <span className="ml-2 text-gray-900">
+                              {new Date(hospital.createdAt).toLocaleDateString()}
+                            </span>
+                          </div>
+                          <div>
+                            <span className="text-gray-500">Last Updated:</span>
+                            <span className="ml-2 text-gray-900">
+                              {new Date(hospital.updatedAt).toLocaleDateString()}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
+          {activeTab !== 'dashboard' && activeTab !== 'donors' && activeTab !== 'settings' && (
             <div className="bg-white rounded-xl border border-gray-200 p-8 text-center">
               <h3 className="text-lg font-medium text-gray-900 mb-2">Coming Soon</h3>
               <p className="text-gray-600 mb-6">
@@ -517,6 +873,16 @@ export default function HospitalDashboard() {
           isOpen={isDonorRequestModalOpen}
           onClose={() => setIsDonorRequestModalOpen(false)}
         />
+
+        {/* Verification Modal */}
+        {hospital && (
+          <HospitalVerificationModal
+            isOpen={isVerificationModalOpen}
+            onClose={() => setIsVerificationModalOpen(false)}
+            onSuccess={handleVerificationSuccess}
+            hospitalId={hospital.id}
+          />
+        )}
       </main>
 
       <Footer />

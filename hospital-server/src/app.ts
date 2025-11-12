@@ -2,6 +2,7 @@ import express from 'express';
 import facilityRoutes from './routes/facility.routes';
 import userRoutes from './routes/user.routes';
 import authRoutes from './routes/auth.routes';
+import hospitalRoutes from './routes/hospital.routes';
 import { errorHandler } from './middlewares/errorHandler';
 import cors from 'cors';
 
@@ -65,6 +66,7 @@ app.get('/health', (req, res) => {
 app.use('/api/auth', authRoutes);
 app.use('/api/facilities', facilityRoutes);
 app.use('/api/users', userRoutes);
+app.use('/api/hospitals', hospitalRoutes);
 
 // Global error handler (should be after routes)
 app.use(errorHandler);

@@ -30,6 +30,14 @@ const nextConfig: NextConfig = {
         protocol: 'https',
         hostname: 'coral-worrying-turtle-782.mypinata.cloud',
       },
+      {
+        protocol: 'https',
+        hostname: 'www.hfmmagazine.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'www.geneticclinic.com.au',
+      },
     ],
   },
 };

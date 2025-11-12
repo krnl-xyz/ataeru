@@ -76,8 +76,8 @@ export default function FertilityTreatmentForm() {
             Back to Home
           </Link>
           <div className="flex items-center gap-2">
-            <Image src="/images/logo.svg" alt="Ataeru Logo" width={32} height={32} className="w-8 h-8" />
-            <span className="text-xl font-bold text-blue-600">Ataeru</span>
+            <Image src="/images/logo.svg" alt="Synhealth Logo" width={32} height={32} className="w-8 h-8" />
+            <span className="text-xl font-bold text-blue-600">Synhealth</span>
           </div>
         </div>
 
@@ -464,7 +464,7 @@ export default function FertilityTreatmentForm() {
                     </div>
 
                     <div className="bg-blue-50 p-4 rounded-lg mb-6">
-                      <h3 className="font-bold text-blue-800 mb-2">Ataeru Commitment</h3>
+                      <h3 className="font-bold text-blue-800 mb-2">Synhealth Commitment</h3>
                       <p className="text-sm text-blue-700">
                         We believe in making fertility treatments accessible and affordable. Our blockchain-based platform enables transparent pricing, secure payment options including cryptocurrency, and streamlined insurance processing where applicable.
                       </p>
@@ -512,7 +512,7 @@ export default function FertilityTreatmentForm() {
                           className="mt-1 h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
                         />
                         <label htmlFor="agreeToContact" className="ml-3 text-sm text-gray-700">
-                          I consent to be contacted by Ataeru representatives regarding my fertility treatment options *
+                          I consent to be contacted by Synhealth representatives regarding my fertility treatment options *
                         </label>
                       </div>
                     </div>
@@ -563,7 +563,7 @@ export default function FertilityTreatmentForm() {
                     <p>• Most treatments can begin within 2-4 weeks of approval</p>
                     <p>• Financing options available with 0% interest for qualified applicants</p>
                     <p>• Crypto payments accepted (BTC, ETH, USDC) with 5% discount</p>
-                    <p>• Questions? Contact us at fertility@Ataeru.eth</p>
+                    <p>• Questions? Contact us at fertility@Synhealth.eth</p>
                   </div>
                 </div>
               </div>

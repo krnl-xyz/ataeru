@@ -9,7 +9,7 @@ export default function Loading() {
         <div className="animate-pulse">
           <Image
             src="/images/logo.svg"
-            alt="Ataeru Logo"
+            alt="Synhealth Logo"
             width={80}
             height={80}
             className="w-20 h-20"
@@ -17,7 +17,7 @@ export default function Loading() {
         </div>
 
         <h1 className="text-4xl font-bold text-blue-600 mt-6">
-          Ataeru
+          Synhealth
         </h1>
 
         <div className="mt-8 flex space-x-2">

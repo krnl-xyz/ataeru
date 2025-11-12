@@ -187,7 +187,7 @@ export default function Home() {
             </p>
             <p className="mt-4 sm:mt-6 text-gray-600 text-sm sm:text-base">
               Dr. Sarah Johnson<br />
-              Medical Director & Blockchain Advisor, Ataeru
+              Medical Director & Blockchain Advisor, Synhealth
             </p>
           </div>
         </div>

@@ -67,7 +67,7 @@ export default function MobileMenu() {
       {isOpen && (
         <div className="fixed inset-0 z-50 flex flex-col bg-white">
           <div className="flex justify-between items-center p-4 border-b">
-            <div className="text-xl font-bold text-blue-600">Ataeru</div>
+            <div className="text-xl font-bold text-blue-600">Synhealth</div>
             <button
               onClick={closeMenu}
               className="flex items-center justify-center h-10 w-10 rounded-md text-gray-600 hover:text-gray-900 focus:outline-none"

@@ -7,12 +7,16 @@ import { useAccount, useDisconnect } from 'wagmi';
 import { ConnectButton } from '@rainbow-me/rainbowkit';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Separator } from '@/components/ui/separator';
-import { Copy, LogOut, User, Wallet, ChevronDown, ExternalLink } from 'lucide-react';
+import { Copy, LogOut, User as UserIcon, Wallet, ExternalLink, Settings, ChevronDown } from 'lucide-react';
 import { toast } from 'sonner';
 
-export default function UserProfileDropdown() {
+interface SidebarUserDropdownProps {
+  isSidebarOpen: boolean;
+}
+
+export default function SidebarUserDropdown({ isSidebarOpen }: SidebarUserDropdownProps) {
   const { user, logout } = useAuth();
-  const { address, isConnected } = useAccount();
+  const { isConnected } = useAccount();
   const { disconnect } = useDisconnect();
   const [open, setOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -67,22 +71,28 @@ export default function UserProfileDropdown() {
     <div className="relative" ref={dropdownRef}>
       <button
         onClick={() => setOpen(!open)}
-        className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-gray-100 transition-colors"
+        className={`flex items-center gap-2 ${isSidebarOpen ? 'w-full px-3 py-2' : 'p-2'} rounded-lg hover:bg-gray-800 transition-colors text-gray-400 hover:text-gray-200`}
       >
-        <Avatar className="h-8 w-8">
-          <AvatarImage src="" alt={user.fullname} />
-          <AvatarFallback className="bg-blue-100 text-blue-600">
-            {getInitials(user.fullname)}
-          </AvatarFallback>
-        </Avatar>
-        <span className="hidden sm:block text-sm font-medium text-gray-700">
-          {user.fullname}
-        </span>
-        <ChevronDown className="h-4 w-4 text-gray-500 hidden sm:block" />
+        {isSidebarOpen ? (
+          <>
+            <Avatar className="h-8 w-8">
+              <AvatarImage src="" alt={user.fullname} />
+              <AvatarFallback className="bg-blue-600 text-white text-xs">
+                {getInitials(user.fullname)}
+              </AvatarFallback>
+            </Avatar>
+            <span className="text-sm font-medium text-gray-300 truncate flex-1 text-left">
+              {user.fullname}
+            </span>
+            <ChevronDown className="h-4 w-4 text-gray-400" />
+          </>
+        ) : (
+          <Settings className="w-5 h-5" />
+        )}
       </button>
 
       {open && (
-        <div className="absolute right-0 top-full mt-2 w-80 z-50">
+        <div className={`absolute ${isSidebarOpen ? 'left-0 bottom-20' : 'left-15 ml-2'} bottom-0 mt-2 w-80 z-50`}>
           <div className="p-4 bg-[#1a1a1a] border border-gray-800 rounded-lg shadow-lg">
             {/* User Info Section */}
             <div className="flex items-center gap-3 mb-4">
@@ -208,12 +218,11 @@ export default function UserProfileDropdown() {
                     {user.userType && (
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2">
-                          <User className="h-4 w-4 text-gray-400" />
+                          <UserIcon className="h-4 w-4 text-gray-400" />
                           <span className="text-sm text-gray-400">Account Type</span>
                         </div>
                         <span className="text-xs px-2 py-1 bg-blue-600/20 text-blue-400 border border-blue-500/50 rounded-full lowercase">
                           {user.userType}
-                          {/* {user.userType === 'USER' ? 'User' : 'Medical Facility'} */}
                         </span>
                       </div>
                     )}

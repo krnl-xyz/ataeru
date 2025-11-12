@@ -54,8 +54,8 @@ export default function Header({ handleScrollToSection }: HeaderProps) {
       <nav className="w-full flex justify-between items-center max-w-7xl mx-auto py-4 sm:py-6 px-4 sm:px-6">
         <div className="flex items-center gap-4 sm:gap-12">
           <div className="text-2xl text-blue-600 font-bold flex items-center gap-2">
-            <Image src="/images/logo.svg" alt="Ataeru Logo" width={32} height={32} className="w-8 h-8" />
-            Ataeru
+            <Image src="/images/logo.svg" alt="Synhealth Logo" width={32} height={32} className="w-8 h-8" />
+            Synhealth
           </div>
           <div className="hidden lg:flex gap-6 sm:gap-8">
             <a href="#hero" className="text-sm hover:text-blue-600" onClick={(e) => handleScrollToSection?.(e, 'hero')}>Home</a>

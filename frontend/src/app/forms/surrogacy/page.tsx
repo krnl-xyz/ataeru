@@ -71,8 +71,8 @@ export default function SurrogacyForm() {
             Back to Home
           </Link>
           <div className="flex items-center gap-2">
-            <Image src="/images/logo.svg" alt="Ataeru Logo" width={32} height={32} className="w-8 h-8" />
-            <span className="text-xl font-bold text-blue-600">Ataeru</span>
+            <Image src="/images/logo.svg" alt="Synhealth Logo" width={32} height={32} className="w-8 h-8" />
+            <span className="text-xl font-bold text-blue-600">Synhealth</span>
           </div>
         </div>
 
@@ -367,7 +367,7 @@ export default function SurrogacyForm() {
                     <div className="bg-blue-50 p-4 rounded-lg mb-6">
                       <h3 className="font-bold text-blue-800 mb-2">Smart Contract Information</h3>
                       <p className="text-sm text-blue-700">
-                        Ataeru uses smart contracts to ensure secure and transparent agreements between surrogates and intended parents. Your compensation and medical expenses will be stored in an escrow account with milestone-based releases.
+                        Synhealth uses smart contracts to ensure secure and transparent agreements between surrogates and intended parents. Your compensation and medical expenses will be stored in an escrow account with milestone-based releases.
                       </p>
                     </div>
 
@@ -463,7 +463,7 @@ export default function SurrogacyForm() {
                     <p>• Surrogates must be between 21-40 years old with at least one healthy pregnancy</p>
                     <p>• Compensation starts at $25,000 USD (paid in crypto-equivalent) plus expenses</p>
                     <p>• Smart contract escrow ensures payment security and milestone-based releases</p>
-                    <p>• Questions? Contact us at surrogacy@Ataeru.eth</p>
+                    <p>• Questions? Contact us at surrogacy@Synhealth.eth</p>
                   </div>
                 </div>
               </div>

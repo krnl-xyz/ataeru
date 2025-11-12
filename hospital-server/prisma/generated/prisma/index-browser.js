@@ -199,6 +199,22 @@ exports.Prisma.UserScalarFieldEnum = {
   updatedAt: 'updatedAt'
 };
 
+exports.Prisma.HospitalScalarFieldEnum = {
+  id: 'id',
+  name: 'name',
+  location: 'location',
+  rating: 'rating',
+  specialties: 'specialties',
+  imageUrl: 'imageUrl',
+  isFavorite: 'isFavorite',
+  reviews: 'reviews',
+  verified: 'verified',
+  walletAddress: 'walletAddress',
+  ownerId: 'ownerId',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
 exports.Prisma.SortOrder = {
   asc: 'asc',
   desc: 'desc'
@@ -223,7 +239,8 @@ exports.Prisma.ModelName = {
   QualityReport: 'QualityReport',
   HcahpsHospitalSurvery: 'HcahpsHospitalSurvery',
   HospitalInformation: 'HospitalInformation',
-  User: 'User'
+  User: 'User',
+  Hospital: 'Hospital'
 };
 
 /**
