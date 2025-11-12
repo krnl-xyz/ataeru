@@ -63,9 +63,9 @@ export default function RegistrationModal() {
   if (!selectedType) {
     return (
       <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
-        <div className="bg-white rounded-2xl p-6 w-full max-w-lg shadow-2xl">
+        <div className="bg-[#1a1a1a] rounded-2xl p-6 w-full max-w-lg shadow-2xl">
           <div className="flex justify-between items-center mb-6">
-            <h2 className="text-xl font-bold text-gray-900">Select Account Type</h2>
+            <h2 className="text-xl font-bold text-foreground">Select Account Type</h2>
             <button onClick={closeRegistrationModal} className="text-gray-500 hover:text-gray-700">
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -76,9 +76,9 @@ export default function RegistrationModal() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <button
               onClick={() => setSelectedType('user')}
-              className="rounded-xl hover:border-blue-500 transition-all text-left group overflow-hidden"
+              className="rounded-xl hover:border-blue-500 transition-all text-left group overflow-hidden bg-background"
             >
-              <div className="relative aspect-[4/3] rounded-t-xl overflow-hidden">
+              <div className="relative aspect-[4/3] rounded-t-xl overflow-hidden bg-background">
                 <Image
                   src="https://i.imgur.com/qXaBeHO.png"
                   alt="User Registration"
@@ -88,9 +88,9 @@ export default function RegistrationModal() {
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-white/80 to-transparent"></div>
               </div>
-              <div className="p-4 bg-gradient-to-br from-gray-50 to-blue-50 rounded-b-xl border border-t-0 border-gray-200 group-hover:border-blue-300">
-                <h3 className="font-bold text-lg mb-2 text-gray-900">Individual User</h3>
-                <p className="text-gray-600 text-sm">
+              <div className="p-4 bg-[#1a1a1a] from-gray-50 to-blue-50 rounded-b-xl border border-t-0 border-gray-800 group-hover:border-blue-300">
+                <h3 className="font-bold text-lg mb-2 text-foreground">Individual User</h3>
+                <p className="text-gray-300 text-sm">
                   Access fertility services, find donors, or become a donor yourself.
                 </p>
               </div>
@@ -110,9 +110,9 @@ export default function RegistrationModal() {
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-white/80 to-transparent"></div>
               </div>
-              <div className="p-4 bg-gradient-to-br from-gray-50 to-blue-50 rounded-b-xl border border-t-0 border-gray-200 group-hover:border-blue-300">
-                <h3 className="font-bold text-lg mb-2 text-gray-900">Medical Facility</h3>
-                <p className="text-gray-600 text-sm">
+              <div className="p-4 bg-[#1a1a1a] from-gray-50 to-blue-50 rounded-b-xl border border-t-0 border-gray-800 group-hover:border-blue-300">
+                <h3 className="font-bold text-lg mb-2 text-foreground">Medical Facility</h3>
+                <p className="text-gray-300 text-sm">
                   Offer fertility services to patients and manage donor programs.
                 </p>
               </div>
@@ -126,9 +126,9 @@ export default function RegistrationModal() {
   if (isRegistrationModalOpen) {
     return (
       <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
-        <div className="bg-white rounded-2xl p-6 w-full max-w-md shadow-2xl">
+        <div className="bg-[#0a0a0a] rounded-2xl p-6 w-full max-w-lg shadow-2xl">
           <div className="flex justify-between items-center mb-6">
-            <h2 className="text-xl font-bold text-gray-900">
+            <h2 className="text-xl font-bold text-foreground">
               {selectedType === 'user' ? 'User Registration' : 'Hospital Registration'}
             </h2>
             <button onClick={closeRegistrationModal} className="text-gray-500 hover:text-gray-700">
@@ -148,7 +148,7 @@ export default function RegistrationModal() {
                 value={formData.fullname}
                 placeholder={selectedType === 'user' ? "Enter your full name" : "Enter facility name"}
                 onChange={(e) => setFormData(prev => ({ ...prev, fullname: e.target.value }))}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className="w-full px-3 py-2 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 required
               />
             </div>
@@ -160,7 +160,7 @@ export default function RegistrationModal() {
                 value={formData.email}
                 placeholder="Enter email address"
                 onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className="w-full px-3 py-2 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 required
               />
             </div>
@@ -172,7 +172,7 @@ export default function RegistrationModal() {
                 value={formData.password}
                 placeholder="Enter password"
                 onChange={(e) => setFormData(prev => ({ ...prev, password: e.target.value }))}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className="w-full px-3 py-2 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 required
                 minLength={6}
               />
@@ -185,7 +185,7 @@ export default function RegistrationModal() {
                 value={formData.phone}
                 placeholder="+1234567890"
                 onChange={(e) => setFormData(prev => ({ ...prev, phone: e.target.value }))}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className="w-full px-3 py-2 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 required
               />
             </div>
@@ -197,7 +197,7 @@ export default function RegistrationModal() {
                 value={formData.hospitalId}
                 placeholder="10001"
                 onChange={(e) => setFormData(prev => ({ ...prev, hospitalId: e.target.value }))}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className="w-full px-3 py-2 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 required
               />
             </div>
@@ -208,7 +208,7 @@ export default function RegistrationModal() {
                 value={formData.address}
                 onChange={(e) => setFormData(prev => ({ ...prev, address: e.target.value }))}
                 placeholder={selectedType === 'user' ? "Enter your address" : "Enter facility address"}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className="w-full px-3 py-2 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 rows={3}
                 required
               />
@@ -220,7 +220,7 @@ export default function RegistrationModal() {
                 value={formData.about}
                 onChange={(e) => setFormData(prev => ({ ...prev, about: e.target.value }))}
                 placeholder={selectedType === 'user' ? "A short description about yourself" : "About the facility"}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className="w-full px-3 py-2 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 rows={3}
                 required
               />
@@ -230,17 +230,17 @@ export default function RegistrationModal() {
               <button
                 type="submit"
                 disabled={isSubmitting || isLoading}
-                className="flex-1 bg-gradient-to-r from-blue-600 to-blue-700 text-white px-4 py-2 rounded-lg hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex-1 bg-gradient-to-r from-blue-600 to-blue-700 text-white px-4 py-2 rounded-lg hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed transition-opacity"
               >
                 {isSubmitting || isLoading ? 'Registering...' : 'Register'}
               </button>
-              <button
+              {/* <button
                 type="button"
                 onClick={() => setSelectedType(null)}
                 className="flex-1 border border-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-50"
               >
                 Back
-              </button>
+              </button> */}
             </div>
           </form>
         </div>
