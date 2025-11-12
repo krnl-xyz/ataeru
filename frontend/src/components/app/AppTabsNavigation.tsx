@@ -33,7 +33,7 @@ export default function AppTabsNavigation({
           : 'text-gray-400 hover:text-gray-200'
           }`}
       >
-        Apps
+        AI
       </button>
       <button
         onClick={() => onViewChange('dashboard')}

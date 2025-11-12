@@ -14,6 +14,7 @@ import { entryPointABI, entryPointAddress, hospitalRequestABI } from '@/contract
 import { hospitalService, RegisteredHospital } from '@/lib/services/hospital';
 import SidebarUserDropdown from '@/components/app/SidebarUserDropdown';
 import AppTabsNavigation from '@/components/app/AppTabsNavigation';
+import ConsultationManager from '@/components/consultations/ConsultationManager';
 
 export default function AppPage() {
   const { user, isLoading: authLoading, isAuthenticated, updateProfile, changePassword, openLoginModal } = useAuth();
@@ -96,10 +97,10 @@ export default function AppPage() {
 
   // Mock agents/apps list
   const agents = [
-    { id: 'fertility-ai', name: 'Fertility AI Assistant', icon: Sparkles, description: 'AI-powered fertility guidance', color: 'bg-blue-500' },
+    { id: 'fertility-ai', name: 'AI Assistant', icon: Sparkles, description: 'AI-powered fertility guidance', color: 'bg-blue-500' },
     { id: 'hospital-manager', name: 'Hospital Manager', icon: Building2, description: 'Manage hospital operations', color: 'bg-green-500' },
+    { id: 'consultations', name: 'Consultations', icon: Calendar, description: 'Book and manage consultations', color: 'bg-orange-500' },
     { id: 'patient-portal', name: 'Patient Portal', icon: Users, description: 'Patient management system', color: 'bg-purple-500' },
-    { id: 'booking-system', name: 'Booking System', icon: Calendar, description: 'Appointment scheduling', color: 'bg-orange-500' },
     { id: 'document-manager', name: 'Document Manager', icon: FileText, description: 'Medical records management', color: 'bg-pink-500' },
   ];
 
@@ -907,6 +908,8 @@ export default function AppPage() {
                   </div>
                 </div>
               </>
+            ) : activeView === 'consultations' ? (
+              <ConsultationManager />
             ) : activeView === 'hospital-manager' ? (
               <div className="w-full max-w-7xl mx-auto">
                 {/* Hospital Manager Header */}
