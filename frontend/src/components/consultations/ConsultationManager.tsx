@@ -6,7 +6,9 @@ import { toast } from 'sonner';
 import { format, isBefore, isAfter, addMinutes, parseISO } from 'date-fns';
 import { useAuth } from '@/app/contexts/use-auth';
 import { useAccount } from 'wagmi';
+import { useRouter } from 'next/navigation';
 import { hospitalService } from '@/lib/services/hospital';
+import { bookingService, Booking } from '@/lib/services/booking';
 import Image from 'next/image';
 
 interface Consultation {
@@ -18,6 +20,7 @@ interface Consultation {
   status: 'upcoming' | 'ongoing' | 'completed' | 'cancelled';
   hospitalId?: string;
   hospitalName?: string;
+  hospitalLocation?: string;
   hospitalImage?: string;
   description?: string;
   healthDataShared?: boolean;
@@ -74,6 +77,21 @@ function CreateConsultationModal({ isOpen, onClose, type, onSuccess }: CreateCon
     setHealthDataFiles(prev => prev.filter((_, i) => i !== index));
   };
 
+  // Format date to dd/mm/yyyy
+  const formatDateForAPI = (date: Date): string => {
+    const day = String(date.getDate()).padStart(2, '0');
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const year = date.getFullYear();
+    return `${day}/${month}/${year}`;
+  };
+
+  // Format time to HH:mm
+  const formatTimeForAPI = (date: Date): string => {
+    const hours = String(date.getHours()).padStart(2, '0');
+    const minutes = String(date.getMinutes()).padStart(2, '0');
+    return `${hours}:${minutes}`;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -92,27 +110,50 @@ function CreateConsultationModal({ isOpen, onClose, type, onSuccess }: CreateCon
       return;
     }
 
+    // For AI consultations, we don't create a booking via the booking API
+    // They might be handled by a different service in the future
+    if (type === 'ai') {
+      toast.info('AI consultations are coming soon!', {
+        description: 'This feature will be available in a future update.',
+      });
+      onClose();
+      return;
+    }
+
     setIsSubmitting(true);
     try {
       const startDateTime = new Date(`${selectedDate}T${selectedTime}`);
-      const endDateTime = addMinutes(startDateTime, parseInt(duration));
 
-      // TODO: Call API to create consultation
-      // For now, simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      // Create booking via API
+      const bookingRequest = {
+        hospitalId: selectedHospital,
+        date: formatDateForAPI(startDateTime),
+        time: formatTimeForAPI(startDateTime),
+        duration: parseInt(duration),
+        purpose: purpose.trim(),
+        additionalNotes: description.trim() || undefined,
+      };
 
-      toast.success('Consultation created successfully');
+      const result = await bookingService.createBooking(bookingRequest);
+
+      toast.success('Consultation booked successfully', {
+        description: 'Your appointment has been scheduled.',
+      });
       onSuccess();
       onClose();
       // Reset form
       setSelectedDate('');
       setSelectedTime('');
+      setDuration('30');
       setPurpose('');
       setDescription('');
+      setSelectedHospital('');
       setHealthDataFiles([]);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error creating consultation:', error);
-      toast.error('Failed to create consultation');
+      toast.error('Failed to create consultation', {
+        description: error.message || 'Please try again later.',
+      });
     } finally {
       setIsSubmitting(false);
     }
@@ -317,12 +358,61 @@ function CreateConsultationModal({ isOpen, onClose, type, onSuccess }: CreateCon
   );
 }
 
+// Helper function to map Booking to Consultation
+const mapBookingToConsultation = (booking: Booking): Consultation => {
+  const appointmentDate = new Date(booking.appointmentDate);
+  const endDate = addMinutes(appointmentDate, booking.duration);
+  const now = new Date();
+
+  // Determine consultation status based on booking status and dates
+  let status: Consultation['status'] = 'upcoming';
+
+  // First check booking status
+  if (booking.status === 'CANCELLED') {
+    status = 'cancelled';
+  } else if (booking.status === 'COMPLETED') {
+    status = 'completed';
+  } else {
+    // For PENDING or CONFIRMED bookings, determine status based on dates
+    const nowTime = now.getTime();
+    const startTime = appointmentDate.getTime();
+    const endTime = endDate.getTime();
+
+    if (nowTime >= startTime && nowTime <= endTime) {
+      // Appointment is currently ongoing (current time is between start and end)
+      status = 'ongoing';
+    } else if (nowTime < startTime) {
+      // Appointment is in the future
+      status = 'upcoming';
+    } else {
+      // Appointment is in the past but booking status is not COMPLETED
+      // Mark as completed since the appointment time has passed
+      status = 'completed';
+    }
+  }
+
+  return {
+    id: booking.id,
+    type: 'hospital',
+    title: booking.purpose,
+    startDate: appointmentDate,
+    endDate: endDate,
+    status: status,
+    hospitalId: booking.hospitalId,
+    hospitalName: booking.hospital?.name,
+    hospitalLocation: booking.hospital?.location,
+    hospitalImage: booking.hospital?.imageUrl,
+    description: booking.additionalNotes,
+  };
+};
+
 export default function ConsultationManager() {
   const { user, isAuthenticated } = useAuth();
   const { address } = useAccount();
+  const router = useRouter();
   const [consultations, setConsultations] = useState<Consultation[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<'upcoming' | 'ongoing' | 'all'>('all');
+  const [activeTab, setActiveTab] = useState<'upcoming' | 'ongoing' | 'completed' | 'all'>('all');
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [createModalType, setCreateModalType] = useState<'hospital' | 'ai'>('hospital');
 
@@ -332,50 +422,43 @@ export default function ConsultationManager() {
     }
   }, [isAuthenticated]);
 
+  // Refresh consultations periodically to update "ongoing" status
+  useEffect(() => {
+    if (!isAuthenticated) return;
+
+    const interval = setInterval(() => {
+      loadConsultations();
+    }, 60000); // Refresh every minute
+
+    return () => clearInterval(interval);
+  }, [isAuthenticated]);
+
   const loadConsultations = async () => {
     setIsLoading(true);
     try {
-      // TODO: Fetch from API
-      // For now, use mock data
-      const mockConsultations: Consultation[] = [
-        {
-          id: '1',
-          type: 'hospital',
-          title: 'Initial Fertility Consultation',
-          startDate: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000), // 2 days from now
-          endDate: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000 + 60 * 60 * 1000),
-          status: 'upcoming',
-          hospitalId: '1',
-          hospitalName: 'Genesis Fertility Institute',
-          hospitalImage: 'https://images.unsplash.com/photo-1519494026892-80bbd2d6fd0d?w=400&h=300&fit=crop',
-          description: 'Initial consultation to discuss fertility options',
-        },
-        {
-          id: '2',
-          type: 'ai',
-          title: 'AI Health Assessment',
-          startDate: new Date(Date.now() + 1 * 60 * 60 * 1000), // 1 hour from now
-          endDate: new Date(Date.now() + 1 * 60 * 60 * 1000 + 30 * 60 * 1000),
-          status: 'upcoming',
-          description: 'AI-powered health assessment and recommendations',
-          healthDataShared: true,
-        },
-        {
-          id: '3',
-          type: 'hospital',
-          title: 'Follow-up Appointment',
-          startDate: new Date(Date.now() - 30 * 60 * 1000), // 30 minutes ago
-          endDate: new Date(Date.now() + 30 * 60 * 1000), // 30 minutes from now
-          status: 'ongoing',
-          hospitalId: '2',
-          hospitalName: 'Boston Medical Center',
-          meetingLink: 'https://meet.example.com/room-123',
-        },
-      ];
-      setConsultations(mockConsultations);
-    } catch (error) {
+      // Fetch bookings from API
+      const bookings = await bookingService.getMyBookings();
+
+      // Map bookings to consultations
+      const consultationsList = bookings.map(mapBookingToConsultation);
+
+      // Sort by start date (upcoming first, then by date)
+      consultationsList.sort((a, b) => {
+        // Prioritize by status: ongoing > upcoming > completed > cancelled
+        const statusOrder = { ongoing: 0, upcoming: 1, completed: 2, cancelled: 3 };
+        const statusDiff = statusOrder[a.status] - statusOrder[b.status];
+        if (statusDiff !== 0) return statusDiff;
+        // Then sort by date (earliest first)
+        return a.startDate.getTime() - b.startDate.getTime();
+      });
+
+      setConsultations(consultationsList);
+    } catch (error: any) {
       console.error('Error loading consultations:', error);
-      toast.error('Failed to load consultations');
+      toast.error('Failed to load consultations', {
+        description: error.message || 'Please try again later.',
+      });
+      setConsultations([]);
     } finally {
       setIsLoading(false);
     }
@@ -388,6 +471,10 @@ export default function ConsultationManager() {
     if (activeTab === 'ongoing') {
       return consultation.status === 'ongoing';
     }
+    if (activeTab === 'completed') {
+      return consultation.status === 'completed' || consultation.status === 'cancelled';
+    }
+    // For "all" tab, show all statuses
     return true;
   });
 
@@ -435,9 +522,8 @@ export default function ConsultationManager() {
         <div className="flex gap-2">
           <button
             onClick={() => openCreateModal('hospital')}
-            className="px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:opacity-90 flex items-center gap-2 transition-opacity"
+            className="px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:opacity-90 flex items-center gap-2 transition-opacity "
           >
-            <Building2 className="w-4 h-4" />
             Book Hospital
           </button>
           <button
@@ -457,6 +543,7 @@ export default function ConsultationManager() {
             { id: 'all', label: 'All Consultations' },
             { id: 'upcoming', label: 'Upcoming' },
             { id: 'ongoing', label: 'Ongoing' },
+            { id: 'completed', label: 'Completed' },
           ].map((tab) => (
             <button
               key={tab.id}
@@ -484,24 +571,11 @@ export default function ConsultationManager() {
           <p className="text-muted-foreground mb-6">
             {activeTab === 'all'
               ? 'Get started by booking your first consultation'
-              : `No ${activeTab} consultations at the moment`}
+              : activeTab === 'completed'
+                ? 'No completed or cancelled consultations'
+                : `No ${activeTab} consultations at the moment`}
           </p>
-          <div className="flex gap-2 justify-center">
-            <button
-              onClick={() => openCreateModal('hospital')}
-              className="px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:opacity-90 flex items-center gap-2"
-            >
-              <Plus className="w-4 h-4" />
-              Book Hospital Consultation
-            </button>
-            <button
-              onClick={() => openCreateModal('ai')}
-              className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:opacity-90 flex items-center gap-2"
-            >
-              <Plus className="w-4 h-4" />
-              Book AI Consultation
-            </button>
-          </div>
+
         </div>
       ) : (
         <div className="space-y-4 min-h-160 overflow-y-auto">
@@ -512,16 +586,6 @@ export default function ConsultationManager() {
             >
               <div className="flex items-start justify-between">
                 <div className="flex gap-4 flex-1">
-                  {/* Icon */}
-                  <div className={`w-12 h-12 rounded-lg flex items-center justify-center ${consultation.type === 'hospital' ? 'bg-blue-500/20' : 'bg-purple-500/20'
-                    }`}>
-                    {consultation.type === 'hospital' ? (
-                      <Building2 className={`w-6 h-6 ${consultation.type === 'hospital' ? 'text-blue-400' : 'text-purple-400'
-                        }`} />
-                    ) : (
-                      <Sparkles className="w-6 h-6 text-purple-400" />
-                    )}
-                  </div>
 
                   {/* Content */}
                   <div className="flex-1">
@@ -547,8 +611,11 @@ export default function ConsultationManager() {
                       </div>
                       {consultation.hospitalName && (
                         <div className="flex items-center gap-2">
-                          <MapPin className="w-4 h-4" />
+                          <Building2 className="w-4 h-4" />
                           <span>{consultation.hospitalName}</span>
+                          {consultation.hospitalLocation && (
+                            <span className="text-muted-foreground"> - {consultation.hospitalLocation}</span>
+                          )}
                         </div>
                       )}
                       {consultation.description && (
@@ -566,20 +633,49 @@ export default function ConsultationManager() {
 
                 {/* Actions */}
                 <div className="flex flex-col gap-2">
-                  {consultation.status === 'ongoing' && consultation.meetingLink && (
-                    <a
-                      href={consultation.meetingLink}
-                      target="_blank"
-                      rel="noopener noreferrer"
+                  {consultation.status === 'ongoing' && (
+                    <button
+                      onClick={() => router.push(`/booking/confirmation/${consultation.id}`)}
                       className="px-4 py-2 bg-green-600 text-white rounded-lg hover:opacity-90 flex items-center gap-2 text-sm transition-opacity"
                     >
                       <Video className="w-4 h-4" />
-                      Join Meeting
-                    </a>
+                      View Details
+                    </button>
                   )}
                   {consultation.status === 'upcoming' && (
-                    <button className="px-4 py-2 border border-border text-foreground rounded-lg hover:bg-background-300 text-sm transition-colors">
+                    <button
+                      onClick={() => router.push(`/booking/confirmation/${consultation.id}`)}
+                      className="px-4 py-2 border border-border text-foreground rounded-lg hover:bg-background-300 text-sm transition-colors"
+                    >
                       View Details
+                    </button>
+                  )}
+                  {consultation.status === 'completed' && (
+                    <button
+                      onClick={() => router.push(`/booking/confirmation/${consultation.id}`)}
+                      className="px-4 py-2 border border-border text-foreground rounded-lg hover:bg-background-300 text-sm transition-colors"
+                    >
+                      View Details
+                    </button>
+                  )}
+                  {(consultation.status === 'upcoming' || consultation.status === 'ongoing') && (
+                    <button
+                      onClick={async () => {
+                        if (confirm('Are you sure you want to cancel this consultation?')) {
+                          try {
+                            await bookingService.cancelBooking(consultation.id);
+                            toast.success('Consultation cancelled');
+                            loadConsultations();
+                          } catch (error: any) {
+                            toast.error('Failed to cancel consultation', {
+                              description: error.message || 'Please try again.',
+                            });
+                          }
+                        }
+                      }}
+                      className="px-4 py-2 border border-red-500/50 text-red-400 rounded-lg hover:bg-red-500/10 text-sm transition-colors"
+                    >
+                      Cancel
                     </button>
                   )}
                 </div>

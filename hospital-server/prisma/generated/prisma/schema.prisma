@@ -97,23 +97,40 @@ model User {
   hospitalId         String? // Optional for MEDICAL_FACILITY users
   hospital           HospitalInformation? @relation(fields: [hospitalId], references: [facilityId], onDelete: Cascade)
   registeredHospital Hospital? // Hospital registered by MEDICAL_FACILITY users
+  bookings           Booking[] // Bookings made by this user
   createdAt          DateTime             @default(now())
   updatedAt          DateTime             @updatedAt
 }
 
 model Hospital {
-  id            String   @id @default(uuid())
+  id            String    @id @default(uuid())
   name          String
   location      String
-  rating        Float    @default(0)
+  rating        Float     @default(0)
   specialties   String[] // Array of specialties
   imageUrl      String?
-  isFavorite    Boolean  @default(false)
-  reviews       Int      @default(0)
-  verified      Boolean  @default(false)
+  isFavorite    Boolean   @default(false)
+  reviews       Int       @default(0)
+  verified      Boolean   @default(false)
   walletAddress String // Owner/admin wallet address
-  ownerId       String   @unique // User ID of the owner (MEDICAL_FACILITY user)
-  owner         User     @relation(fields: [ownerId], references: [id], onDelete: Cascade)
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  ownerId       String    @unique // User ID of the owner (MEDICAL_FACILITY user)
+  owner         User      @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  bookings      Booking[]
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+}
+
+model Booking {
+  id              String   @id @default(uuid())
+  hospitalId      String // Reference to Hospital
+  hospital        Hospital @relation(fields: [hospitalId], references: [id], onDelete: Cascade)
+  userId          String // Reference to User who made the booking
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  appointmentDate DateTime // Appointment date and time combined
+  duration        Int      @default(30) // Duration in minutes
+  purpose         String // Purpose of the appointment (required)
+  additionalNotes String? // Additional notes (optional)
+  status          String   @default("PENDING") // PENDING, CONFIRMED, CANCELLED, COMPLETED
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
 }

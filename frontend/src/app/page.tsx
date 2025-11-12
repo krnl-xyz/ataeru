@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { Search, Settings, HelpCircle, Plus, MessageSquare, Sparkles, FileText, LayoutDashboard, Users, Building2, Calendar, Image as ImageIcon, Upload, Link as LinkIcon, X, ChevronDown, ChevronLeft, ChevronRight, Menu, User, Bell, Shield, Globe, Loader, CheckCircle, ShieldCheck, MapPin, Star, Loader2 } from 'lucide-react';
+import { format } from 'date-fns';
 import { useAuth } from '@/app/contexts/use-auth';
 import { useAccount, useReadContract } from 'wagmi';
 import Image from 'next/image';
@@ -12,6 +13,7 @@ import LoginModal from '@/components/LoginModal';
 import RegistrationModal from '@/components/RegistrationModal';
 import { entryPointABI, entryPointAddress, hospitalRequestABI } from '@/contract/web3';
 import { hospitalService, RegisteredHospital } from '@/lib/services/hospital';
+import { bookingService, Booking } from '@/lib/services/booking';
 import SidebarUserDropdown from '@/components/app/SidebarUserDropdown';
 import AppTabsNavigation from '@/components/app/AppTabsNavigation';
 import ConsultationManager from '@/components/consultations/ConsultationManager';
@@ -42,6 +44,8 @@ export default function AppPage() {
   const [isEditingHospital, setIsEditingHospital] = useState(false);
   const [editFormData, setEditFormData] = useState<Partial<RegisteredHospital>>({});
   const [isSavingHospital, setIsSavingHospital] = useState(false);
+  const [hospitalBookings, setHospitalBookings] = useState<any[]>([]);
+  const [isLoadingBookings, setIsLoadingBookings] = useState(false);
 
   // Profile state
   const [profile, setProfile] = useState({
@@ -186,8 +190,24 @@ export default function AppPage() {
   useEffect(() => {
     if (activeView === 'hospital-manager' && user?.userType === 'MEDICAL_FACILITY') {
       loadHospital();
+      loadHospitalBookings();
     }
   }, [activeView, user]);
+
+  // Load hospital bookings
+  const loadHospitalBookings = async () => {
+    setIsLoadingBookings(true);
+    try {
+      const bookings = await bookingService.getMyHospitalBookings();
+      setHospitalBookings(bookings);
+    } catch (error: any) {
+      console.error('Error loading hospital bookings:', error);
+      // If user doesn't own hospitals, this will fail - that's okay
+      setHospitalBookings([]);
+    } finally {
+      setIsLoadingBookings(false);
+    }
+  };
 
   // Update donor requests when currentRequest changes
   useEffect(() => {
@@ -949,9 +969,9 @@ export default function AppPage() {
                 </div>
 
                 {/* Hospital Manager Tabs */}
-                <div className="border-b border-gray-800 mb-6">
+                <div className="border-b border-gray-800 mb-6 ">
                   <nav className="flex space-x-8">
-                    {['dashboard', 'donors', 'customers', 'treatments', 'settings'].map((tab) => (
+                    {['dashboard', 'bookings', 'donors', 'customers', 'treatments', 'settings'].map((tab) => (
                       <button
                         key={tab}
                         onClick={() => setHospitalManagerTab(tab)}
@@ -967,432 +987,589 @@ export default function AppPage() {
                 </div>
 
                 {/* Hospital Manager Content */}
-                {hospitalManagerTab === 'dashboard' && (
-                  <div>
-                    {/* Stats Grid */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-                      <div className="bg-gray-900/50 border border-gray-800 rounded-lg p-6">
-                        <h3 className="text-sm font-medium text-gray-400 mb-1">Total Donors</h3>
-                        <p className="text-2xl font-bold text-white">{donorStats.total}</p>
-                        <div className="mt-2 flex items-center text-sm">
-                          <span className="text-green-400 font-medium">+{donorStats.new} new</span>
-                          <span className="text-gray-500 ml-2">this week</span>
+                <div className='min-h-160'>
+                  {hospitalManagerTab === 'dashboard' && (
+                    <div>
+                      {/* Stats Grid */}
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                        <div className="bg-gray-900/50 border border-gray-800 rounded-lg p-6">
+                          <h3 className="text-sm font-medium text-gray-400 mb-1">Total Donors</h3>
+                          <p className="text-2xl font-bold text-white">{donorStats.total}</p>
+                          <div className="mt-2 flex items-center text-sm">
+                            <span className="text-green-400 font-medium">+{donorStats.new} new</span>
+                            <span className="text-gray-500 ml-2">this week</span>
+                          </div>
                         </div>
-                      </div>
-                      <div className="bg-gray-900/50 border border-gray-800 rounded-lg p-6">
-                        <h3 className="text-sm font-medium text-gray-400 mb-1">Active Donors</h3>
-                        <p className="text-2xl font-bold text-white">{donorStats.active}</p>
-                        <div className="mt-2 flex items-center text-sm">
-                          <span className="text-yellow-400 font-medium">{donorStats.pending} pending</span>
-                          <span className="text-gray-500 ml-2">verification</span>
+                        <div className="bg-gray-900/50 border border-gray-800 rounded-lg p-6">
+                          <h3 className="text-sm font-medium text-gray-400 mb-1">Active Donors</h3>
+                          <p className="text-2xl font-bold text-white">{donorStats.active}</p>
+                          <div className="mt-2 flex items-center text-sm">
+                            <span className="text-yellow-400 font-medium">{donorStats.pending} pending</span>
+                            <span className="text-gray-500 ml-2">verification</span>
+                          </div>
                         </div>
-                      </div>
-                      <div className="bg-gray-900/50 border border-gray-800 rounded-lg p-6">
-                        <h3 className="text-sm font-medium text-gray-400 mb-1">Total Customers</h3>
-                        <p className="text-2xl font-bold text-white">{customerStats.total}</p>
-                        <div className="mt-2 flex items-center text-sm">
-                          <span className="text-green-400 font-medium">+{customerStats.new} new</span>
-                          <span className="text-gray-500 ml-2">this month</span>
+                        <div className="bg-gray-900/50 border border-gray-800 rounded-lg p-6">
+                          <h3 className="text-sm font-medium text-gray-400 mb-1">Total Customers</h3>
+                          <p className="text-2xl font-bold text-white">{customerStats.total}</p>
+                          <div className="mt-2 flex items-center text-sm">
+                            <span className="text-green-400 font-medium">+{customerStats.new} new</span>
+                            <span className="text-gray-500 ml-2">this month</span>
+                          </div>
                         </div>
-                      </div>
-                      <div className="bg-gray-900/50 border border-gray-800 rounded-lg p-6">
-                        <h3 className="text-sm font-medium text-gray-400 mb-1">Active Customers</h3>
-                        <p className="text-2xl font-bold text-white">{customerStats.active}</p>
-                        <div className="mt-2 flex items-center text-sm">
-                          <span className="text-blue-400 font-medium">{Math.round(customerStats.active / customerStats.total * 100)}%</span>
-                          <span className="text-gray-500 ml-2">activity rate</span>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Recent Activity */}
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                      {/* Recent Donations */}
-                      <div className="bg-[#0b0b0d] border border-gray-800 rounded-lg overflow-hidden">
-                        <div className="bg-gray-900/50 px-6 py-4 border-b border-gray-800 flex justify-between items-center">
-                          <h3 className="font-medium text-white">Recent Donations</h3>
-                          <button className="text-blue-400 text-sm font-medium hover:text-blue-300">View All</button>
-                        </div>
-                        <div className="divide-y divide-gray-800">
-                          {recentDonations.map(donation => (
-                            <div key={donation.id} className="px-6 py-4 flex justify-between items-center">
-                              <div>
-                                <p className="font-medium text-white">{donation.donor}</p>
-                                <p className="text-sm text-gray-400">{donation.date}</p>
-                              </div>
-                              <span className={`text-xs px-2 py-1 rounded-full ${donation.status === 'Completed'
-                                ? 'bg-green-500/20 text-green-400 border border-green-500/50'
-                                : 'bg-yellow-500/20 text-yellow-400 border border-yellow-500/50'
-                                }`}>
-                                {donation.status}
-                              </span>
-                            </div>
-                          ))}
-                        </div>
-                        <div className="bg-gray-900/50 px-6 py-3 border-t border-gray-800">
-                          <button
-                            onClick={() => setIsDonorRequestModalOpen(true)}
-                            className="w-full bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 flex items-center justify-center gap-2"
-                          >
-                            <Plus className="w-4 h-4" />
-                            Add New Donor
-                          </button>
+                        <div className="bg-gray-900/50 border border-gray-800 rounded-lg p-6">
+                          <h3 className="text-sm font-medium text-gray-400 mb-1">Active Customers</h3>
+                          <p className="text-2xl font-bold text-white">{customerStats.active}</p>
+                          <div className="mt-2 flex items-center text-sm">
+                            <span className="text-blue-400 font-medium">{Math.round(customerStats.active / customerStats.total * 100)}%</span>
+                            <span className="text-gray-500 ml-2">activity rate</span>
+                          </div>
                         </div>
                       </div>
 
-                      {/* Recent Customers */}
-                      <div className="bg-[#0b0b0d] border border-gray-800 rounded-lg overflow-hidden">
-                        <div className="bg-gray-900/50 px-6 py-4 border-b border-gray-800 flex justify-between items-center">
-                          <h3 className="font-medium text-white">Recent Customers</h3>
-                          <button className="text-blue-400 text-sm font-medium hover:text-blue-300">View All</button>
-                        </div>
-                        <div className="divide-y divide-gray-800">
-                          {recentCustomers.map(customer => (
-                            <div key={customer.id} className="px-6 py-4 flex justify-between items-center">
-                              <div>
-                                <p className="font-medium text-white">{customer.name}</p>
-                                <p className="text-sm text-gray-400">{customer.date}</p>
-                              </div>
-                              <span className="text-xs px-2 py-1 rounded-full bg-blue-500/20 text-blue-400 border border-blue-500/50">
-                                {customer.treatment}
-                              </span>
-                            </div>
-                          ))}
-                        </div>
-                        <div className="bg-gray-900/50 px-6 py-3 border-t border-gray-800">
-                          <button className="w-full bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 flex items-center justify-center gap-2">
-                            <Plus className="w-4 h-4" />
-                            Add New Customer
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                {hospitalManagerTab === 'donors' && (
-                  <div className="space-y-6">
-                    <div className="flex justify-between items-center">
-                      <h2 className="text-xl font-bold text-white">Donor Requests</h2>
-                      <button
-                        onClick={() => setIsDonorRequestModalOpen(true)}
-                        className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 flex items-center gap-2"
-                      >
-                        <Plus className="w-4 h-4" />
-                        New Request
-                      </button>
-                    </div>
-
-                    {/* Active Requests */}
-                    <div className="bg-[#1a1a1a] border border-gray-800 rounded-lg overflow-hidden">
-                      <div className="bg-gray-900/50 px-6 py-4 border-b border-gray-800">
-                        <h3 className="font-medium text-white">Active Requests</h3>
-                      </div>
-                      <div className="divide-y divide-gray-800">
-                        {donorRequests && donorRequests
-                          .filter(request => request?.isActive)
-                          .map((request, index) => (
-                            <div key={index} className="px-6 py-4">
-                              <div className="flex justify-between items-start">
+                      {/* Recent Activity */}
+                      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                        {/* Recent Donations */}
+                        <div className="bg-[#0b0b0d] border border-gray-800 rounded-lg overflow-hidden">
+                          <div className="bg-gray-900/50 px-6 py-4 border-b border-gray-800 flex justify-between items-center">
+                            <h3 className="font-medium text-white">Recent Donations</h3>
+                            <button className="text-blue-400 text-sm font-medium hover:text-blue-300">View All</button>
+                          </div>
+                          <div className="divide-y divide-gray-800">
+                            {recentDonations.map(donation => (
+                              <div key={donation.id} className="px-6 py-4 flex justify-between items-center">
                                 <div>
-                                  <h4 className="font-medium text-white">{getDonorTypeLabel(request.donorType)}</h4>
-                                  <p className="text-sm text-gray-400 mt-1">{request.requestDescription}</p>
-                                  <div className="mt-2 flex flex-wrap gap-2">
-                                    <span className="text-xs px-2 py-1 rounded-full bg-blue-500/20 text-blue-400 border border-blue-500/50">
-                                      Max Donors: {request.maxDonors?.toString()}
-                                    </span>
-                                    <span className="text-xs px-2 py-1 rounded-full bg-green-500/20 text-green-400 border border-green-500/50">
-                                      Amount: {request.minAmontpayment?.toString()} - {request.maxAmountPayment?.toString()} ETH
-                                    </span>
-                                    <span className="text-xs px-2 py-1 rounded-full bg-purple-500/20 text-purple-400 border border-purple-500/50">
-                                      Date: {request.date ? formatDate(request.date) : 'N/A'}
-                                    </span>
-                                  </div>
+                                  <p className="font-medium text-white">{donation.donor}</p>
+                                  <p className="text-sm text-gray-400">{donation.date}</p>
                                 </div>
-                                <span className={`text-xs px-2 py-1 rounded-full ${request.status === 0 ? 'bg-yellow-500/20 text-yellow-400 border border-yellow-500/50' :
-                                  request.status === 1 ? 'bg-green-500/20 text-green-400 border border-green-500/50' :
-                                    request.status === 2 ? 'bg-red-500/20 text-red-400 border border-red-500/50' :
-                                      'bg-blue-500/20 text-blue-400 border border-blue-500/50'
+                                <span className={`text-xs px-2 py-1 rounded-full ${donation.status === 'Completed'
+                                  ? 'bg-green-500/20 text-green-400 border border-green-500/50'
+                                  : 'bg-yellow-500/20 text-yellow-400 border border-yellow-500/50'
                                   }`}>
-                                  {getStatusLabel(request.status)}
+                                  {donation.status}
                                 </span>
                               </div>
-                            </div>
-                          ))}
+                            ))}
+                          </div>
+                          <div className="bg-gray-900/50 px-6 py-3 border-t border-gray-800">
+                            <button
+                              onClick={() => setIsDonorRequestModalOpen(true)}
+                              className="w-full bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 flex items-center justify-center gap-2"
+                            >
+                              <Plus className="w-4 h-4" />
+                              Add New Donor
+                            </button>
+                          </div>
+                        </div>
+
+                        {/* Recent Customers */}
+                        <div className="bg-[#0b0b0d] border border-gray-800 rounded-lg overflow-hidden">
+                          <div className="bg-gray-900/50 px-6 py-4 border-b border-gray-800 flex justify-between items-center">
+                            <h3 className="font-medium text-white">Recent Customers</h3>
+                            <button className="text-blue-400 text-sm font-medium hover:text-blue-300">View All</button>
+                          </div>
+                          <div className="divide-y divide-gray-800">
+                            {recentCustomers.map(customer => (
+                              <div key={customer.id} className="px-6 py-4 flex justify-between items-center">
+                                <div>
+                                  <p className="font-medium text-white">{customer.name}</p>
+                                  <p className="text-sm text-gray-400">{customer.date}</p>
+                                </div>
+                                <span className="text-xs px-2 py-1 rounded-full bg-blue-500/20 text-blue-400 border border-blue-500/50">
+                                  {customer.treatment}
+                                </span>
+                              </div>
+                            ))}
+                          </div>
+                          <div className="bg-gray-900/50 px-6 py-3 border-t border-gray-800">
+                            <button className="w-full bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 flex items-center justify-center gap-2">
+                              <Plus className="w-4 h-4" />
+                              Add New Customer
+                            </button>
+                          </div>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                )}
+                  )}
 
-                {hospitalManagerTab === 'settings' && (
-                  <div className="space-y-6">
-                    {isLoadingHospital ? (
-                      <div className="bg-[#0b0b0d] border border-gray-800 rounded-lg p-8 text-center">
-                        <Loader2 className="h-8 w-8 animate-spin text-blue-500 mx-auto mb-4" />
-                        <p className="text-gray-400">Loading hospital information...</p>
+                  {hospitalManagerTab === 'bookings' && (
+                    <div className="space-y-6">
+                      <div className="flex justify-between items-center">
+                        <h2 className="text-xl font-bold text-white">Hospital Bookings</h2>
+                        <button
+                          onClick={() => loadHospitalBookings()}
+                          className="text-blue-400 text-sm font-medium hover:text-blue-300"
+                        >
+                          Refresh
+                        </button>
                       </div>
-                    ) : !hospital ? (
-                      <div className="bg-[#0b0b0d] border border-gray-800 rounded-lg p-8 text-center">
-                        <Building2 className="h-12 w-12 text-gray-500 mx-auto mb-4" />
-                        <h3 className="text-lg font-medium text-white mb-2">No Hospital Registered</h3>
-                        <p className="text-gray-400 mb-6">
-                          Please register your hospital first to access settings.
-                        </p>
-                      </div>
-                    ) : (
-                      <div className="bg-gray-900/50 border border-gray-800 rounded-lg overflow-hidden">
-                        {/* Verification Status */}
-                        <div className="bg-gray-900/50 rounded-lg border border-gray-800 mx-4 mt-4 px-4 py-2">
-                          <div className="flex items-center justify-between">
-                            <div>
-                              <h3 className="font-medium text-white mb-1">Verification Status</h3>
-                              <p className="text-sm text-gray-400">
-                                {hospital.isVerified
-                                  ? 'Your hospital has been verified and is trusted by patients.'
-                                  : 'Verify your hospital to build trust and credibility with patients.'}
-                              </p>
-                              {hospital.verificationDate && (
-                                <p className="text-xs text-gray-500 mt-1">
-                                  Verified on {new Date(hospital.verificationDate).toLocaleDateString()}
-                                </p>
-                              )}
-                            </div>
-                            {!hospital.isVerified && (
-                              <button
-                                onClick={() => setIsVerificationModalOpen(true)}
-                                className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 flex items-center gap-2"
-                              >
-                                <Shield className="h-4 w-4" />
-                                Verify Now
-                              </button>
-                            )}
-                          </div>
-                        </div>
 
-                        <div className="px-6 py-4 flex justify-between items-center">
-                          <div></div>
-                          {!isEditingHospital ? (
-                            <button
-                              onClick={() => setIsEditingHospital(true)}
-                              className="px-4 py-2 text-blue-400 underline rounded-lg text-sm hover:text-blue-300"
-                            >
-                              Edit Details
-                            </button>
-                          ) : (
-                            <div className="flex gap-2">
-                              <button
-                                onClick={() => {
-                                  setIsEditingHospital(false);
-                                  setEditFormData({
-                                    name: hospital.name,
-                                    location: hospital.location,
-                                    rating: hospital.rating,
-                                    specialties: hospital.specialties,
-                                    imageUrl: hospital.imageUrl,
-                                  });
-                                }}
-                                className="px-4 py-2 border border-gray-700 text-gray-300 rounded-lg hover:bg-gray-800 text-sm"
-                              >
-                                Cancel
-                              </button>
-                              <button
-                                onClick={handleSaveHospitalChanges}
-                                disabled={isSavingHospital}
-                                className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 text-sm disabled:opacity-50"
-                              >
-                                {isSavingHospital ? 'Saving...' : 'Save Changes'}
-                              </button>
-                            </div>
-                          )}
+                      {isLoadingBookings ? (
+                        <div className="flex justify-center items-center py-12">
+                          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white"></div>
                         </div>
+                      ) : hospitalBookings.length === 0 ? (
+                        <div className="bg-[#0b0b0d] border border-gray-800 rounded-lg p-12 text-center">
+                          <Calendar className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                          <h3 className="text-lg font-medium text-white mb-2">No bookings found</h3>
+                          <p className="text-gray-400">
+                            You don&apos;t have any bookings for your hospitals yet.
+                          </p>
+                        </div>
+                      ) : (
+                        <div className="space-y-4">
+                          {hospitalBookings.map((booking: Booking) => {
+                            const appointmentDate = new Date(booking.appointmentDate);
+                            const endDate = new Date(appointmentDate.getTime() + booking.duration * 60000);
 
-                        <div className="p-6 space-y-6">
-                          {hospital.imageUrl && (
-                            <div className="mb-2">
-                              <Image
-                                src={hospital.imageUrl}
-                                alt={hospital.name}
-                                width={200}
-                                height={200}
-                                className="rounded-lg border border-gray-800 w-full max-w-xs h-48 object-cover"
-                              />
-                            </div>
-                          )}
-                          <div>
-                            <label className="block text-sm font-medium text-gray-300 mb-1">Image URL</label>
-                            {isEditingHospital ? (
-                              <input
-                                type="url"
-                                value={editFormData.imageUrl || ''}
-                                onChange={(e) => setEditFormData({ ...editFormData, imageUrl: e.target.value })}
-                                className="w-full px-3 py-2 bg-[#0a0a0a] border border-gray-700 rounded-lg text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                                placeholder="https://..."
-                              />
-                            ) : (
-                              <div className="text-gray-300 text-sm break-all">{hospital.imageUrl || 'No image URL set'}</div>
-                            )}
-                          </div>
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <div>
-                              <label className="block text-sm font-medium text-gray-300 mb-1">Hospital Name</label>
-                              {isEditingHospital ? (
-                                <input
-                                  type="text"
-                                  value={editFormData.name || ''}
-                                  onChange={(e) => setEditFormData({ ...editFormData, name: e.target.value })}
-                                  className="w-full px-3 py-2 bg-[#0a0a0a] border border-gray-700 rounded-lg text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                                />
-                              ) : (
-                                <div className="text-white font-medium">{hospital.name}</div>
-                              )}
-                            </div>
-                            <div>
-                              <label className="block text-sm font-medium text-gray-300 mb-1">Location</label>
-                              {isEditingHospital ? (
-                                <input
-                                  type="text"
-                                  value={editFormData.location || ''}
-                                  onChange={(e) => setEditFormData({ ...editFormData, location: e.target.value })}
-                                  className="w-full px-3 py-2 bg-[#0a0a0a] border border-gray-700 rounded-lg text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                                  placeholder="e.g., Boston, MA"
-                                />
-                              ) : (
-                                <div className="text-white flex items-center gap-1">{hospital.location}</div>
-                              )}
-                            </div>
-                            <div>
-                              <label className="block text-sm font-medium text-gray-300 mb-1">Rating</label>
-                              {isEditingHospital ? (
-                                <input
-                                  type="number"
-                                  min="0"
-                                  max="5"
-                                  step="0.1"
-                                  value={editFormData.rating || 0}
-                                  onChange={(e) => setEditFormData({ ...editFormData, rating: parseFloat(e.target.value) || 0 })}
-                                  className="w-full px-3 py-2 bg-[#0a0a0a] border border-gray-700 rounded-lg text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                                />
-                              ) : (
-                                <div className="text-white flex items-center gap-1">
-                                  <Star className="h-4 w-4 text-yellow-400 fill-current" />
-                                  {hospital.rating.toFixed(1)} / 5.0
-                                </div>
-                              )}
-                            </div>
-                            <div>
-                              <label className="block text-sm font-medium text-gray-300 mb-1">Wallet Address</label>
-                              <div className="text-gray-300 font-mono text-sm">{hospital.walletAddress}</div>
-                            </div>
-                            <div className="md:col-span-2">
-                              <label className="block text-sm font-medium text-gray-300 mb-2">Specialties</label>
-                              {isEditingHospital ? (
-                                <div className="space-y-2">
-                                  <div className="flex flex-wrap gap-2">
-                                    {editFormData.specialties?.map((specialty, index) => (
-                                      <span
-                                        key={index}
-                                        className="inline-flex items-center gap-1 px-3 py-1 bg-blue-500/20 text-blue-400 rounded-full text-sm border border-blue-500/50"
-                                      >
-                                        {specialty}
-                                        <button
-                                          onClick={() => {
-                                            const newSpecialties = editFormData.specialties?.filter((_, i) => i !== index) || [];
-                                            setEditFormData({ ...editFormData, specialties: newSpecialties });
-                                          }}
-                                          className="hover:text-blue-300"
-                                        >
-                                          <X className="h-3 w-3" />
-                                        </button>
+                            const getStatusColor = (status: string) => {
+                              switch (status) {
+                                case 'CONFIRMED':
+                                  return 'bg-green-500/20 text-green-400 border-green-500/50';
+                                case 'PENDING':
+                                  return 'bg-yellow-500/20 text-yellow-400 border-yellow-500/50';
+                                case 'CANCELLED':
+                                  return 'bg-red-500/20 text-red-400 border-red-500/50';
+                                case 'COMPLETED':
+                                  return 'bg-blue-500/20 text-blue-400 border-blue-500/50';
+                                default:
+                                  return 'bg-gray-500/20 text-gray-400 border-gray-500/50';
+                              }
+                            };
+
+                            return (
+                              <div key={booking.id} className="bg-[#0b0b0d] border border-gray-800 rounded-lg p-6">
+                                <div className="flex justify-between items-start mb-4">
+                                  <div className="flex-1">
+                                    <div className="flex items-center gap-3 mb-2">
+                                      <h3 className="text-lg font-medium text-white">{booking.purpose}</h3>
+                                      <span className={`text-xs px-2 py-1 rounded-full border ${getStatusColor(booking.status)}`}>
+                                        {booking.status}
                                       </span>
-                                    ))}
+                                    </div>
+                                    <p className="text-sm text-gray-400">Booking ID: {booking.id}</p>
                                   </div>
-                                  <input
-                                    type="text"
-                                    placeholder="Add specialty and press Enter"
-                                    className="w-full px-3 py-2 bg-[#0a0a0a] border border-gray-700 rounded-lg text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                                    onKeyDown={(e) => {
-                                      if (e.key === 'Enter') {
-                                        e.preventDefault();
-                                        const value = e.currentTarget.value.trim();
-                                        if (value && !editFormData.specialties?.includes(value)) {
-                                          setEditFormData({
-                                            ...editFormData,
-                                            specialties: [...(editFormData.specialties || []), value],
-                                          });
-                                          e.currentTarget.value = '';
-                                        }
-                                      }
-                                    }}
-                                  />
+                                  <button
+                                    onClick={() => window.location.href = `/booking/confirmation/${booking.id}`}
+                                    className="text-blue-400 text-sm font-medium hover:text-blue-300"
+                                  >
+                                    View Details
+                                  </button>
                                 </div>
-                              ) : (
-                                <div className="flex flex-wrap gap-2">
-                                  {hospital.specialties.length > 0 ? (
-                                    hospital.specialties.map((specialty, index) => (
-                                      <span
-                                        key={index}
-                                        className="px-3 py-1 bg-blue-500/20 text-blue-400 rounded-full text-sm border border-blue-500/50"
-                                      >
-                                        {specialty}
-                                      </span>
-                                    ))
-                                  ) : (
-                                    <span className="text-gray-500 text-sm">No specialties listed</span>
+
+                                <div className="grid md:grid-cols-2 gap-6">
+                                  {/* Patient Information */}
+                                  {booking.user && (
+                                    <div className="space-y-2">
+                                      <h4 className="text-sm font-medium text-gray-400 flex items-center gap-2">
+                                        <User className="h-4 w-4" />
+                                        Patient
+                                      </h4>
+                                      <div className="space-y-1">
+                                        <p className="text-white font-medium">{booking.user.fullname}</p>
+                                        <p className="text-sm text-gray-400">{booking.user.email}</p>
+                                        {booking.user.phone && (
+                                          <p className="text-sm text-gray-400">{booking.user.phone}</p>
+                                        )}
+                                      </div>
+                                    </div>
+                                  )}
+
+                                  {/* Appointment Details */}
+                                  <div className="space-y-2">
+                                    <h4 className="text-sm font-medium text-gray-400 flex items-center gap-2">
+                                      <Calendar className="h-4 w-4" />
+                                      Appointment
+                                    </h4>
+                                    <div className="space-y-1">
+                                      <p className="text-white">
+                                        {format(appointmentDate, 'EEEE, MMMM d, yyyy')}
+                                      </p>
+                                      <p className="text-sm text-gray-400">
+                                        {format(appointmentDate, 'h:mm a')} - {format(endDate, 'h:mm a')}
+                                      </p>
+                                      <p className="text-sm text-gray-400">
+                                        Duration: {booking.duration} minutes
+                                      </p>
+                                    </div>
+                                  </div>
+                                </div>
+
+                                {booking.additionalNotes && (
+                                  <div className="mt-4 pt-4 border-t border-gray-800">
+                                    <h4 className="text-sm font-medium text-gray-400 mb-1">Additional Notes</h4>
+                                    <p className="text-sm text-gray-300">{booking.additionalNotes}</p>
+                                  </div>
+                                )}
+
+                                {/* Action Buttons */}
+                                <div className="mt-4 flex gap-2">
+                                  {booking.status === 'PENDING' && (
+                                    <button
+                                      onClick={async () => {
+                                        try {
+                                          await bookingService.updateBooking(booking.id, { status: 'CONFIRMED' });
+                                          toast.success('Booking confirmed');
+                                          loadHospitalBookings();
+                                        } catch (error: any) {
+                                          toast.error(error.message || 'Failed to confirm booking');
+                                        }
+                                      }}
+                                      className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 text-sm"
+                                    >
+                                      Confirm
+                                    </button>
+                                  )}
+                                  {(booking.status === 'PENDING' || booking.status === 'CONFIRMED') && (
+                                    <button
+                                      onClick={async () => {
+                                        if (confirm('Are you sure you want to cancel this booking?')) {
+                                          try {
+                                            await bookingService.cancelBooking(booking.id);
+                                            toast.success('Booking cancelled');
+                                            loadHospitalBookings();
+                                          } catch (error: any) {
+                                            toast.error(error.message || 'Failed to cancel booking');
+                                          }
+                                        }
+                                      }}
+                                      className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 text-sm"
+                                    >
+                                      Cancel
+                                    </button>
                                   )}
                                 </div>
-                              )}
-                            </div>
-                            <div className="md:col-span-2 pt-4 border-t border-gray-800">
-                              <div className="grid grid-cols-2 gap-4 text-sm">
-                                <div>
-                                  <span className="text-gray-500">Created:</span>
-                                  <span className="ml-2 text-gray-300">
-                                    {new Date(hospital.createdAt).toLocaleDateString()}
+                              </div>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {hospitalManagerTab === 'donors' && (
+                    <div className="space-y-6">
+                      <div className="flex justify-between items-center">
+                        <h2 className="text-xl font-bold text-white">Donor Requests</h2>
+                        <button
+                          onClick={() => setIsDonorRequestModalOpen(true)}
+                          className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 flex items-center gap-2"
+                        >
+                          <Plus className="w-4 h-4" />
+                          New Request
+                        </button>
+                      </div>
+
+                      {/* Active Requests */}
+                      <div className="bg-[#1a1a1a] border border-gray-800 rounded-lg overflow-hidden">
+                        <div className="bg-gray-900/50 px-6 py-4 border-b border-gray-800">
+                          <h3 className="font-medium text-white">Active Requests</h3>
+                        </div>
+                        <div className="divide-y divide-gray-800">
+                          {donorRequests && donorRequests
+                            .filter(request => request?.isActive)
+                            .map((request, index) => (
+                              <div key={index} className="px-6 py-4">
+                                <div className="flex justify-between items-start">
+                                  <div>
+                                    <h4 className="font-medium text-white">{getDonorTypeLabel(request.donorType)}</h4>
+                                    <p className="text-sm text-gray-400 mt-1">{request.requestDescription}</p>
+                                    <div className="mt-2 flex flex-wrap gap-2">
+                                      <span className="text-xs px-2 py-1 rounded-full bg-blue-500/20 text-blue-400 border border-blue-500/50">
+                                        Max Donors: {request.maxDonors?.toString()}
+                                      </span>
+                                      <span className="text-xs px-2 py-1 rounded-full bg-green-500/20 text-green-400 border border-green-500/50">
+                                        Amount: {request.minAmontpayment?.toString()} - {request.maxAmountPayment?.toString()} ETH
+                                      </span>
+                                      <span className="text-xs px-2 py-1 rounded-full bg-purple-500/20 text-purple-400 border border-purple-500/50">
+                                        Date: {request.date ? formatDate(request.date) : 'N/A'}
+                                      </span>
+                                    </div>
+                                  </div>
+                                  <span className={`text-xs px-2 py-1 rounded-full ${request.status === 0 ? 'bg-yellow-500/20 text-yellow-400 border border-yellow-500/50' :
+                                    request.status === 1 ? 'bg-green-500/20 text-green-400 border border-green-500/50' :
+                                      request.status === 2 ? 'bg-red-500/20 text-red-400 border border-red-500/50' :
+                                        'bg-blue-500/20 text-blue-400 border border-blue-500/50'
+                                    }`}>
+                                    {getStatusLabel(request.status)}
                                   </span>
                                 </div>
-                                <div>
-                                  <span className="text-gray-500">Last Updated:</span>
-                                  <span className="ml-2 text-gray-300">
-                                    {new Date(hospital.updatedAt).toLocaleDateString()}
-                                  </span>
+                              </div>
+                            ))}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {hospitalManagerTab === 'settings' && (
+                    <div className="space-y-6">
+                      {isLoadingHospital ? (
+                        <div className="bg-[#0b0b0d] border border-gray-800 rounded-lg p-8 text-center">
+                          <Loader2 className="h-8 w-8 animate-spin text-blue-500 mx-auto mb-4" />
+                          <p className="text-gray-400">Loading hospital information...</p>
+                        </div>
+                      ) : !hospital ? (
+                        <div className="bg-[#0b0b0d] border border-gray-800 rounded-lg p-8 text-center">
+                          <Building2 className="h-12 w-12 text-gray-500 mx-auto mb-4" />
+                          <h3 className="text-lg font-medium text-white mb-2">No Hospital Registered</h3>
+                          <p className="text-gray-400 mb-6">
+                            Please register your hospital first to access settings.
+                          </p>
+                        </div>
+                      ) : (
+                        <div className="bg-gray-900/50 border border-gray-800 rounded-lg overflow-hidden">
+                          {/* Verification Status */}
+                          <div className="bg-gray-900/50 rounded-lg border border-gray-800 mx-4 mt-4 px-4 py-2">
+                            <div className="flex items-center justify-between">
+                              <div>
+                                <h3 className="font-medium text-white mb-1">Verification Status</h3>
+                                <p className="text-sm text-gray-400">
+                                  {hospital.isVerified
+                                    ? 'Your hospital has been verified and is trusted by patients.'
+                                    : 'Verify your hospital to build trust and credibility with patients.'}
+                                </p>
+                                {hospital.verificationDate && (
+                                  <p className="text-xs text-gray-500 mt-1">
+                                    Verified on {new Date(hospital.verificationDate).toLocaleDateString()}
+                                  </p>
+                                )}
+                              </div>
+                              {!hospital.isVerified && (
+                                <button
+                                  onClick={() => setIsVerificationModalOpen(true)}
+                                  className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 flex items-center gap-2"
+                                >
+                                  <Shield className="h-4 w-4" />
+                                  Verify Now
+                                </button>
+                              )}
+                            </div>
+                          </div>
+
+                          <div className="px-6 py-4 flex justify-between items-center">
+                            <div></div>
+                            {!isEditingHospital ? (
+                              <button
+                                onClick={() => setIsEditingHospital(true)}
+                                className="px-4 py-2 text-blue-400 underline rounded-lg text-sm hover:text-blue-300"
+                              >
+                                Edit Details
+                              </button>
+                            ) : (
+                              <div className="flex gap-2">
+                                <button
+                                  onClick={() => {
+                                    setIsEditingHospital(false);
+                                    setEditFormData({
+                                      name: hospital.name,
+                                      location: hospital.location,
+                                      rating: hospital.rating,
+                                      specialties: hospital.specialties,
+                                      imageUrl: hospital.imageUrl,
+                                    });
+                                  }}
+                                  className="px-4 py-2 border border-gray-700 text-gray-300 rounded-lg hover:bg-gray-800 text-sm"
+                                >
+                                  Cancel
+                                </button>
+                                <button
+                                  onClick={handleSaveHospitalChanges}
+                                  disabled={isSavingHospital}
+                                  className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 text-sm disabled:opacity-50"
+                                >
+                                  {isSavingHospital ? 'Saving...' : 'Save Changes'}
+                                </button>
+                              </div>
+                            )}
+                          </div>
+
+                          <div className="p-6 space-y-6">
+                            {hospital.imageUrl && (
+                              <div className="mb-2">
+                                <Image
+                                  src={hospital.imageUrl}
+                                  alt={hospital.name}
+                                  width={200}
+                                  height={200}
+                                  className="rounded-lg border border-gray-800 w-full max-w-xs h-48 object-cover"
+                                />
+                              </div>
+                            )}
+                            <div>
+                              <label className="block text-sm font-medium text-gray-300 mb-1">Image URL</label>
+                              {isEditingHospital ? (
+                                <input
+                                  type="url"
+                                  value={editFormData.imageUrl || ''}
+                                  onChange={(e) => setEditFormData({ ...editFormData, imageUrl: e.target.value })}
+                                  className="w-full px-3 py-2 bg-[#0a0a0a] border border-gray-700 rounded-lg text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                  placeholder="https://..."
+                                />
+                              ) : (
+                                <div className="text-gray-300 text-sm break-all">{hospital.imageUrl || 'No image URL set'}</div>
+                              )}
+                            </div>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                              <div>
+                                <label className="block text-sm font-medium text-gray-300 mb-1">Hospital Name</label>
+                                {isEditingHospital ? (
+                                  <input
+                                    type="text"
+                                    value={editFormData.name || ''}
+                                    onChange={(e) => setEditFormData({ ...editFormData, name: e.target.value })}
+                                    className="w-full px-3 py-2 bg-[#0a0a0a] border border-gray-700 rounded-lg text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                  />
+                                ) : (
+                                  <div className="text-white font-medium">{hospital.name}</div>
+                                )}
+                              </div>
+                              <div>
+                                <label className="block text-sm font-medium text-gray-300 mb-1">Location</label>
+                                {isEditingHospital ? (
+                                  <input
+                                    type="text"
+                                    value={editFormData.location || ''}
+                                    onChange={(e) => setEditFormData({ ...editFormData, location: e.target.value })}
+                                    className="w-full px-3 py-2 bg-[#0a0a0a] border border-gray-700 rounded-lg text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                    placeholder="e.g., Boston, MA"
+                                  />
+                                ) : (
+                                  <div className="text-white flex items-center gap-1">{hospital.location}</div>
+                                )}
+                              </div>
+                              <div>
+                                <label className="block text-sm font-medium text-gray-300 mb-1">Rating</label>
+                                {isEditingHospital ? (
+                                  <input
+                                    type="number"
+                                    min="0"
+                                    max="5"
+                                    step="0.1"
+                                    value={editFormData.rating || 0}
+                                    onChange={(e) => setEditFormData({ ...editFormData, rating: parseFloat(e.target.value) || 0 })}
+                                    className="w-full px-3 py-2 bg-[#0a0a0a] border border-gray-700 rounded-lg text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                  />
+                                ) : (
+                                  <div className="text-white flex items-center gap-1">
+                                    <Star className="h-4 w-4 text-yellow-400 fill-current" />
+                                    {hospital.rating.toFixed(1)} / 5.0
+                                  </div>
+                                )}
+                              </div>
+                              <div>
+                                <label className="block text-sm font-medium text-gray-300 mb-1">Wallet Address</label>
+                                <div className="text-gray-300 font-mono text-sm">{hospital.walletAddress}</div>
+                              </div>
+                              <div className="md:col-span-2">
+                                <label className="block text-sm font-medium text-gray-300 mb-2">Specialties</label>
+                                {isEditingHospital ? (
+                                  <div className="space-y-2">
+                                    <div className="flex flex-wrap gap-2">
+                                      {editFormData.specialties?.map((specialty, index) => (
+                                        <span
+                                          key={index}
+                                          className="inline-flex items-center gap-1 px-3 py-1 bg-blue-500/20 text-blue-400 rounded-full text-sm border border-blue-500/50"
+                                        >
+                                          {specialty}
+                                          <button
+                                            onClick={() => {
+                                              const newSpecialties = editFormData.specialties?.filter((_, i) => i !== index) || [];
+                                              setEditFormData({ ...editFormData, specialties: newSpecialties });
+                                            }}
+                                            className="hover:text-blue-300"
+                                          >
+                                            <X className="h-3 w-3" />
+                                          </button>
+                                        </span>
+                                      ))}
+                                    </div>
+                                    <input
+                                      type="text"
+                                      placeholder="Add specialty and press Enter"
+                                      className="w-full px-3 py-2 bg-[#0a0a0a] border border-gray-700 rounded-lg text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                      onKeyDown={(e) => {
+                                        if (e.key === 'Enter') {
+                                          e.preventDefault();
+                                          const value = e.currentTarget.value.trim();
+                                          if (value && !editFormData.specialties?.includes(value)) {
+                                            setEditFormData({
+                                              ...editFormData,
+                                              specialties: [...(editFormData.specialties || []), value],
+                                            });
+                                            e.currentTarget.value = '';
+                                          }
+                                        }
+                                      }}
+                                    />
+                                  </div>
+                                ) : (
+                                  <div className="flex flex-wrap gap-2">
+                                    {hospital.specialties.length > 0 ? (
+                                      hospital.specialties.map((specialty, index) => (
+                                        <span
+                                          key={index}
+                                          className="px-3 py-1 bg-blue-500/20 text-blue-400 rounded-full text-sm border border-blue-500/50"
+                                        >
+                                          {specialty}
+                                        </span>
+                                      ))
+                                    ) : (
+                                      <span className="text-gray-500 text-sm">No specialties listed</span>
+                                    )}
+                                  </div>
+                                )}
+                              </div>
+                              <div className="md:col-span-2 pt-4 border-t border-gray-800">
+                                <div className="grid grid-cols-2 gap-4 text-sm">
+                                  <div>
+                                    <span className="text-gray-500">Created:</span>
+                                    <span className="ml-2 text-gray-300">
+                                      {new Date(hospital.createdAt).toLocaleDateString()}
+                                    </span>
+                                  </div>
+                                  <div>
+                                    <span className="text-gray-500">Last Updated:</span>
+                                    <span className="ml-2 text-gray-300">
+                                      {new Date(hospital.updatedAt).toLocaleDateString()}
+                                    </span>
+                                  </div>
                                 </div>
                               </div>
                             </div>
                           </div>
                         </div>
-                      </div>
-                    )}
-                  </div>
-                )}
+                      )}
+                    </div>
+                  )}
 
-                {(hospitalManagerTab === 'customers' || hospitalManagerTab === 'treatments') && (
-                  <div className="bg-[#1a1a1a] border border-gray-800 rounded-lg p-8 text-center">
-                    <h3 className="text-lg font-medium text-white mb-2">Coming Soon</h3>
-                    <p className="text-gray-400 mb-6">
-                      The {hospitalManagerTab} management section is currently under development.
-                    </p>
-                    <button
-                      onClick={() => setHospitalManagerTab('dashboard')}
-                      className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700"
-                    >
-                      Return to Dashboard
-                    </button>
-                  </div>
-                )}
+                  {(hospitalManagerTab === 'customers' || hospitalManagerTab === 'treatments') && (
+                    <div className="bg-[#1a1a1a] border border-gray-800 rounded-lg p-8 text-center">
+                      <h3 className="text-lg font-medium text-white mb-2">Coming Soon</h3>
+                      <p className="text-gray-400 mb-6">
+                        The {hospitalManagerTab} management section is currently under development.
+                      </p>
+                      <button
+                        onClick={() => setHospitalManagerTab('dashboard')}
+                        className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700"
+                      >
+                        Return to Dashboard
+                      </button>
+                    </div>
+                  )}
 
-                {/* Modals */}
-                <DonorRequestModal
-                  isOpen={isDonorRequestModalOpen}
-                  onClose={() => setIsDonorRequestModalOpen(false)}
-                />
-                {hospital && (
-                  <HospitalVerificationModal
-                    isOpen={isVerificationModalOpen}
-                    onClose={() => setIsVerificationModalOpen(false)}
-                    onSuccess={handleVerificationSuccess}
-                    hospitalId={hospital.id}
+                  {/* Modals */}
+                  <DonorRequestModal
+                    isOpen={isDonorRequestModalOpen}
+                    onClose={() => setIsDonorRequestModalOpen(false)}
                   />
-                )}
+                  {hospital && (
+                    <HospitalVerificationModal
+                      isOpen={isVerificationModalOpen}
+                      onClose={() => setIsVerificationModalOpen(false)}
+                      onSuccess={handleVerificationSuccess}
+                      hospitalId={hospital.id}
+                    />
+                  )}
+                </div>
               </div>
             ) : (
               <div className="w-full max-w-6xl mx-auto">

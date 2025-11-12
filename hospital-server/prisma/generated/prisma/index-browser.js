@@ -215,6 +215,19 @@ exports.Prisma.HospitalScalarFieldEnum = {
   updatedAt: 'updatedAt'
 };
 
+exports.Prisma.BookingScalarFieldEnum = {
+  id: 'id',
+  hospitalId: 'hospitalId',
+  userId: 'userId',
+  appointmentDate: 'appointmentDate',
+  duration: 'duration',
+  purpose: 'purpose',
+  additionalNotes: 'additionalNotes',
+  status: 'status',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
 exports.Prisma.SortOrder = {
   asc: 'asc',
   desc: 'desc'
@@ -240,7 +253,8 @@ exports.Prisma.ModelName = {
   HcahpsHospitalSurvery: 'HcahpsHospitalSurvery',
   HospitalInformation: 'HospitalInformation',
   User: 'User',
-  Hospital: 'Hospital'
+  Hospital: 'Hospital',
+  Booking: 'Booking'
 };
 
 /**
