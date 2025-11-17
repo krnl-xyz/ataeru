@@ -14,9 +14,9 @@ export const createRequest = async (req: Request, res: Response, next: NextFunct
     const { hospitalId, requestType, title, description, bookingId, treatmentId, priority, requestedDate } = req.body;
 
     // Validate required fields
-    if (!hospitalId || !requestType || !title) {
+    if (!requestType || !title) {
       res.status(400).json({
-        message: "Missing required fields: hospitalId, requestType, and title are required",
+        message: "Missing required fields: requestType and title are required",
       });
       return;
     }
@@ -46,14 +46,17 @@ export const createRequest = async (req: Request, res: Response, next: NextFunct
       return;
     }
 
-    // Verify hospital exists
-    const hospital = await prisma.hospital.findUnique({
-      where: { id: hospitalId },
-    });
+    // Verify hospital exists if hospitalId is provided
+    let hospital = null;
+    if (hospitalId) {
+      hospital = await prisma.hospital.findUnique({
+        where: { id: hospitalId },
+      });
 
-    if (!hospital) {
-      res.status(404).json({ message: "Hospital not found" });
-      return;
+      if (!hospital) {
+        res.status(404).json({ message: "Hospital not found" });
+        return;
+      }
     }
 
     // Verify booking exists if bookingId is provided
@@ -87,7 +90,7 @@ export const createRequest = async (req: Request, res: Response, next: NextFunct
     // Create the request
     const request = await prisma.hospitalRequest.create({
       data: {
-        hospitalId,
+        hospitalId: hospitalId || null,
         userId,
         requestType: requestType.toUpperCase() as 'DONOR_REQUEST' | 'CONSULTATION' | 'HELP_REQUEST' | 'TREATMENT_REQUEST',
         title,
@@ -129,13 +132,15 @@ export const createRequest = async (req: Request, res: Response, next: NextFunct
       },
     });
 
-    // Update hospital statistics
-    await prisma.hospital.update({
-      where: { id: hospitalId },
-      data: {
-        totalRequests: { increment: 1 },
-      },
-    });
+    // Update hospital statistics if hospitalId is provided
+    if (hospitalId) {
+      await prisma.hospital.update({
+        where: { id: hospitalId },
+        data: {
+          totalRequests: { increment: 1 },
+        },
+      });
+    }
 
     res.status(201).json({
       message: "Request created successfully",
@@ -333,12 +338,17 @@ export const getRequestById = async (req: Request, res: Response, next: NextFunc
       return;
     }
 
-    // Check authorization: user must be the requester or hospital owner
-    const hospital = await prisma.hospital.findUnique({
-      where: { id: request.hospitalId },
-    });
+    // Check authorization: user must be the requester or hospital owner (if hospital exists)
+    let isAuthorized = request.userId === userId;
 
-    if (request.userId !== userId && hospital?.ownerId !== userId) {
+    if (!isAuthorized && request.hospitalId) {
+      const hospital = await prisma.hospital.findUnique({
+        where: { id: request.hospitalId },
+      });
+      isAuthorized = hospital?.ownerId === userId;
+    }
+
+    if (!isAuthorized) {
       res.status(403).json({ message: "You are not authorized to view this request" });
       return;
     }
@@ -380,14 +390,22 @@ export const updateRequestStatus = async (req: Request, res: Response, next: Nex
       return;
     }
 
-    // Verify user is the hospital owner
-    const hospital = await prisma.hospital.findUnique({
-      where: { id: request.hospitalId },
-    });
+    // Verify user is the hospital owner (if hospital exists)
+    if (request.hospitalId) {
+      const hospital = await prisma.hospital.findUnique({
+        where: { id: request.hospitalId },
+      });
 
-    if (!hospital || hospital.ownerId !== userId) {
-      res.status(403).json({ message: "You are not authorized to update this request" });
-      return;
+      if (!hospital || hospital.ownerId !== userId) {
+        res.status(403).json({ message: "You are not authorized to update this request" });
+        return;
+      }
+    } else {
+      // If no hospital, only the requester can update
+      if (request.userId !== userId) {
+        res.status(403).json({ message: "You are not authorized to update this request" });
+        return;
+      }
     }
 
     // Prepare update data
@@ -458,7 +476,7 @@ export const updateRequest = async (req: Request, res: Response, next: NextFunct
     }
 
     const { id } = req.params;
-    const { title, description, priority, requestedDate } = req.body;
+    const { hospitalId, title, description, priority, requestedDate } = req.body;
 
     // Get the request
     const request = await prisma.hospitalRequest.findUnique({
@@ -470,12 +488,14 @@ export const updateRequest = async (req: Request, res: Response, next: NextFunct
       return;
     }
 
-    // Check authorization: user must be the requester or hospital owner
-    const hospital = await prisma.hospital.findUnique({
-      where: { id: request.hospitalId },
-    });
-
-    const isOwner = hospital?.ownerId === userId;
+    // Check authorization: user must be the requester or hospital owner (if hospital exists)
+    let isOwner = false;
+    if (request.hospitalId) {
+      const hospital = await prisma.hospital.findUnique({
+        where: { id: request.hospitalId },
+      });
+      isOwner = hospital?.ownerId === userId;
+    }
     const isRequester = request.userId === userId;
 
     if (!isOwner && !isRequester) {
@@ -483,8 +503,43 @@ export const updateRequest = async (req: Request, res: Response, next: NextFunct
       return;
     }
 
-    // Only requester can update these fields (unless it's the owner)
+    // Prepare update data
     const updateData: any = {};
+
+    // Validate and verify hospital if hospitalId is being updated
+    let newHospital = null;
+    let oldHospitalId = request.hospitalId;
+    if (hospitalId !== undefined) {
+      if (hospitalId === null) {
+        // Allow setting hospitalId to null (unlink from hospital)
+        // Only requester can do this
+        if (!isRequester) {
+          res.status(403).json({ message: "Only the requester can unlink a hospital from their request" });
+          return;
+        }
+        updateData.hospitalId = null;
+      } else {
+        // Verify the new hospital exists
+        newHospital = await prisma.hospital.findUnique({
+          where: { id: hospitalId },
+        });
+
+        if (!newHospital) {
+          res.status(404).json({ message: "Hospital not found" });
+          return;
+        }
+
+        // Requester can link any hospital, hospital owner can only link their own
+        if (newHospital.ownerId !== userId && !isRequester) {
+          res.status(403).json({ message: "You are not authorized to link this hospital to the request" });
+          return;
+        }
+
+        updateData.hospitalId = hospitalId;
+      }
+    }
+
+    // Only requester can update these fields (unless it's the owner)
     if (title !== undefined && (isRequester || isOwner)) {
       updateData.title = title;
     }
@@ -538,6 +593,28 @@ export const updateRequest = async (req: Request, res: Response, next: NextFunct
       },
     });
 
+    // Update hospital statistics if hospitalId was changed
+    if (hospitalId !== undefined && oldHospitalId !== hospitalId) {
+      // Decrement old hospital if it existed
+      if (oldHospitalId) {
+        await prisma.hospital.update({
+          where: { id: oldHospitalId },
+          data: {
+            totalRequests: { decrement: 1 },
+          },
+        });
+      }
+      // Increment new hospital if it exists
+      if (hospitalId) {
+        await prisma.hospital.update({
+          where: { id: hospitalId },
+          data: {
+            totalRequests: { increment: 1 },
+          },
+        });
+      }
+    }
+
     res.status(200).json({
       message: "Request updated successfully",
       request: updatedRequest,
@@ -568,12 +645,14 @@ export const deleteRequest = async (req: Request, res: Response, next: NextFunct
       return;
     }
 
-    // Check authorization: user must be the requester or hospital owner
-    const hospital = await prisma.hospital.findUnique({
-      where: { id: request.hospitalId },
-    });
-
-    const isOwner = hospital?.ownerId === userId;
+    // Check authorization: user must be the requester or hospital owner (if hospital exists)
+    let isOwner = false;
+    if (request.hospitalId) {
+      const hospital = await prisma.hospital.findUnique({
+        where: { id: request.hospitalId },
+      });
+      isOwner = hospital?.ownerId === userId;
+    }
     const isRequester = request.userId === userId;
 
     if (!isOwner && !isRequester) {
@@ -581,18 +660,23 @@ export const deleteRequest = async (req: Request, res: Response, next: NextFunct
       return;
     }
 
+    // Store hospitalId before deletion for statistics update
+    const requestHospitalId = request.hospitalId;
+
     // Delete the request
     await prisma.hospitalRequest.delete({
       where: { id },
     });
 
-    // Update hospital statistics (decrement totalRequests)
-    await prisma.hospital.update({
-      where: { id: request.hospitalId },
-      data: {
-        totalRequests: { decrement: 1 },
-      },
-    });
+    // Update hospital statistics (decrement totalRequests) if hospital exists
+    if (requestHospitalId) {
+      await prisma.hospital.update({
+        where: { id: requestHospitalId },
+        data: {
+          totalRequests: { decrement: 1 },
+        },
+      });
+    }
 
     res.status(200).json({ message: "Request deleted successfully" });
   } catch (error) {
@@ -622,7 +706,7 @@ export const getRequestsByType = async (req: Request, res: Response, next: NextF
     const requests = await prisma.hospitalRequest.findMany({
       where: {
         requestType: type.toUpperCase() as 'DONOR_REQUEST' | 'CONSULTATION' | 'HELP_REQUEST' | 'TREATMENT_REQUEST',
-        // Only show requests where user is requester or hospital owner
+        // Only show requests where user is requester or hospital owner (if hospital exists)
         OR: [
           { userId },
           {
@@ -686,7 +770,7 @@ export const getRequestsByStatus = async (req: Request, res: Response, next: Nex
     const requests = await prisma.hospitalRequest.findMany({
       where: {
         status: status.toUpperCase() as 'PENDING' | 'APPROVED' | 'REJECTED' | 'IN_PROGRESS' | 'COMPLETED' | 'CANCELLED',
-        // Only show requests where user is requester or hospital owner
+        // Only show requests where user is requester or hospital owner (if hospital exists)
         OR: [
           { userId },
           {

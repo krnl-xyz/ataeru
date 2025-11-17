@@ -10529,7 +10529,7 @@ export namespace Prisma {
 
   export type HospitalRequestGroupByOutputType = {
     id: string
-    hospitalId: string
+    hospitalId: string | null
     userId: string
     requestType: $Enums.RequestType
     status: $Enums.RequestStatus
@@ -10578,7 +10578,7 @@ export namespace Prisma {
     notes?: boolean
     createdAt?: boolean
     updatedAt?: boolean
-    hospital?: boolean | HospitalDefaultArgs<ExtArgs>
+    hospital?: boolean | HospitalRequest$hospitalArgs<ExtArgs>
     user?: boolean | UserDefaultArgs<ExtArgs>
     booking?: boolean | HospitalRequest$bookingArgs<ExtArgs>
   }, ExtArgs["result"]["hospitalRequest"]>
@@ -10599,7 +10599,7 @@ export namespace Prisma {
     notes?: boolean
     createdAt?: boolean
     updatedAt?: boolean
-    hospital?: boolean | HospitalDefaultArgs<ExtArgs>
+    hospital?: boolean | HospitalRequest$hospitalArgs<ExtArgs>
     user?: boolean | UserDefaultArgs<ExtArgs>
     booking?: boolean | HospitalRequest$bookingArgs<ExtArgs>
   }, ExtArgs["result"]["hospitalRequest"]>
@@ -10620,7 +10620,7 @@ export namespace Prisma {
     notes?: boolean
     createdAt?: boolean
     updatedAt?: boolean
-    hospital?: boolean | HospitalDefaultArgs<ExtArgs>
+    hospital?: boolean | HospitalRequest$hospitalArgs<ExtArgs>
     user?: boolean | UserDefaultArgs<ExtArgs>
     booking?: boolean | HospitalRequest$bookingArgs<ExtArgs>
   }, ExtArgs["result"]["hospitalRequest"]>
@@ -10645,17 +10645,17 @@ export namespace Prisma {
 
   export type HospitalRequestOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "hospitalId" | "userId" | "requestType" | "status" | "title" | "description" | "bookingId" | "treatmentId" | "priority" | "requestedDate" | "completedDate" | "notes" | "createdAt" | "updatedAt", ExtArgs["result"]["hospitalRequest"]>
   export type HospitalRequestInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    hospital?: boolean | HospitalDefaultArgs<ExtArgs>
+    hospital?: boolean | HospitalRequest$hospitalArgs<ExtArgs>
     user?: boolean | UserDefaultArgs<ExtArgs>
     booking?: boolean | HospitalRequest$bookingArgs<ExtArgs>
   }
   export type HospitalRequestIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    hospital?: boolean | HospitalDefaultArgs<ExtArgs>
+    hospital?: boolean | HospitalRequest$hospitalArgs<ExtArgs>
     user?: boolean | UserDefaultArgs<ExtArgs>
     booking?: boolean | HospitalRequest$bookingArgs<ExtArgs>
   }
   export type HospitalRequestIncludeUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    hospital?: boolean | HospitalDefaultArgs<ExtArgs>
+    hospital?: boolean | HospitalRequest$hospitalArgs<ExtArgs>
     user?: boolean | UserDefaultArgs<ExtArgs>
     booking?: boolean | HospitalRequest$bookingArgs<ExtArgs>
   }
@@ -10663,13 +10663,13 @@ export namespace Prisma {
   export type $HospitalRequestPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     name: "HospitalRequest"
     objects: {
-      hospital: Prisma.$HospitalPayload<ExtArgs>
+      hospital: Prisma.$HospitalPayload<ExtArgs> | null
       user: Prisma.$UserPayload<ExtArgs>
       booking: Prisma.$BookingPayload<ExtArgs> | null
     }
     scalars: $Extensions.GetPayloadResult<{
       id: string
-      hospitalId: string
+      hospitalId: string | null
       userId: string
       requestType: $Enums.RequestType
       status: $Enums.RequestStatus
@@ -11077,7 +11077,7 @@ export namespace Prisma {
    */
   export interface Prisma__HospitalRequestClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
     readonly [Symbol.toStringTag]: "PrismaPromise"
-    hospital<T extends HospitalDefaultArgs<ExtArgs> = {}>(args?: Subset<T, HospitalDefaultArgs<ExtArgs>>): Prisma__HospitalClient<$Result.GetResult<Prisma.$HospitalPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+    hospital<T extends HospitalRequest$hospitalArgs<ExtArgs> = {}>(args?: Subset<T, HospitalRequest$hospitalArgs<ExtArgs>>): Prisma__HospitalClient<$Result.GetResult<Prisma.$HospitalPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
     user<T extends UserDefaultArgs<ExtArgs> = {}>(args?: Subset<T, UserDefaultArgs<ExtArgs>>): Prisma__UserClient<$Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
     booking<T extends HospitalRequest$bookingArgs<ExtArgs> = {}>(args?: Subset<T, HospitalRequest$bookingArgs<ExtArgs>>): Prisma__BookingClient<$Result.GetResult<Prisma.$BookingPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
     /**
@@ -11517,6 +11517,25 @@ export namespace Prisma {
      * Limit how many HospitalRequests to delete.
      */
     limit?: number
+  }
+
+  /**
+   * HospitalRequest.hospital
+   */
+  export type HospitalRequest$hospitalArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Hospital
+     */
+    select?: HospitalSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Hospital
+     */
+    omit?: HospitalOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: HospitalInclude<ExtArgs> | null
+    where?: HospitalWhereInput
   }
 
   /**
@@ -14799,7 +14818,7 @@ export namespace Prisma {
     OR?: HospitalRequestWhereInput[]
     NOT?: HospitalRequestWhereInput | HospitalRequestWhereInput[]
     id?: StringFilter<"HospitalRequest"> | string
-    hospitalId?: StringFilter<"HospitalRequest"> | string
+    hospitalId?: StringNullableFilter<"HospitalRequest"> | string | null
     userId?: StringFilter<"HospitalRequest"> | string
     requestType?: EnumRequestTypeFilter<"HospitalRequest"> | $Enums.RequestType
     status?: EnumRequestStatusFilter<"HospitalRequest"> | $Enums.RequestStatus
@@ -14813,14 +14832,14 @@ export namespace Prisma {
     notes?: StringNullableFilter<"HospitalRequest"> | string | null
     createdAt?: DateTimeFilter<"HospitalRequest"> | Date | string
     updatedAt?: DateTimeFilter<"HospitalRequest"> | Date | string
-    hospital?: XOR<HospitalScalarRelationFilter, HospitalWhereInput>
+    hospital?: XOR<HospitalNullableScalarRelationFilter, HospitalWhereInput> | null
     user?: XOR<UserScalarRelationFilter, UserWhereInput>
     booking?: XOR<BookingNullableScalarRelationFilter, BookingWhereInput> | null
   }
 
   export type HospitalRequestOrderByWithRelationInput = {
     id?: SortOrder
-    hospitalId?: SortOrder
+    hospitalId?: SortOrderInput | SortOrder
     userId?: SortOrder
     requestType?: SortOrder
     status?: SortOrder
@@ -14845,7 +14864,7 @@ export namespace Prisma {
     AND?: HospitalRequestWhereInput | HospitalRequestWhereInput[]
     OR?: HospitalRequestWhereInput[]
     NOT?: HospitalRequestWhereInput | HospitalRequestWhereInput[]
-    hospitalId?: StringFilter<"HospitalRequest"> | string
+    hospitalId?: StringNullableFilter<"HospitalRequest"> | string | null
     userId?: StringFilter<"HospitalRequest"> | string
     requestType?: EnumRequestTypeFilter<"HospitalRequest"> | $Enums.RequestType
     status?: EnumRequestStatusFilter<"HospitalRequest"> | $Enums.RequestStatus
@@ -14858,14 +14877,14 @@ export namespace Prisma {
     notes?: StringNullableFilter<"HospitalRequest"> | string | null
     createdAt?: DateTimeFilter<"HospitalRequest"> | Date | string
     updatedAt?: DateTimeFilter<"HospitalRequest"> | Date | string
-    hospital?: XOR<HospitalScalarRelationFilter, HospitalWhereInput>
+    hospital?: XOR<HospitalNullableScalarRelationFilter, HospitalWhereInput> | null
     user?: XOR<UserScalarRelationFilter, UserWhereInput>
     booking?: XOR<BookingNullableScalarRelationFilter, BookingWhereInput> | null
   }, "id" | "bookingId">
 
   export type HospitalRequestOrderByWithAggregationInput = {
     id?: SortOrder
-    hospitalId?: SortOrder
+    hospitalId?: SortOrderInput | SortOrder
     userId?: SortOrder
     requestType?: SortOrder
     status?: SortOrder
@@ -14889,7 +14908,7 @@ export namespace Prisma {
     OR?: HospitalRequestScalarWhereWithAggregatesInput[]
     NOT?: HospitalRequestScalarWhereWithAggregatesInput | HospitalRequestScalarWhereWithAggregatesInput[]
     id?: StringWithAggregatesFilter<"HospitalRequest"> | string
-    hospitalId?: StringWithAggregatesFilter<"HospitalRequest"> | string
+    hospitalId?: StringNullableWithAggregatesFilter<"HospitalRequest"> | string | null
     userId?: StringWithAggregatesFilter<"HospitalRequest"> | string
     requestType?: EnumRequestTypeWithAggregatesFilter<"HospitalRequest"> | $Enums.RequestType
     status?: EnumRequestStatusWithAggregatesFilter<"HospitalRequest"> | $Enums.RequestStatus
@@ -15885,14 +15904,14 @@ export namespace Prisma {
     notes?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
-    hospital: HospitalCreateNestedOneWithoutRequestsInput
+    hospital?: HospitalCreateNestedOneWithoutRequestsInput
     user: UserCreateNestedOneWithoutRequestsInput
     booking?: BookingCreateNestedOneWithoutRequestInput
   }
 
   export type HospitalRequestUncheckedCreateInput = {
     id?: string
-    hospitalId: string
+    hospitalId?: string | null
     userId: string
     requestType: $Enums.RequestType
     status?: $Enums.RequestStatus
@@ -15921,14 +15940,14 @@ export namespace Prisma {
     notes?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    hospital?: HospitalUpdateOneRequiredWithoutRequestsNestedInput
+    hospital?: HospitalUpdateOneWithoutRequestsNestedInput
     user?: UserUpdateOneRequiredWithoutRequestsNestedInput
     booking?: BookingUpdateOneWithoutRequestNestedInput
   }
 
   export type HospitalRequestUncheckedUpdateInput = {
     id?: StringFieldUpdateOperationsInput | string
-    hospitalId?: StringFieldUpdateOperationsInput | string
+    hospitalId?: NullableStringFieldUpdateOperationsInput | string | null
     userId?: StringFieldUpdateOperationsInput | string
     requestType?: EnumRequestTypeFieldUpdateOperationsInput | $Enums.RequestType
     status?: EnumRequestStatusFieldUpdateOperationsInput | $Enums.RequestStatus
@@ -15946,7 +15965,7 @@ export namespace Prisma {
 
   export type HospitalRequestCreateManyInput = {
     id?: string
-    hospitalId: string
+    hospitalId?: string | null
     userId: string
     requestType: $Enums.RequestType
     status?: $Enums.RequestStatus
@@ -15979,7 +15998,7 @@ export namespace Prisma {
 
   export type HospitalRequestUncheckedUpdateManyInput = {
     id?: StringFieldUpdateOperationsInput | string
-    hospitalId?: StringFieldUpdateOperationsInput | string
+    hospitalId?: NullableStringFieldUpdateOperationsInput | string | null
     userId?: StringFieldUpdateOperationsInput | string
     requestType?: EnumRequestTypeFieldUpdateOperationsInput | $Enums.RequestType
     status?: EnumRequestStatusFieldUpdateOperationsInput | $Enums.RequestStatus
@@ -17548,10 +17567,12 @@ export namespace Prisma {
     set?: Date | string | null
   }
 
-  export type HospitalUpdateOneRequiredWithoutRequestsNestedInput = {
+  export type HospitalUpdateOneWithoutRequestsNestedInput = {
     create?: XOR<HospitalCreateWithoutRequestsInput, HospitalUncheckedCreateWithoutRequestsInput>
     connectOrCreate?: HospitalCreateOrConnectWithoutRequestsInput
     upsert?: HospitalUpsertWithoutRequestsInput
+    disconnect?: HospitalWhereInput | boolean
+    delete?: HospitalWhereInput | boolean
     connect?: HospitalWhereUniqueInput
     update?: XOR<XOR<HospitalUpdateToOneWithWhereWithoutRequestsInput, HospitalUpdateWithoutRequestsInput>, HospitalUncheckedUpdateWithoutRequestsInput>
   }
@@ -18097,13 +18118,13 @@ export namespace Prisma {
     notes?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
-    hospital: HospitalCreateNestedOneWithoutRequestsInput
+    hospital?: HospitalCreateNestedOneWithoutRequestsInput
     booking?: BookingCreateNestedOneWithoutRequestInput
   }
 
   export type HospitalRequestUncheckedCreateWithoutUserInput = {
     id?: string
-    hospitalId: string
+    hospitalId?: string | null
     requestType: $Enums.RequestType
     status?: $Enums.RequestStatus
     title: string
@@ -18309,7 +18330,7 @@ export namespace Prisma {
     OR?: HospitalRequestScalarWhereInput[]
     NOT?: HospitalRequestScalarWhereInput | HospitalRequestScalarWhereInput[]
     id?: StringFilter<"HospitalRequest"> | string
-    hospitalId?: StringFilter<"HospitalRequest"> | string
+    hospitalId?: StringNullableFilter<"HospitalRequest"> | string | null
     userId?: StringFilter<"HospitalRequest"> | string
     requestType?: EnumRequestTypeFilter<"HospitalRequest"> | $Enums.RequestType
     status?: EnumRequestStatusFilter<"HospitalRequest"> | $Enums.RequestStatus
@@ -18775,13 +18796,13 @@ export namespace Prisma {
     notes?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
-    hospital: HospitalCreateNestedOneWithoutRequestsInput
+    hospital?: HospitalCreateNestedOneWithoutRequestsInput
     user: UserCreateNestedOneWithoutRequestsInput
   }
 
   export type HospitalRequestUncheckedCreateWithoutBookingInput = {
     id?: string
-    hospitalId: string
+    hospitalId?: string | null
     userId: string
     requestType: $Enums.RequestType
     status?: $Enums.RequestStatus
@@ -18933,13 +18954,13 @@ export namespace Prisma {
     notes?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    hospital?: HospitalUpdateOneRequiredWithoutRequestsNestedInput
+    hospital?: HospitalUpdateOneWithoutRequestsNestedInput
     user?: UserUpdateOneRequiredWithoutRequestsNestedInput
   }
 
   export type HospitalRequestUncheckedUpdateWithoutBookingInput = {
     id?: StringFieldUpdateOperationsInput | string
-    hospitalId?: StringFieldUpdateOperationsInput | string
+    hospitalId?: NullableStringFieldUpdateOperationsInput | string | null
     userId?: StringFieldUpdateOperationsInput | string
     requestType?: EnumRequestTypeFieldUpdateOperationsInput | $Enums.RequestType
     status?: EnumRequestStatusFieldUpdateOperationsInput | $Enums.RequestStatus
@@ -19624,7 +19645,7 @@ export namespace Prisma {
 
   export type HospitalRequestCreateManyUserInput = {
     id?: string
-    hospitalId: string
+    hospitalId?: string | null
     requestType: $Enums.RequestType
     status?: $Enums.RequestStatus
     title: string
@@ -19699,13 +19720,13 @@ export namespace Prisma {
     notes?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    hospital?: HospitalUpdateOneRequiredWithoutRequestsNestedInput
+    hospital?: HospitalUpdateOneWithoutRequestsNestedInput
     booking?: BookingUpdateOneWithoutRequestNestedInput
   }
 
   export type HospitalRequestUncheckedUpdateWithoutUserInput = {
     id?: StringFieldUpdateOperationsInput | string
-    hospitalId?: StringFieldUpdateOperationsInput | string
+    hospitalId?: NullableStringFieldUpdateOperationsInput | string | null
     requestType?: EnumRequestTypeFieldUpdateOperationsInput | $Enums.RequestType
     status?: EnumRequestStatusFieldUpdateOperationsInput | $Enums.RequestStatus
     title?: StringFieldUpdateOperationsInput | string
@@ -19722,7 +19743,7 @@ export namespace Prisma {
 
   export type HospitalRequestUncheckedUpdateManyWithoutUserInput = {
     id?: StringFieldUpdateOperationsInput | string
-    hospitalId?: StringFieldUpdateOperationsInput | string
+    hospitalId?: NullableStringFieldUpdateOperationsInput | string | null
     requestType?: EnumRequestTypeFieldUpdateOperationsInput | $Enums.RequestType
     status?: EnumRequestStatusFieldUpdateOperationsInput | $Enums.RequestStatus
     title?: StringFieldUpdateOperationsInput | string

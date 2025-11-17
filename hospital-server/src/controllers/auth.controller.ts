@@ -44,12 +44,12 @@ export const signup = async (req: Request, res: Response, next: NextFunction): P
     }
 
     // hospitalId is required for regular USERs, optional for MEDICAL_FACILITY
-    if (finalUserType === 'USER' && !hospitalId) {
-      res.status(400).json({
-        message: "hospitalId is required for USER type",
-      });
-      return;
-    }
+    // if (finalUserType === 'USER' && !hospitalId) {
+    //   res.status(400).json({
+    //     message: "hospitalId is required for USER type",
+    //   });
+    //   return;
+    // }
 
     // Validate password strength (minimum 6 characters)
     if (password.length < 6) {
@@ -557,12 +557,12 @@ export const googleSSO = async (req: Request, res: Response, next: NextFunction)
       : 'USER';
 
     // hospitalId is required for regular USERs, optional for MEDICAL_FACILITY
-    if (finalUserType === 'USER' && !hospitalId) {
-      res.status(400).json({
-        message: "hospitalId is required for USER type",
-      });
-      return;
-    }
+    // if (finalUserType === 'USER' && !hospitalId) {
+    //   res.status(400).json({
+    //     message: "hospitalId is required for USER type",
+    //   });
+    //   return;
+    // }
 
     // Verify Google ID token
     const client = new OAuth2Client(config.googleClientId);
@@ -866,12 +866,12 @@ export const appleSSO = async (req: Request, res: Response, next: NextFunction):
       : 'USER';
 
     // hospitalId is required for regular USERs, optional for MEDICAL_FACILITY
-    if (finalUserType === 'USER' && !hospitalId) {
-      res.status(400).json({
-        message: "hospitalId is required for USER type",
-      });
-      return;
-    }
+    // if (finalUserType === 'USER' && !hospitalId) {
+    //   res.status(400).json({
+    //     message: "hospitalId is required for USER type",
+    //   });
+    //   return;
+    // }
 
     // Verify Apple identity token
     let decodedToken: any;

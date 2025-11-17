@@ -173,8 +173,8 @@ model Booking {
 
 model HospitalRequest {
   id               String        @id @default(uuid())
-  hospitalId       String        // Which hospital this request is for
-  hospital         Hospital      @relation(fields: [hospitalId], references: [id], onDelete: Cascade)
+  hospitalId       String?       // Optional: Which hospital this request is for (can be linked later)
+  hospital         Hospital?     @relation(fields: [hospitalId], references: [id], onDelete: Cascade)
   userId           String        // User making the request
   user             User          @relation(fields: [userId], references: [id], onDelete: Cascade)
   requestType      RequestType   // Type of request
