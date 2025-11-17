@@ -194,6 +194,8 @@ exports.Prisma.UserScalarFieldEnum = {
   address: 'address',
   about: 'about',
   userType: 'userType',
+  authProvider: 'authProvider',
+  providerId: 'providerId',
   hospitalId: 'hospitalId',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
@@ -211,6 +213,10 @@ exports.Prisma.HospitalScalarFieldEnum = {
   verified: 'verified',
   walletAddress: 'walletAddress',
   ownerId: 'ownerId',
+  totalRequests: 'totalRequests',
+  totalDonors: 'totalDonors',
+  totalCustomers: 'totalCustomers',
+  totalTreatments: 'totalTreatments',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 };
@@ -224,6 +230,45 @@ exports.Prisma.BookingScalarFieldEnum = {
   purpose: 'purpose',
   additionalNotes: 'additionalNotes',
   status: 'status',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
+exports.Prisma.HospitalRequestScalarFieldEnum = {
+  id: 'id',
+  hospitalId: 'hospitalId',
+  userId: 'userId',
+  requestType: 'requestType',
+  status: 'status',
+  title: 'title',
+  description: 'description',
+  bookingId: 'bookingId',
+  treatmentId: 'treatmentId',
+  priority: 'priority',
+  requestedDate: 'requestedDate',
+  completedDate: 'completedDate',
+  notes: 'notes',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
+exports.Prisma.UserPreferenceScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  hospitalId: 'hospitalId',
+  preferenceType: 'preferenceType',
+  notes: 'notes',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
+exports.Prisma.TreatmentPreferenceScalarFieldEnum = {
+  id: 'id',
+  treatmentId: 'treatmentId',
+  treatmentName: 'treatmentName',
+  hospitalId: 'hospitalId',
+  preferenceType: 'preferenceType',
+  notes: 'notes',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 };
@@ -247,6 +292,28 @@ exports.UserType = exports.$Enums.UserType = {
   MEDICAL_FACILITY: 'MEDICAL_FACILITY'
 };
 
+exports.AuthProvider = exports.$Enums.AuthProvider = {
+  EMAIL: 'EMAIL',
+  GOOGLE: 'GOOGLE',
+  APPLE: 'APPLE'
+};
+
+exports.RequestType = exports.$Enums.RequestType = {
+  DONOR_REQUEST: 'DONOR_REQUEST',
+  CONSULTATION: 'CONSULTATION',
+  HELP_REQUEST: 'HELP_REQUEST',
+  TREATMENT_REQUEST: 'TREATMENT_REQUEST'
+};
+
+exports.RequestStatus = exports.$Enums.RequestStatus = {
+  PENDING: 'PENDING',
+  APPROVED: 'APPROVED',
+  REJECTED: 'REJECTED',
+  IN_PROGRESS: 'IN_PROGRESS',
+  COMPLETED: 'COMPLETED',
+  CANCELLED: 'CANCELLED'
+};
+
 exports.Prisma.ModelName = {
   Facility: 'Facility',
   QualityReport: 'QualityReport',
@@ -254,7 +321,10 @@ exports.Prisma.ModelName = {
   HospitalInformation: 'HospitalInformation',
   User: 'User',
   Hospital: 'Hospital',
-  Booking: 'Booking'
+  Booking: 'Booking',
+  HospitalRequest: 'HospitalRequest',
+  UserPreference: 'UserPreference',
+  TreatmentPreference: 'TreatmentPreference'
 };
 
 /**

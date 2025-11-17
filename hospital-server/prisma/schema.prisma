@@ -21,6 +21,28 @@ enum UserType {
   MEDICAL_FACILITY
 }
 
+enum AuthProvider {
+  EMAIL
+  GOOGLE
+  APPLE
+}
+
+enum RequestType {
+  DONOR_REQUEST
+  CONSULTATION
+  HELP_REQUEST
+  TREATMENT_REQUEST
+}
+
+enum RequestStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+}
+
 model Facility {
   id           String @id @default(uuid())
   facilityName String
@@ -86,54 +108,125 @@ model HospitalInformation {
 }
 
 model User {
-  id                 String   @id @default(uuid())
+  id                 String       @id @default(uuid())
   fullname           String
-  email              String   @unique
-  password           String
-  witnesshash        String   @unique
+  email              String       @unique
+  password           String?      // Optional for OAuth users
+  witnesshash        String       @unique
   phone              String
   address            String
   about              String?
-  userType           UserType @default(USER)
-  hospitalId         String?  // Optional for MEDICAL_FACILITY users
+  userType           UserType     @default(USER)
+  authProvider       AuthProvider @default(EMAIL) // EMAIL, GOOGLE, or APPLE
+  providerId         String?      // OAuth provider user ID (Google/Apple)
+  hospitalId         String?      // Optional for MEDICAL_FACILITY users
   hospital           HospitalInformation? @relation(fields: [hospitalId], references: [facilityId], onDelete: Cascade)
-  registeredHospital Hospital? // Hospital registered by MEDICAL_FACILITY users
-  bookings           Booking[] // Bookings made by this user
-  createdAt          DateTime @default(now())
-  updatedAt          DateTime @updatedAt
+  registeredHospital Hospital?    // Hospital registered by MEDICAL_FACILITY users
+  bookings           Booking[]    // Bookings made by this user
+  requests           HospitalRequest[] // Requests made by this user
+  preferredHospitals UserPreference[] // Hospitals this user prefers to work with
+  createdAt          DateTime     @default(now())
+  updatedAt          DateTime     @updatedAt
 }
 
 model Hospital {
-  id            String   @id @default(uuid())
-  name          String
-  location      String
-  rating        Float    @default(0)
-  specialties   String[] // Array of specialties
-  imageUrl      String?
-  isFavorite    Boolean  @default(false)
-  reviews       Int      @default(0)
-  verified      Boolean  @default(false)
-  walletAddress String   // Owner/admin wallet address
-  ownerId       String   @unique // User ID of the owner (MEDICAL_FACILITY user)
-  owner         User     @relation(fields: [ownerId], references: [id], onDelete: Cascade)
-  bookings      Booking[]
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  id                 String                @id @default(uuid())
+  name               String
+  location           String
+  rating             Float                 @default(0)
+  specialties        String[]              // Array of specialties
+  imageUrl           String?
+  isFavorite         Boolean               @default(false)
+  reviews            Int                   @default(0)
+  verified           Boolean               @default(false)
+  walletAddress      String                // Owner/admin wallet address
+  ownerId            String                @unique // User ID of the owner (MEDICAL_FACILITY user)
+  owner              User                  @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  bookings           Booking[]
+  requests           HospitalRequest[]     // Requests for this hospital
+  preferredUsers     UserPreference[]      // Users who prefer this hospital
+  preferredTreatments TreatmentPreference[] // Treatments preferring this hospital
+  // Aggregate statistics (computed from requests/bookings)
+  totalRequests      Int                   @default(0) // Total requests received
+  totalDonors        Int                   @default(0) // Total unique donors (users who donated)
+  totalCustomers     Int                   @default(0) // Total unique customers (users with bookings)
+  totalTreatments    Int                   @default(0) // Total treatments provided
+  createdAt          DateTime              @default(now())
+  updatedAt          DateTime              @updatedAt
 }
 
 model Booking {
+  id               String          @id @default(uuid())
+  hospitalId       String          // Reference to Hospital
+  hospital         Hospital        @relation(fields: [hospitalId], references: [id], onDelete: Cascade)
+  userId           String          // Reference to User who made the booking
+  user             User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  request          HospitalRequest? // Optional: Link to request if this booking came from a request (back-relation)
+  appointmentDate  DateTime        // Appointment date and time combined
+  duration         Int             @default(30) // Duration in minutes
+  purpose          String          // Purpose of the appointment (required)
+  additionalNotes  String?         // Additional notes (optional)
+  status           String          @default("PENDING") // PENDING, CONFIRMED, CANCELLED, COMPLETED
+  createdAt        DateTime        @default(now())
+  updatedAt        DateTime        @updatedAt
+}
+
+model HospitalRequest {
+  id               String        @id @default(uuid())
+  hospitalId       String        // Which hospital this request is for
+  hospital         Hospital      @relation(fields: [hospitalId], references: [id], onDelete: Cascade)
+  userId           String        // User making the request
+  user             User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  requestType      RequestType   // Type of request
+  status           RequestStatus @default(PENDING)
+  title            String        // Brief title of the request
+  description      String?       // Detailed description
+  bookingId        String?       @unique // Optional: Link to a booking if related (one-to-one)
+  booking          Booking?      @relation(fields: [bookingId], references: [id], onDelete: SetNull) // Optional: Link to a booking if related
+  treatmentId      String?       // Optional: Link to a treatment (future)
+  priority         String        @default("NORMAL") // LOW, NORMAL, HIGH, URGENT
+  requestedDate    DateTime?     // When the request should be fulfilled
+  completedDate    DateTime?     // When the request was completed
+  notes            String?       // Internal notes from hospital
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
+  
+  @@index([hospitalId])
+  @@index([userId])
+  @@index([status])
+  @@index([requestType])
+}
+
+model UserPreference {
   id               String   @id @default(uuid())
-  hospitalId       String   // Reference to Hospital
-  hospital         Hospital @relation(fields: [hospitalId], references: [id], onDelete: Cascade)
-  userId           String   // Reference to User who made the booking
+  userId           String
   user             User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  appointmentDate  DateTime // Appointment date and time combined
-  duration         Int      @default(30) // Duration in minutes
-  purpose          String   // Purpose of the appointment (required)
-  additionalNotes  String?  // Additional notes (optional)
-  status           String   @default("PENDING") // PENDING, CONFIRMED, CANCELLED, COMPLETED
+  hospitalId       String
+  hospital         Hospital @relation(fields: [hospitalId], references: [id], onDelete: Cascade)
+  preferenceType   String   @default("FULL_TIME") // FULL_TIME, PREFERRED, OCCASIONAL
+  notes            String?  // Why this preference
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
+  
+  @@unique([userId, hospitalId])
+  @@index([userId])
+  @@index([hospitalId])
+}
+
+model TreatmentPreference {
+  id               String   @id @default(uuid())
+  treatmentId      String   // Treatment ID (for now, string; can be linked when Treatment model exists)
+  treatmentName    String   // Name of treatment
+  hospitalId       String
+  hospital         Hospital @relation(fields: [hospitalId], references: [id], onDelete: Cascade)
+  preferenceType   String   @default("FULL_TIME") // FULL_TIME, PREFERRED, OCCASIONAL
+  notes            String?  // Why this treatment prefers this hospital
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+  
+  @@unique([treatmentId, hospitalId])
+  @@index([treatmentId])
+  @@index([hospitalId])
 }
 
 

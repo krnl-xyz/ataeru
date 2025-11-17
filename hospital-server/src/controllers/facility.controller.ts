@@ -2,7 +2,7 @@ import { NextFunction, Request, Response } from "express";
 import { prisma } from "../config/db";
 
 
-export const getFacility = async (req: Request, res: Response, next: NextFunction) => {
+export const getFacility = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
    try {
       const facilities = await prisma.hospitalInformation.findMany()
       res.status(200).json(facilities)
@@ -13,7 +13,7 @@ export const getFacility = async (req: Request, res: Response, next: NextFunctio
 
 
 
-export const getFacilityById = async (req: Request, res: Response, next: NextFunction) => {
+export const getFacilityById = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
    try {
       const { id } = req.params
       const facility = await prisma.hospitalInformation.findUnique({ where: { facilityId: id } })
@@ -24,7 +24,7 @@ export const getFacilityById = async (req: Request, res: Response, next: NextFun
 }
 
 
-export const getFacilityByName = async (req: Request, res: Response, next: NextFunction) => {
+export const getFacilityByName = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
    try {
       const { name } = req.params
       const facility = await prisma.hospitalInformation.findMany({ where: { facilityName: { contains: name, mode: 'insensitive' } } })
@@ -34,15 +34,16 @@ export const getFacilityByName = async (req: Request, res: Response, next: NextF
    }
 }
 
-export const verifyFacilityById = async (req: Request, res: Response, next: NextFunction) => {
+export const verifyFacilityById = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
    try {
       const { id } = req.params
       const facility = await prisma.hospitalInformation.findUnique({ where: { facilityId: id } })
       if (!facility) {
          // return res.status(404).json({ message: "Facility not found" })
-         return res.status(200).json({ message: false })
+         res.status(200).json({ message: false })
+         return
       }
-      return res.status(200).json({ message: true })
+      res.status(200).json({ message: true })
    } catch (error) {
       next(error)
    }

@@ -17,6 +17,7 @@ import {
   FileText,
   Menu,
   Calendar,
+  CreditCard,
 } from 'lucide-react';
 
 export default function DashboardLayout({

@@ -49,7 +49,13 @@ export interface AuthResponse extends User {
   token?: string;
 }
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+// Use Next.js API proxy to avoid CORS issues
+// If NEXT_PUBLIC_USE_PROXY is true, use the proxy route, otherwise use direct API URL
+const USE_PROXY = process.env.NEXT_PUBLIC_USE_PROXY !== 'false'; // Default to true
+const API_BASE_URL = USE_PROXY
+  ? (typeof window !== 'undefined' ? window.location.origin : '')
+  : (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001');
+const API_PREFIX = USE_PROXY ? '/api/proxy' : '';
 
 // Get auth token from localStorage
 const getAuthToken = (): string | null => {
@@ -69,8 +75,34 @@ const removeAuthToken = (): void => {
   localStorage.removeItem('authToken');
 };
 
+// Type declarations for Google Identity Services
+declare global {
+  interface Window {
+    google?: {
+      accounts: {
+        id: {
+          initialize: (config: {
+            client_id: string;
+            callback: (response: { credential: string }) => void;
+            ux_mode?: 'popup' | 'redirect';
+            auto_select?: boolean;
+            cancel_on_tap_outside?: boolean;
+          }) => void;
+          prompt: (callback?: (notification: any) => void) => void;
+          renderButton: (element: HTMLElement, config: any) => void;
+        };
+        oauth2: {
+          initTokenClient: (config: any) => {
+            requestAccessToken: () => void;
+          };
+        };
+      };
+    };
+  }
+}
+
 // Make authenticated API request
-const apiRequest = async <T>(
+export const apiRequest = async <T>(
   endpoint: string,
   options: RequestInit = {}
 ): Promise<T> => {
@@ -85,7 +117,8 @@ const apiRequest = async <T>(
   }
 
   try {
-    const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+    const url = `${API_BASE_URL}${endpoint}`;
+    const response = await fetch(url, {
       ...options,
       headers,
       credentials: 'include', // Include cookies for cookie-based auth
@@ -100,17 +133,23 @@ const apiRequest = async <T>(
   } catch (error: any) {
     // Provide more helpful error messages for network issues
     if (error.message === 'Failed to fetch' || error.name === 'TypeError') {
-      const origin = typeof window !== 'undefined' ? window.location.origin : 'unknown';
-
+      const backendUrl = USE_PROXY
+        ? 'via Next.js proxy'
+        : (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001');
 
       console.error('Error in API request:', {
         endpoint,
         url: `${API_BASE_URL}${endpoint}`,
         error: error.message,
-        origin,
+        backendUrl,
+        useProxy: USE_PROXY,
       });
 
-      throw new Error(`Cannot connect to server at ${API_BASE_URL}${endpoint}`);
+      const errorMessage = USE_PROXY
+        ? `Cannot connect to backend server. Please ensure the backend server is running at ${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}`
+        : `Cannot connect to server at ${API_BASE_URL}${endpoint}`;
+
+      throw new Error(errorMessage);
     }
     throw error;
   }
@@ -122,7 +161,7 @@ export const authService = {
    */
   async signup(data: SignupRequest): Promise<AuthResponse> {
     try {
-      const response = await fetch(`${API_BASE_URL}/api/auth/signup`, {
+      const response = await fetch(`${API_BASE_URL}${API_PREFIX}/auth/signup`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -150,14 +189,17 @@ export const authService = {
         message: error.message,
         name: error.name,
         stack: error.stack,
-        url: `${API_BASE_URL}/api/auth/signup`,
+        url: `${API_BASE_URL}${API_PREFIX}/auth/signup`,
       });
 
       // Provide more helpful error messages
       if (error.message === 'Failed to fetch' || error.name === 'TypeError') {
-        const origin = typeof window !== 'undefined' ? window.location.origin : 'your-frontend-origin';
-        const errorMessage =
-          `Cannot connect to server at ${API_BASE_URL}/api/auth/signup`;
+        const backendUrl = USE_PROXY
+          ? (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001')
+          : API_BASE_URL;
+        const errorMessage = USE_PROXY
+          ? `Cannot connect to backend server. Please ensure the backend server is running at ${backendUrl}`
+          : `Cannot connect to server at ${API_BASE_URL}${API_PREFIX}/auth/signup`;
 
         console.error('Error in API request:', errorMessage);
         throw new Error(errorMessage);
@@ -171,7 +213,7 @@ export const authService = {
    */
   async login(data: LoginRequest): Promise<AuthResponse> {
     try {
-      const response = await fetch(`${API_BASE_URL}/api/auth/login`, {
+      const response = await fetch(`${API_BASE_URL}${API_PREFIX}/auth/login`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -199,14 +241,17 @@ export const authService = {
         message: error.message,
         name: error.name,
         stack: error.stack,
-        url: `${API_BASE_URL}/api/auth/login`,
+        url: `${API_BASE_URL}${API_PREFIX}/auth/login`,
       });
 
       // Provide more helpful error messages
       if (error.message === 'Failed to fetch' || error.name === 'TypeError') {
-        const origin = typeof window !== 'undefined' ? window.location.origin : 'your-frontend-origin';
-        const errorMessage =
-          `Cannot connect to server at ${API_BASE_URL}/api/auth/login`;
+        const backendUrl = USE_PROXY
+          ? (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001')
+          : API_BASE_URL;
+        const errorMessage = USE_PROXY
+          ? `Cannot connect to backend server. Please ensure the backend server is running at ${backendUrl}`
+          : `Cannot connect to server at ${API_BASE_URL}${API_PREFIX}/auth/login`;
 
         console.error('Error in API request:', errorMessage);
         throw new Error(errorMessage);
@@ -219,7 +264,7 @@ export const authService = {
    * Get current user information
    */
   async getMe(): Promise<User> {
-    return apiRequest<User>('/api/auth/me');
+    return apiRequest<User>(`${API_PREFIX}/auth/me`);
   },
 
   /**
@@ -233,7 +278,7 @@ export const authService = {
     about: string;
     hospitalId: string;
   }>): Promise<User> {
-    return apiRequest<User>('/api/auth/profile', {
+    return apiRequest<User>(`${API_PREFIX}/auth/profile`, {
       method: 'PUT',
       body: JSON.stringify(data),
     });
@@ -246,7 +291,7 @@ export const authService = {
     currentPassword: string;
     newPassword: string;
   }): Promise<void> {
-    return apiRequest<void>('/api/auth/change-password', {
+    return apiRequest<void>(`${API_PREFIX}/auth/change-password`, {
       method: 'PUT',
       body: JSON.stringify(data),
     });
@@ -279,6 +324,236 @@ export const authService = {
    */
   getToken(): string | null {
     return getAuthToken();
+  },
+
+  /**
+   * Initiate Google OAuth login
+   * Uses Google Identity Services to get idToken and sends it to backend
+   */
+  async loginWithGoogle(): Promise<AuthResponse> {
+    return new Promise((resolve, reject) => {
+      if (typeof window === 'undefined') {
+        reject(new Error('Google login is only available in the browser'));
+        return;
+      }
+
+      const clientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
+      if (!clientId) {
+        reject(new Error('Google Client ID is not configured. Please set NEXT_PUBLIC_GOOGLE_CLIENT_ID'));
+        return;
+      }
+
+      // Load Google Identity Services script if not already loaded
+      const loadGoogleScript = () => {
+        return new Promise<void>((resolve, reject) => {
+          if (window.google?.accounts?.id) {
+            resolve();
+            return;
+          }
+
+          const script = document.createElement('script');
+          script.src = 'https://accounts.google.com/gsi/client';
+          script.async = true;
+          script.defer = true;
+          script.onload = () => {
+            // Wait a bit for the script to fully initialize
+            setTimeout(() => resolve(), 200);
+          };
+          script.onerror = () => reject(new Error('Failed to load Google Identity Services'));
+          document.head.appendChild(script);
+        });
+      };
+
+      loadGoogleScript()
+        .then(() => {
+          if (!window.google?.accounts?.id) {
+            reject(new Error('Google Identity Services failed to load'));
+            return;
+          }
+
+          // Store resolve/reject for the callback
+          (window as any).__googleAuthResolve = resolve;
+          (window as any).__googleAuthReject = reject;
+          (window as any).__googleAuthService = this;
+
+          // Get current origin
+          const origin = window.location.origin;
+
+          // Initialize Google Sign-In with explicit origin
+          window.google.accounts.id.initialize({
+            client_id: clientId,
+            callback: async (response: { credential: string }) => {
+              try {
+                // Send idToken to backend
+                const service = (window as any).__googleAuthService;
+                const result = await service.sendGoogleIdToken(response.credential);
+                const resolveFn = (window as any).__googleAuthResolve;
+                if (resolveFn) {
+                  resolveFn(result);
+                }
+                // Cleanup
+                delete (window as any).__googleAuthResolve;
+                delete (window as any).__googleAuthReject;
+                delete (window as any).__googleAuthService;
+              } catch (error) {
+                const rejectFn = (window as any).__googleAuthReject;
+                if (rejectFn) {
+                  rejectFn(error);
+                }
+                // Cleanup
+                delete (window as any).__googleAuthResolve;
+                delete (window as any).__googleAuthReject;
+                delete (window as any).__googleAuthService;
+              }
+            },
+            ux_mode: 'popup',
+            auto_select: false,
+            cancel_on_tap_outside: true,
+          });
+
+          // Trigger Google Sign-In flow directly
+          // Render button in a visible container to ensure origin is detected
+          const google = window.google;
+          if (!google?.accounts?.id) {
+            reject(new Error('Google Identity Services not available'));
+            return;
+          }
+
+          // Create a minimal visible container for the button
+          // Google needs to detect the origin, so the element must be in the DOM and visible
+          const tempContainer = document.createElement('div');
+          tempContainer.style.position = 'fixed';
+          tempContainer.style.top = '0';
+          tempContainer.style.left = '0';
+          tempContainer.style.width = '1px';
+          tempContainer.style.height = '1px';
+          tempContainer.style.opacity = '0';
+          tempContainer.style.pointerEvents = 'none';
+          tempContainer.style.overflow = 'hidden';
+          tempContainer.id = 'temp-google-signin-container';
+          document.body.appendChild(tempContainer);
+
+          // Render Google button
+          try {
+            google.accounts.id.renderButton(tempContainer, {
+              type: 'standard',
+              theme: 'outline',
+              size: 'large',
+              text: 'signin_with',
+            });
+
+            // Wait for button to render, then click it automatically
+            setTimeout(() => {
+              const button = tempContainer.querySelector('div[role="button"]') as HTMLElement;
+              if (button) {
+                // Make button visible temporarily for click
+                button.style.position = 'fixed';
+                button.style.top = '50%';
+                button.style.left = '50%';
+                button.style.transform = 'translate(-50%, -50%)';
+                button.style.zIndex = '10000';
+
+                button.click();
+
+                // Clean up after a delay
+                setTimeout(() => {
+                  if (tempContainer.parentNode) {
+                    tempContainer.remove();
+                  }
+                }, 1000);
+              } else {
+                tempContainer.remove();
+                reject(new Error('Failed to initialize Google Sign-In. Please ensure your origin is registered in Google Cloud Console.'));
+              }
+            }, 500);
+          } catch (error: any) {
+            tempContainer.remove();
+            const errorMsg = error?.message || 'Failed to render Google Sign-In button';
+            reject(new Error(`${errorMsg}. Please ensure your origin (${origin}) is registered in Google Cloud Console under Authorized JavaScript origins.`));
+          }
+        })
+        .catch(reject);
+    });
+  },
+
+  /**
+   * Send Google idToken to backend for authentication
+   */
+  async sendGoogleIdToken(idToken: string): Promise<AuthResponse> {
+    try {
+      const result = await apiRequest<AuthResponse>(`${API_PREFIX}/auth/google`, {
+        method: 'POST',
+        body: JSON.stringify({ idToken }),
+      });
+
+      if (result.token) {
+        setAuthToken(result.token);
+      }
+
+      return result;
+    } catch (error: any) {
+      console.error('Google idToken authentication error:', error);
+      throw error;
+    }
+  },
+
+  /**
+   * Initiate Apple OAuth login
+   */
+  async loginWithApple(): Promise<void> {
+    const BACKEND_URL = USE_PROXY
+      ? (typeof window !== 'undefined' ? window.location.origin : '')
+      : (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001');
+    const redirectUri = typeof window !== 'undefined'
+      ? `${window.location.origin}/auth/apple/callback`
+      : '';
+
+    // Redirect to backend OAuth endpoint (always use direct URL for OAuth redirects)
+    const oauthUrl = USE_PROXY
+      ? `${BACKEND_URL}${API_PREFIX}/auth/apple?redirect_uri=${encodeURIComponent(redirectUri)}`
+      : `${BACKEND_URL}/api/auth/apple?redirect_uri=${encodeURIComponent(redirectUri)}`;
+
+    window.location.href = oauthUrl;
+  },
+
+  /**
+   * Handle OAuth callback (called after OAuth redirect)
+   * This is kept for backward compatibility but may not be used if using idToken flow
+   */
+  async handleOAuthCallback(provider: 'google' | 'apple', code: string, state?: string): Promise<AuthResponse> {
+    try {
+      // For Google, if we have an idToken in the code parameter, use it directly
+      if (provider === 'google' && code && code.length > 100) {
+        // Likely an idToken (JWT tokens are long)
+        return this.sendGoogleIdToken(code);
+      }
+
+      const response = await fetch(`${API_BASE_URL}${API_PREFIX}/auth/${provider}/callback`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ code, state }),
+        credentials: 'include',
+      });
+
+      if (!response.ok) {
+        const error = await response.json().catch(() => ({ message: 'OAuth authentication failed' }));
+        throw new Error(error.message || `HTTP error! status: ${response.status}`);
+      }
+
+      const result = await response.json();
+
+      // Store token if provided
+      if (result.token) {
+        setAuthToken(result.token);
+      }
+
+      return result;
+    } catch (error: any) {
+      console.error(`${provider} OAuth error:`, error);
+      throw error;
+    }
   },
 };
 

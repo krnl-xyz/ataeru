@@ -48,6 +48,21 @@ export type Hospital = $Result.DefaultSelection<Prisma.$HospitalPayload>
  * 
  */
 export type Booking = $Result.DefaultSelection<Prisma.$BookingPayload>
+/**
+ * Model HospitalRequest
+ * 
+ */
+export type HospitalRequest = $Result.DefaultSelection<Prisma.$HospitalRequestPayload>
+/**
+ * Model UserPreference
+ * 
+ */
+export type UserPreference = $Result.DefaultSelection<Prisma.$UserPreferencePayload>
+/**
+ * Model TreatmentPreference
+ * 
+ */
+export type TreatmentPreference = $Result.DefaultSelection<Prisma.$TreatmentPreferencePayload>
 
 /**
  * Enums
@@ -60,11 +75,54 @@ export namespace $Enums {
 
 export type UserType = (typeof UserType)[keyof typeof UserType]
 
+
+export const AuthProvider: {
+  EMAIL: 'EMAIL',
+  GOOGLE: 'GOOGLE',
+  APPLE: 'APPLE'
+};
+
+export type AuthProvider = (typeof AuthProvider)[keyof typeof AuthProvider]
+
+
+export const RequestType: {
+  DONOR_REQUEST: 'DONOR_REQUEST',
+  CONSULTATION: 'CONSULTATION',
+  HELP_REQUEST: 'HELP_REQUEST',
+  TREATMENT_REQUEST: 'TREATMENT_REQUEST'
+};
+
+export type RequestType = (typeof RequestType)[keyof typeof RequestType]
+
+
+export const RequestStatus: {
+  PENDING: 'PENDING',
+  APPROVED: 'APPROVED',
+  REJECTED: 'REJECTED',
+  IN_PROGRESS: 'IN_PROGRESS',
+  COMPLETED: 'COMPLETED',
+  CANCELLED: 'CANCELLED'
+};
+
+export type RequestStatus = (typeof RequestStatus)[keyof typeof RequestStatus]
+
 }
 
 export type UserType = $Enums.UserType
 
 export const UserType: typeof $Enums.UserType
+
+export type AuthProvider = $Enums.AuthProvider
+
+export const AuthProvider: typeof $Enums.AuthProvider
+
+export type RequestType = $Enums.RequestType
+
+export const RequestType: typeof $Enums.RequestType
+
+export type RequestStatus = $Enums.RequestStatus
+
+export const RequestStatus: typeof $Enums.RequestStatus
 
 /**
  * ##  Prisma Client ʲˢ
@@ -253,6 +311,36 @@ export class PrismaClient<
     * ```
     */
   get booking(): Prisma.BookingDelegate<ExtArgs, ClientOptions>;
+
+  /**
+   * `prisma.hospitalRequest`: Exposes CRUD operations for the **HospitalRequest** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more HospitalRequests
+    * const hospitalRequests = await prisma.hospitalRequest.findMany()
+    * ```
+    */
+  get hospitalRequest(): Prisma.HospitalRequestDelegate<ExtArgs, ClientOptions>;
+
+  /**
+   * `prisma.userPreference`: Exposes CRUD operations for the **UserPreference** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more UserPreferences
+    * const userPreferences = await prisma.userPreference.findMany()
+    * ```
+    */
+  get userPreference(): Prisma.UserPreferenceDelegate<ExtArgs, ClientOptions>;
+
+  /**
+   * `prisma.treatmentPreference`: Exposes CRUD operations for the **TreatmentPreference** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more TreatmentPreferences
+    * const treatmentPreferences = await prisma.treatmentPreference.findMany()
+    * ```
+    */
+  get treatmentPreference(): Prisma.TreatmentPreferenceDelegate<ExtArgs, ClientOptions>;
 }
 
 export namespace Prisma {
@@ -700,7 +788,10 @@ export namespace Prisma {
     HospitalInformation: 'HospitalInformation',
     User: 'User',
     Hospital: 'Hospital',
-    Booking: 'Booking'
+    Booking: 'Booking',
+    HospitalRequest: 'HospitalRequest',
+    UserPreference: 'UserPreference',
+    TreatmentPreference: 'TreatmentPreference'
   };
 
   export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -719,7 +810,7 @@ export namespace Prisma {
       omit: GlobalOmitOptions
     }
     meta: {
-      modelProps: "facility" | "qualityReport" | "hcahpsHospitalSurvery" | "hospitalInformation" | "user" | "hospital" | "booking"
+      modelProps: "facility" | "qualityReport" | "hcahpsHospitalSurvery" | "hospitalInformation" | "user" | "hospital" | "booking" | "hospitalRequest" | "userPreference" | "treatmentPreference"
       txIsolationLevel: Prisma.TransactionIsolationLevel
     }
     model: {
@@ -1241,6 +1332,228 @@ export namespace Prisma {
           }
         }
       }
+      HospitalRequest: {
+        payload: Prisma.$HospitalRequestPayload<ExtArgs>
+        fields: Prisma.HospitalRequestFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.HospitalRequestFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$HospitalRequestPayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.HospitalRequestFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$HospitalRequestPayload>
+          }
+          findFirst: {
+            args: Prisma.HospitalRequestFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$HospitalRequestPayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.HospitalRequestFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$HospitalRequestPayload>
+          }
+          findMany: {
+            args: Prisma.HospitalRequestFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$HospitalRequestPayload>[]
+          }
+          create: {
+            args: Prisma.HospitalRequestCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$HospitalRequestPayload>
+          }
+          createMany: {
+            args: Prisma.HospitalRequestCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          createManyAndReturn: {
+            args: Prisma.HospitalRequestCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$HospitalRequestPayload>[]
+          }
+          delete: {
+            args: Prisma.HospitalRequestDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$HospitalRequestPayload>
+          }
+          update: {
+            args: Prisma.HospitalRequestUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$HospitalRequestPayload>
+          }
+          deleteMany: {
+            args: Prisma.HospitalRequestDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.HospitalRequestUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateManyAndReturn: {
+            args: Prisma.HospitalRequestUpdateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$HospitalRequestPayload>[]
+          }
+          upsert: {
+            args: Prisma.HospitalRequestUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$HospitalRequestPayload>
+          }
+          aggregate: {
+            args: Prisma.HospitalRequestAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateHospitalRequest>
+          }
+          groupBy: {
+            args: Prisma.HospitalRequestGroupByArgs<ExtArgs>
+            result: $Utils.Optional<HospitalRequestGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.HospitalRequestCountArgs<ExtArgs>
+            result: $Utils.Optional<HospitalRequestCountAggregateOutputType> | number
+          }
+        }
+      }
+      UserPreference: {
+        payload: Prisma.$UserPreferencePayload<ExtArgs>
+        fields: Prisma.UserPreferenceFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.UserPreferenceFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$UserPreferencePayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.UserPreferenceFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$UserPreferencePayload>
+          }
+          findFirst: {
+            args: Prisma.UserPreferenceFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$UserPreferencePayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.UserPreferenceFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$UserPreferencePayload>
+          }
+          findMany: {
+            args: Prisma.UserPreferenceFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$UserPreferencePayload>[]
+          }
+          create: {
+            args: Prisma.UserPreferenceCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$UserPreferencePayload>
+          }
+          createMany: {
+            args: Prisma.UserPreferenceCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          createManyAndReturn: {
+            args: Prisma.UserPreferenceCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$UserPreferencePayload>[]
+          }
+          delete: {
+            args: Prisma.UserPreferenceDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$UserPreferencePayload>
+          }
+          update: {
+            args: Prisma.UserPreferenceUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$UserPreferencePayload>
+          }
+          deleteMany: {
+            args: Prisma.UserPreferenceDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.UserPreferenceUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateManyAndReturn: {
+            args: Prisma.UserPreferenceUpdateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$UserPreferencePayload>[]
+          }
+          upsert: {
+            args: Prisma.UserPreferenceUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$UserPreferencePayload>
+          }
+          aggregate: {
+            args: Prisma.UserPreferenceAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateUserPreference>
+          }
+          groupBy: {
+            args: Prisma.UserPreferenceGroupByArgs<ExtArgs>
+            result: $Utils.Optional<UserPreferenceGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.UserPreferenceCountArgs<ExtArgs>
+            result: $Utils.Optional<UserPreferenceCountAggregateOutputType> | number
+          }
+        }
+      }
+      TreatmentPreference: {
+        payload: Prisma.$TreatmentPreferencePayload<ExtArgs>
+        fields: Prisma.TreatmentPreferenceFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.TreatmentPreferenceFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$TreatmentPreferencePayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.TreatmentPreferenceFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$TreatmentPreferencePayload>
+          }
+          findFirst: {
+            args: Prisma.TreatmentPreferenceFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$TreatmentPreferencePayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.TreatmentPreferenceFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$TreatmentPreferencePayload>
+          }
+          findMany: {
+            args: Prisma.TreatmentPreferenceFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$TreatmentPreferencePayload>[]
+          }
+          create: {
+            args: Prisma.TreatmentPreferenceCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$TreatmentPreferencePayload>
+          }
+          createMany: {
+            args: Prisma.TreatmentPreferenceCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          createManyAndReturn: {
+            args: Prisma.TreatmentPreferenceCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$TreatmentPreferencePayload>[]
+          }
+          delete: {
+            args: Prisma.TreatmentPreferenceDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$TreatmentPreferencePayload>
+          }
+          update: {
+            args: Prisma.TreatmentPreferenceUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$TreatmentPreferencePayload>
+          }
+          deleteMany: {
+            args: Prisma.TreatmentPreferenceDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.TreatmentPreferenceUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateManyAndReturn: {
+            args: Prisma.TreatmentPreferenceUpdateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$TreatmentPreferencePayload>[]
+          }
+          upsert: {
+            args: Prisma.TreatmentPreferenceUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$TreatmentPreferencePayload>
+          }
+          aggregate: {
+            args: Prisma.TreatmentPreferenceAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateTreatmentPreference>
+          }
+          groupBy: {
+            args: Prisma.TreatmentPreferenceGroupByArgs<ExtArgs>
+            result: $Utils.Optional<TreatmentPreferenceGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.TreatmentPreferenceCountArgs<ExtArgs>
+            result: $Utils.Optional<TreatmentPreferenceCountAggregateOutputType> | number
+          }
+        }
+      }
     }
   } & {
     other: {
@@ -1344,6 +1657,9 @@ export namespace Prisma {
     user?: UserOmit
     hospital?: HospitalOmit
     booking?: BookingOmit
+    hospitalRequest?: HospitalRequestOmit
+    userPreference?: UserPreferenceOmit
+    treatmentPreference?: TreatmentPreferenceOmit
   }
 
   /* Types for Logging */
@@ -1456,10 +1772,14 @@ export namespace Prisma {
 
   export type UserCountOutputType = {
     bookings: number
+    requests: number
+    preferredHospitals: number
   }
 
   export type UserCountOutputTypeSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     bookings?: boolean | UserCountOutputTypeCountBookingsArgs
+    requests?: boolean | UserCountOutputTypeCountRequestsArgs
+    preferredHospitals?: boolean | UserCountOutputTypeCountPreferredHospitalsArgs
   }
 
   // Custom InputTypes
@@ -1480,6 +1800,20 @@ export namespace Prisma {
     where?: BookingWhereInput
   }
 
+  /**
+   * UserCountOutputType without action
+   */
+  export type UserCountOutputTypeCountRequestsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: HospitalRequestWhereInput
+  }
+
+  /**
+   * UserCountOutputType without action
+   */
+  export type UserCountOutputTypeCountPreferredHospitalsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: UserPreferenceWhereInput
+  }
+
 
   /**
    * Count Type HospitalCountOutputType
@@ -1487,10 +1821,16 @@ export namespace Prisma {
 
   export type HospitalCountOutputType = {
     bookings: number
+    requests: number
+    preferredUsers: number
+    preferredTreatments: number
   }
 
   export type HospitalCountOutputTypeSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     bookings?: boolean | HospitalCountOutputTypeCountBookingsArgs
+    requests?: boolean | HospitalCountOutputTypeCountRequestsArgs
+    preferredUsers?: boolean | HospitalCountOutputTypeCountPreferredUsersArgs
+    preferredTreatments?: boolean | HospitalCountOutputTypeCountPreferredTreatmentsArgs
   }
 
   // Custom InputTypes
@@ -1509,6 +1849,27 @@ export namespace Prisma {
    */
   export type HospitalCountOutputTypeCountBookingsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     where?: BookingWhereInput
+  }
+
+  /**
+   * HospitalCountOutputType without action
+   */
+  export type HospitalCountOutputTypeCountRequestsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: HospitalRequestWhereInput
+  }
+
+  /**
+   * HospitalCountOutputType without action
+   */
+  export type HospitalCountOutputTypeCountPreferredUsersArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: UserPreferenceWhereInput
+  }
+
+  /**
+   * HospitalCountOutputType without action
+   */
+  export type HospitalCountOutputTypeCountPreferredTreatmentsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: TreatmentPreferenceWhereInput
   }
 
 
@@ -6124,6 +6485,8 @@ export namespace Prisma {
     address: string | null
     about: string | null
     userType: $Enums.UserType | null
+    authProvider: $Enums.AuthProvider | null
+    providerId: string | null
     hospitalId: string | null
     createdAt: Date | null
     updatedAt: Date | null
@@ -6139,6 +6502,8 @@ export namespace Prisma {
     address: string | null
     about: string | null
     userType: $Enums.UserType | null
+    authProvider: $Enums.AuthProvider | null
+    providerId: string | null
     hospitalId: string | null
     createdAt: Date | null
     updatedAt: Date | null
@@ -6154,6 +6519,8 @@ export namespace Prisma {
     address: number
     about: number
     userType: number
+    authProvider: number
+    providerId: number
     hospitalId: number
     createdAt: number
     updatedAt: number
@@ -6171,6 +6538,8 @@ export namespace Prisma {
     address?: true
     about?: true
     userType?: true
+    authProvider?: true
+    providerId?: true
     hospitalId?: true
     createdAt?: true
     updatedAt?: true
@@ -6186,6 +6555,8 @@ export namespace Prisma {
     address?: true
     about?: true
     userType?: true
+    authProvider?: true
+    providerId?: true
     hospitalId?: true
     createdAt?: true
     updatedAt?: true
@@ -6201,6 +6572,8 @@ export namespace Prisma {
     address?: true
     about?: true
     userType?: true
+    authProvider?: true
+    providerId?: true
     hospitalId?: true
     createdAt?: true
     updatedAt?: true
@@ -6283,12 +6656,14 @@ export namespace Prisma {
     id: string
     fullname: string
     email: string
-    password: string
+    password: string | null
     witnesshash: string
     phone: string
     address: string
     about: string | null
     userType: $Enums.UserType
+    authProvider: $Enums.AuthProvider
+    providerId: string | null
     hospitalId: string | null
     createdAt: Date
     updatedAt: Date
@@ -6321,12 +6696,16 @@ export namespace Prisma {
     address?: boolean
     about?: boolean
     userType?: boolean
+    authProvider?: boolean
+    providerId?: boolean
     hospitalId?: boolean
     createdAt?: boolean
     updatedAt?: boolean
     hospital?: boolean | User$hospitalArgs<ExtArgs>
     registeredHospital?: boolean | User$registeredHospitalArgs<ExtArgs>
     bookings?: boolean | User$bookingsArgs<ExtArgs>
+    requests?: boolean | User$requestsArgs<ExtArgs>
+    preferredHospitals?: boolean | User$preferredHospitalsArgs<ExtArgs>
     _count?: boolean | UserCountOutputTypeDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["user"]>
 
@@ -6340,6 +6719,8 @@ export namespace Prisma {
     address?: boolean
     about?: boolean
     userType?: boolean
+    authProvider?: boolean
+    providerId?: boolean
     hospitalId?: boolean
     createdAt?: boolean
     updatedAt?: boolean
@@ -6356,6 +6737,8 @@ export namespace Prisma {
     address?: boolean
     about?: boolean
     userType?: boolean
+    authProvider?: boolean
+    providerId?: boolean
     hospitalId?: boolean
     createdAt?: boolean
     updatedAt?: boolean
@@ -6372,16 +6755,20 @@ export namespace Prisma {
     address?: boolean
     about?: boolean
     userType?: boolean
+    authProvider?: boolean
+    providerId?: boolean
     hospitalId?: boolean
     createdAt?: boolean
     updatedAt?: boolean
   }
 
-  export type UserOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "fullname" | "email" | "password" | "witnesshash" | "phone" | "address" | "about" | "userType" | "hospitalId" | "createdAt" | "updatedAt", ExtArgs["result"]["user"]>
+  export type UserOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "fullname" | "email" | "password" | "witnesshash" | "phone" | "address" | "about" | "userType" | "authProvider" | "providerId" | "hospitalId" | "createdAt" | "updatedAt", ExtArgs["result"]["user"]>
   export type UserInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     hospital?: boolean | User$hospitalArgs<ExtArgs>
     registeredHospital?: boolean | User$registeredHospitalArgs<ExtArgs>
     bookings?: boolean | User$bookingsArgs<ExtArgs>
+    requests?: boolean | User$requestsArgs<ExtArgs>
+    preferredHospitals?: boolean | User$preferredHospitalsArgs<ExtArgs>
     _count?: boolean | UserCountOutputTypeDefaultArgs<ExtArgs>
   }
   export type UserIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
@@ -6397,17 +6784,21 @@ export namespace Prisma {
       hospital: Prisma.$HospitalInformationPayload<ExtArgs> | null
       registeredHospital: Prisma.$HospitalPayload<ExtArgs> | null
       bookings: Prisma.$BookingPayload<ExtArgs>[]
+      requests: Prisma.$HospitalRequestPayload<ExtArgs>[]
+      preferredHospitals: Prisma.$UserPreferencePayload<ExtArgs>[]
     }
     scalars: $Extensions.GetPayloadResult<{
       id: string
       fullname: string
       email: string
-      password: string
+      password: string | null
       witnesshash: string
       phone: string
       address: string
       about: string | null
       userType: $Enums.UserType
+      authProvider: $Enums.AuthProvider
+      providerId: string | null
       hospitalId: string | null
       createdAt: Date
       updatedAt: Date
@@ -6808,6 +7199,8 @@ export namespace Prisma {
     hospital<T extends User$hospitalArgs<ExtArgs> = {}>(args?: Subset<T, User$hospitalArgs<ExtArgs>>): Prisma__HospitalInformationClient<$Result.GetResult<Prisma.$HospitalInformationPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
     registeredHospital<T extends User$registeredHospitalArgs<ExtArgs> = {}>(args?: Subset<T, User$registeredHospitalArgs<ExtArgs>>): Prisma__HospitalClient<$Result.GetResult<Prisma.$HospitalPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
     bookings<T extends User$bookingsArgs<ExtArgs> = {}>(args?: Subset<T, User$bookingsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$BookingPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+    requests<T extends User$requestsArgs<ExtArgs> = {}>(args?: Subset<T, User$requestsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$HospitalRequestPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+    preferredHospitals<T extends User$preferredHospitalsArgs<ExtArgs> = {}>(args?: Subset<T, User$preferredHospitalsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$UserPreferencePayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     /**
      * Attaches callbacks for the resolution and/or rejection of the Promise.
      * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -6846,6 +7239,8 @@ export namespace Prisma {
     readonly address: FieldRef<"User", 'String'>
     readonly about: FieldRef<"User", 'String'>
     readonly userType: FieldRef<"User", 'UserType'>
+    readonly authProvider: FieldRef<"User", 'AuthProvider'>
+    readonly providerId: FieldRef<"User", 'String'>
     readonly hospitalId: FieldRef<"User", 'String'>
     readonly createdAt: FieldRef<"User", 'DateTime'>
     readonly updatedAt: FieldRef<"User", 'DateTime'>
@@ -7307,6 +7702,54 @@ export namespace Prisma {
   }
 
   /**
+   * User.requests
+   */
+  export type User$requestsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the HospitalRequest
+     */
+    select?: HospitalRequestSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the HospitalRequest
+     */
+    omit?: HospitalRequestOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: HospitalRequestInclude<ExtArgs> | null
+    where?: HospitalRequestWhereInput
+    orderBy?: HospitalRequestOrderByWithRelationInput | HospitalRequestOrderByWithRelationInput[]
+    cursor?: HospitalRequestWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: HospitalRequestScalarFieldEnum | HospitalRequestScalarFieldEnum[]
+  }
+
+  /**
+   * User.preferredHospitals
+   */
+  export type User$preferredHospitalsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the UserPreference
+     */
+    select?: UserPreferenceSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the UserPreference
+     */
+    omit?: UserPreferenceOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: UserPreferenceInclude<ExtArgs> | null
+    where?: UserPreferenceWhereInput
+    orderBy?: UserPreferenceOrderByWithRelationInput | UserPreferenceOrderByWithRelationInput[]
+    cursor?: UserPreferenceWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: UserPreferenceScalarFieldEnum | UserPreferenceScalarFieldEnum[]
+  }
+
+  /**
    * User without action
    */
   export type UserDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
@@ -7340,11 +7783,19 @@ export namespace Prisma {
   export type HospitalAvgAggregateOutputType = {
     rating: number | null
     reviews: number | null
+    totalRequests: number | null
+    totalDonors: number | null
+    totalCustomers: number | null
+    totalTreatments: number | null
   }
 
   export type HospitalSumAggregateOutputType = {
     rating: number | null
     reviews: number | null
+    totalRequests: number | null
+    totalDonors: number | null
+    totalCustomers: number | null
+    totalTreatments: number | null
   }
 
   export type HospitalMinAggregateOutputType = {
@@ -7358,6 +7809,10 @@ export namespace Prisma {
     verified: boolean | null
     walletAddress: string | null
     ownerId: string | null
+    totalRequests: number | null
+    totalDonors: number | null
+    totalCustomers: number | null
+    totalTreatments: number | null
     createdAt: Date | null
     updatedAt: Date | null
   }
@@ -7373,6 +7828,10 @@ export namespace Prisma {
     verified: boolean | null
     walletAddress: string | null
     ownerId: string | null
+    totalRequests: number | null
+    totalDonors: number | null
+    totalCustomers: number | null
+    totalTreatments: number | null
     createdAt: Date | null
     updatedAt: Date | null
   }
@@ -7389,6 +7848,10 @@ export namespace Prisma {
     verified: number
     walletAddress: number
     ownerId: number
+    totalRequests: number
+    totalDonors: number
+    totalCustomers: number
+    totalTreatments: number
     createdAt: number
     updatedAt: number
     _all: number
@@ -7398,11 +7861,19 @@ export namespace Prisma {
   export type HospitalAvgAggregateInputType = {
     rating?: true
     reviews?: true
+    totalRequests?: true
+    totalDonors?: true
+    totalCustomers?: true
+    totalTreatments?: true
   }
 
   export type HospitalSumAggregateInputType = {
     rating?: true
     reviews?: true
+    totalRequests?: true
+    totalDonors?: true
+    totalCustomers?: true
+    totalTreatments?: true
   }
 
   export type HospitalMinAggregateInputType = {
@@ -7416,6 +7887,10 @@ export namespace Prisma {
     verified?: true
     walletAddress?: true
     ownerId?: true
+    totalRequests?: true
+    totalDonors?: true
+    totalCustomers?: true
+    totalTreatments?: true
     createdAt?: true
     updatedAt?: true
   }
@@ -7431,6 +7906,10 @@ export namespace Prisma {
     verified?: true
     walletAddress?: true
     ownerId?: true
+    totalRequests?: true
+    totalDonors?: true
+    totalCustomers?: true
+    totalTreatments?: true
     createdAt?: true
     updatedAt?: true
   }
@@ -7447,6 +7926,10 @@ export namespace Prisma {
     verified?: true
     walletAddress?: true
     ownerId?: true
+    totalRequests?: true
+    totalDonors?: true
+    totalCustomers?: true
+    totalTreatments?: true
     createdAt?: true
     updatedAt?: true
     _all?: true
@@ -7550,6 +8033,10 @@ export namespace Prisma {
     verified: boolean
     walletAddress: string
     ownerId: string
+    totalRequests: number
+    totalDonors: number
+    totalCustomers: number
+    totalTreatments: number
     createdAt: Date
     updatedAt: Date
     _count: HospitalCountAggregateOutputType | null
@@ -7585,10 +8072,17 @@ export namespace Prisma {
     verified?: boolean
     walletAddress?: boolean
     ownerId?: boolean
+    totalRequests?: boolean
+    totalDonors?: boolean
+    totalCustomers?: boolean
+    totalTreatments?: boolean
     createdAt?: boolean
     updatedAt?: boolean
     owner?: boolean | UserDefaultArgs<ExtArgs>
     bookings?: boolean | Hospital$bookingsArgs<ExtArgs>
+    requests?: boolean | Hospital$requestsArgs<ExtArgs>
+    preferredUsers?: boolean | Hospital$preferredUsersArgs<ExtArgs>
+    preferredTreatments?: boolean | Hospital$preferredTreatmentsArgs<ExtArgs>
     _count?: boolean | HospitalCountOutputTypeDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["hospital"]>
 
@@ -7604,6 +8098,10 @@ export namespace Prisma {
     verified?: boolean
     walletAddress?: boolean
     ownerId?: boolean
+    totalRequests?: boolean
+    totalDonors?: boolean
+    totalCustomers?: boolean
+    totalTreatments?: boolean
     createdAt?: boolean
     updatedAt?: boolean
     owner?: boolean | UserDefaultArgs<ExtArgs>
@@ -7621,6 +8119,10 @@ export namespace Prisma {
     verified?: boolean
     walletAddress?: boolean
     ownerId?: boolean
+    totalRequests?: boolean
+    totalDonors?: boolean
+    totalCustomers?: boolean
+    totalTreatments?: boolean
     createdAt?: boolean
     updatedAt?: boolean
     owner?: boolean | UserDefaultArgs<ExtArgs>
@@ -7638,14 +8140,21 @@ export namespace Prisma {
     verified?: boolean
     walletAddress?: boolean
     ownerId?: boolean
+    totalRequests?: boolean
+    totalDonors?: boolean
+    totalCustomers?: boolean
+    totalTreatments?: boolean
     createdAt?: boolean
     updatedAt?: boolean
   }
 
-  export type HospitalOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "name" | "location" | "rating" | "specialties" | "imageUrl" | "isFavorite" | "reviews" | "verified" | "walletAddress" | "ownerId" | "createdAt" | "updatedAt", ExtArgs["result"]["hospital"]>
+  export type HospitalOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "name" | "location" | "rating" | "specialties" | "imageUrl" | "isFavorite" | "reviews" | "verified" | "walletAddress" | "ownerId" | "totalRequests" | "totalDonors" | "totalCustomers" | "totalTreatments" | "createdAt" | "updatedAt", ExtArgs["result"]["hospital"]>
   export type HospitalInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     owner?: boolean | UserDefaultArgs<ExtArgs>
     bookings?: boolean | Hospital$bookingsArgs<ExtArgs>
+    requests?: boolean | Hospital$requestsArgs<ExtArgs>
+    preferredUsers?: boolean | Hospital$preferredUsersArgs<ExtArgs>
+    preferredTreatments?: boolean | Hospital$preferredTreatmentsArgs<ExtArgs>
     _count?: boolean | HospitalCountOutputTypeDefaultArgs<ExtArgs>
   }
   export type HospitalIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
@@ -7660,6 +8169,9 @@ export namespace Prisma {
     objects: {
       owner: Prisma.$UserPayload<ExtArgs>
       bookings: Prisma.$BookingPayload<ExtArgs>[]
+      requests: Prisma.$HospitalRequestPayload<ExtArgs>[]
+      preferredUsers: Prisma.$UserPreferencePayload<ExtArgs>[]
+      preferredTreatments: Prisma.$TreatmentPreferencePayload<ExtArgs>[]
     }
     scalars: $Extensions.GetPayloadResult<{
       id: string
@@ -7673,6 +8185,10 @@ export namespace Prisma {
       verified: boolean
       walletAddress: string
       ownerId: string
+      totalRequests: number
+      totalDonors: number
+      totalCustomers: number
+      totalTreatments: number
       createdAt: Date
       updatedAt: Date
     }, ExtArgs["result"]["hospital"]>
@@ -8071,6 +8587,9 @@ export namespace Prisma {
     readonly [Symbol.toStringTag]: "PrismaPromise"
     owner<T extends UserDefaultArgs<ExtArgs> = {}>(args?: Subset<T, UserDefaultArgs<ExtArgs>>): Prisma__UserClient<$Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
     bookings<T extends Hospital$bookingsArgs<ExtArgs> = {}>(args?: Subset<T, Hospital$bookingsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$BookingPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+    requests<T extends Hospital$requestsArgs<ExtArgs> = {}>(args?: Subset<T, Hospital$requestsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$HospitalRequestPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+    preferredUsers<T extends Hospital$preferredUsersArgs<ExtArgs> = {}>(args?: Subset<T, Hospital$preferredUsersArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$UserPreferencePayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+    preferredTreatments<T extends Hospital$preferredTreatmentsArgs<ExtArgs> = {}>(args?: Subset<T, Hospital$preferredTreatmentsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$TreatmentPreferencePayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     /**
      * Attaches callbacks for the resolution and/or rejection of the Promise.
      * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -8111,6 +8630,10 @@ export namespace Prisma {
     readonly verified: FieldRef<"Hospital", 'Boolean'>
     readonly walletAddress: FieldRef<"Hospital", 'String'>
     readonly ownerId: FieldRef<"Hospital", 'String'>
+    readonly totalRequests: FieldRef<"Hospital", 'Int'>
+    readonly totalDonors: FieldRef<"Hospital", 'Int'>
+    readonly totalCustomers: FieldRef<"Hospital", 'Int'>
+    readonly totalTreatments: FieldRef<"Hospital", 'Int'>
     readonly createdAt: FieldRef<"Hospital", 'DateTime'>
     readonly updatedAt: FieldRef<"Hospital", 'DateTime'>
   }
@@ -8533,6 +9056,78 @@ export namespace Prisma {
   }
 
   /**
+   * Hospital.requests
+   */
+  export type Hospital$requestsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the HospitalRequest
+     */
+    select?: HospitalRequestSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the HospitalRequest
+     */
+    omit?: HospitalRequestOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: HospitalRequestInclude<ExtArgs> | null
+    where?: HospitalRequestWhereInput
+    orderBy?: HospitalRequestOrderByWithRelationInput | HospitalRequestOrderByWithRelationInput[]
+    cursor?: HospitalRequestWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: HospitalRequestScalarFieldEnum | HospitalRequestScalarFieldEnum[]
+  }
+
+  /**
+   * Hospital.preferredUsers
+   */
+  export type Hospital$preferredUsersArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the UserPreference
+     */
+    select?: UserPreferenceSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the UserPreference
+     */
+    omit?: UserPreferenceOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: UserPreferenceInclude<ExtArgs> | null
+    where?: UserPreferenceWhereInput
+    orderBy?: UserPreferenceOrderByWithRelationInput | UserPreferenceOrderByWithRelationInput[]
+    cursor?: UserPreferenceWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: UserPreferenceScalarFieldEnum | UserPreferenceScalarFieldEnum[]
+  }
+
+  /**
+   * Hospital.preferredTreatments
+   */
+  export type Hospital$preferredTreatmentsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the TreatmentPreference
+     */
+    select?: TreatmentPreferenceSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the TreatmentPreference
+     */
+    omit?: TreatmentPreferenceOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: TreatmentPreferenceInclude<ExtArgs> | null
+    where?: TreatmentPreferenceWhereInput
+    orderBy?: TreatmentPreferenceOrderByWithRelationInput | TreatmentPreferenceOrderByWithRelationInput[]
+    cursor?: TreatmentPreferenceWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: TreatmentPreferenceScalarFieldEnum | TreatmentPreferenceScalarFieldEnum[]
+  }
+
+  /**
    * Hospital without action
    */
   export type HospitalDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
@@ -8791,6 +9386,7 @@ export namespace Prisma {
     updatedAt?: boolean
     hospital?: boolean | HospitalDefaultArgs<ExtArgs>
     user?: boolean | UserDefaultArgs<ExtArgs>
+    request?: boolean | Booking$requestArgs<ExtArgs>
   }, ExtArgs["result"]["booking"]>
 
   export type BookingSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
@@ -8840,6 +9436,7 @@ export namespace Prisma {
   export type BookingInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     hospital?: boolean | HospitalDefaultArgs<ExtArgs>
     user?: boolean | UserDefaultArgs<ExtArgs>
+    request?: boolean | Booking$requestArgs<ExtArgs>
   }
   export type BookingIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     hospital?: boolean | HospitalDefaultArgs<ExtArgs>
@@ -8855,6 +9452,7 @@ export namespace Prisma {
     objects: {
       hospital: Prisma.$HospitalPayload<ExtArgs>
       user: Prisma.$UserPayload<ExtArgs>
+      request: Prisma.$HospitalRequestPayload<ExtArgs> | null
     }
     scalars: $Extensions.GetPayloadResult<{
       id: string
@@ -9263,6 +9861,7 @@ export namespace Prisma {
     readonly [Symbol.toStringTag]: "PrismaPromise"
     hospital<T extends HospitalDefaultArgs<ExtArgs> = {}>(args?: Subset<T, HospitalDefaultArgs<ExtArgs>>): Prisma__HospitalClient<$Result.GetResult<Prisma.$HospitalPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
     user<T extends UserDefaultArgs<ExtArgs> = {}>(args?: Subset<T, UserDefaultArgs<ExtArgs>>): Prisma__UserClient<$Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+    request<T extends Booking$requestArgs<ExtArgs> = {}>(args?: Subset<T, Booking$requestArgs<ExtArgs>>): Prisma__HospitalRequestClient<$Result.GetResult<Prisma.$HospitalRequestPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
     /**
      * Attaches callbacks for the resolution and/or rejection of the Promise.
      * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -9698,6 +10297,25 @@ export namespace Prisma {
   }
 
   /**
+   * Booking.request
+   */
+  export type Booking$requestArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the HospitalRequest
+     */
+    select?: HospitalRequestSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the HospitalRequest
+     */
+    omit?: HospitalRequestOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: HospitalRequestInclude<ExtArgs> | null
+    where?: HospitalRequestWhereInput
+  }
+
+  /**
    * Booking without action
    */
   export type BookingDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
@@ -9713,6 +10331,3418 @@ export namespace Prisma {
      * Choose, which related nodes to fetch as well
      */
     include?: BookingInclude<ExtArgs> | null
+  }
+
+
+  /**
+   * Model HospitalRequest
+   */
+
+  export type AggregateHospitalRequest = {
+    _count: HospitalRequestCountAggregateOutputType | null
+    _min: HospitalRequestMinAggregateOutputType | null
+    _max: HospitalRequestMaxAggregateOutputType | null
+  }
+
+  export type HospitalRequestMinAggregateOutputType = {
+    id: string | null
+    hospitalId: string | null
+    userId: string | null
+    requestType: $Enums.RequestType | null
+    status: $Enums.RequestStatus | null
+    title: string | null
+    description: string | null
+    bookingId: string | null
+    treatmentId: string | null
+    priority: string | null
+    requestedDate: Date | null
+    completedDate: Date | null
+    notes: string | null
+    createdAt: Date | null
+    updatedAt: Date | null
+  }
+
+  export type HospitalRequestMaxAggregateOutputType = {
+    id: string | null
+    hospitalId: string | null
+    userId: string | null
+    requestType: $Enums.RequestType | null
+    status: $Enums.RequestStatus | null
+    title: string | null
+    description: string | null
+    bookingId: string | null
+    treatmentId: string | null
+    priority: string | null
+    requestedDate: Date | null
+    completedDate: Date | null
+    notes: string | null
+    createdAt: Date | null
+    updatedAt: Date | null
+  }
+
+  export type HospitalRequestCountAggregateOutputType = {
+    id: number
+    hospitalId: number
+    userId: number
+    requestType: number
+    status: number
+    title: number
+    description: number
+    bookingId: number
+    treatmentId: number
+    priority: number
+    requestedDate: number
+    completedDate: number
+    notes: number
+    createdAt: number
+    updatedAt: number
+    _all: number
+  }
+
+
+  export type HospitalRequestMinAggregateInputType = {
+    id?: true
+    hospitalId?: true
+    userId?: true
+    requestType?: true
+    status?: true
+    title?: true
+    description?: true
+    bookingId?: true
+    treatmentId?: true
+    priority?: true
+    requestedDate?: true
+    completedDate?: true
+    notes?: true
+    createdAt?: true
+    updatedAt?: true
+  }
+
+  export type HospitalRequestMaxAggregateInputType = {
+    id?: true
+    hospitalId?: true
+    userId?: true
+    requestType?: true
+    status?: true
+    title?: true
+    description?: true
+    bookingId?: true
+    treatmentId?: true
+    priority?: true
+    requestedDate?: true
+    completedDate?: true
+    notes?: true
+    createdAt?: true
+    updatedAt?: true
+  }
+
+  export type HospitalRequestCountAggregateInputType = {
+    id?: true
+    hospitalId?: true
+    userId?: true
+    requestType?: true
+    status?: true
+    title?: true
+    description?: true
+    bookingId?: true
+    treatmentId?: true
+    priority?: true
+    requestedDate?: true
+    completedDate?: true
+    notes?: true
+    createdAt?: true
+    updatedAt?: true
+    _all?: true
+  }
+
+  export type HospitalRequestAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which HospitalRequest to aggregate.
+     */
+    where?: HospitalRequestWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of HospitalRequests to fetch.
+     */
+    orderBy?: HospitalRequestOrderByWithRelationInput | HospitalRequestOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: HospitalRequestWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` HospitalRequests from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` HospitalRequests.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned HospitalRequests
+    **/
+    _count?: true | HospitalRequestCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: HospitalRequestMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: HospitalRequestMaxAggregateInputType
+  }
+
+  export type GetHospitalRequestAggregateType<T extends HospitalRequestAggregateArgs> = {
+        [P in keyof T & keyof AggregateHospitalRequest]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateHospitalRequest[P]>
+      : GetScalarType<T[P], AggregateHospitalRequest[P]>
+  }
+
+
+
+
+  export type HospitalRequestGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: HospitalRequestWhereInput
+    orderBy?: HospitalRequestOrderByWithAggregationInput | HospitalRequestOrderByWithAggregationInput[]
+    by: HospitalRequestScalarFieldEnum[] | HospitalRequestScalarFieldEnum
+    having?: HospitalRequestScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: HospitalRequestCountAggregateInputType | true
+    _min?: HospitalRequestMinAggregateInputType
+    _max?: HospitalRequestMaxAggregateInputType
+  }
+
+  export type HospitalRequestGroupByOutputType = {
+    id: string
+    hospitalId: string
+    userId: string
+    requestType: $Enums.RequestType
+    status: $Enums.RequestStatus
+    title: string
+    description: string | null
+    bookingId: string | null
+    treatmentId: string | null
+    priority: string
+    requestedDate: Date | null
+    completedDate: Date | null
+    notes: string | null
+    createdAt: Date
+    updatedAt: Date
+    _count: HospitalRequestCountAggregateOutputType | null
+    _min: HospitalRequestMinAggregateOutputType | null
+    _max: HospitalRequestMaxAggregateOutputType | null
+  }
+
+  type GetHospitalRequestGroupByPayload<T extends HospitalRequestGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<HospitalRequestGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof HospitalRequestGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], HospitalRequestGroupByOutputType[P]>
+            : GetScalarType<T[P], HospitalRequestGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type HospitalRequestSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    hospitalId?: boolean
+    userId?: boolean
+    requestType?: boolean
+    status?: boolean
+    title?: boolean
+    description?: boolean
+    bookingId?: boolean
+    treatmentId?: boolean
+    priority?: boolean
+    requestedDate?: boolean
+    completedDate?: boolean
+    notes?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+    hospital?: boolean | HospitalDefaultArgs<ExtArgs>
+    user?: boolean | UserDefaultArgs<ExtArgs>
+    booking?: boolean | HospitalRequest$bookingArgs<ExtArgs>
+  }, ExtArgs["result"]["hospitalRequest"]>
+
+  export type HospitalRequestSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    hospitalId?: boolean
+    userId?: boolean
+    requestType?: boolean
+    status?: boolean
+    title?: boolean
+    description?: boolean
+    bookingId?: boolean
+    treatmentId?: boolean
+    priority?: boolean
+    requestedDate?: boolean
+    completedDate?: boolean
+    notes?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+    hospital?: boolean | HospitalDefaultArgs<ExtArgs>
+    user?: boolean | UserDefaultArgs<ExtArgs>
+    booking?: boolean | HospitalRequest$bookingArgs<ExtArgs>
+  }, ExtArgs["result"]["hospitalRequest"]>
+
+  export type HospitalRequestSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    hospitalId?: boolean
+    userId?: boolean
+    requestType?: boolean
+    status?: boolean
+    title?: boolean
+    description?: boolean
+    bookingId?: boolean
+    treatmentId?: boolean
+    priority?: boolean
+    requestedDate?: boolean
+    completedDate?: boolean
+    notes?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+    hospital?: boolean | HospitalDefaultArgs<ExtArgs>
+    user?: boolean | UserDefaultArgs<ExtArgs>
+    booking?: boolean | HospitalRequest$bookingArgs<ExtArgs>
+  }, ExtArgs["result"]["hospitalRequest"]>
+
+  export type HospitalRequestSelectScalar = {
+    id?: boolean
+    hospitalId?: boolean
+    userId?: boolean
+    requestType?: boolean
+    status?: boolean
+    title?: boolean
+    description?: boolean
+    bookingId?: boolean
+    treatmentId?: boolean
+    priority?: boolean
+    requestedDate?: boolean
+    completedDate?: boolean
+    notes?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+  }
+
+  export type HospitalRequestOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "hospitalId" | "userId" | "requestType" | "status" | "title" | "description" | "bookingId" | "treatmentId" | "priority" | "requestedDate" | "completedDate" | "notes" | "createdAt" | "updatedAt", ExtArgs["result"]["hospitalRequest"]>
+  export type HospitalRequestInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    hospital?: boolean | HospitalDefaultArgs<ExtArgs>
+    user?: boolean | UserDefaultArgs<ExtArgs>
+    booking?: boolean | HospitalRequest$bookingArgs<ExtArgs>
+  }
+  export type HospitalRequestIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    hospital?: boolean | HospitalDefaultArgs<ExtArgs>
+    user?: boolean | UserDefaultArgs<ExtArgs>
+    booking?: boolean | HospitalRequest$bookingArgs<ExtArgs>
+  }
+  export type HospitalRequestIncludeUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    hospital?: boolean | HospitalDefaultArgs<ExtArgs>
+    user?: boolean | UserDefaultArgs<ExtArgs>
+    booking?: boolean | HospitalRequest$bookingArgs<ExtArgs>
+  }
+
+  export type $HospitalRequestPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "HospitalRequest"
+    objects: {
+      hospital: Prisma.$HospitalPayload<ExtArgs>
+      user: Prisma.$UserPayload<ExtArgs>
+      booking: Prisma.$BookingPayload<ExtArgs> | null
+    }
+    scalars: $Extensions.GetPayloadResult<{
+      id: string
+      hospitalId: string
+      userId: string
+      requestType: $Enums.RequestType
+      status: $Enums.RequestStatus
+      title: string
+      description: string | null
+      bookingId: string | null
+      treatmentId: string | null
+      priority: string
+      requestedDate: Date | null
+      completedDate: Date | null
+      notes: string | null
+      createdAt: Date
+      updatedAt: Date
+    }, ExtArgs["result"]["hospitalRequest"]>
+    composites: {}
+  }
+
+  type HospitalRequestGetPayload<S extends boolean | null | undefined | HospitalRequestDefaultArgs> = $Result.GetResult<Prisma.$HospitalRequestPayload, S>
+
+  type HospitalRequestCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
+    Omit<HospitalRequestFindManyArgs, 'select' | 'include' | 'distinct' | 'omit'> & {
+      select?: HospitalRequestCountAggregateInputType | true
+    }
+
+  export interface HospitalRequestDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['HospitalRequest'], meta: { name: 'HospitalRequest' } }
+    /**
+     * Find zero or one HospitalRequest that matches the filter.
+     * @param {HospitalRequestFindUniqueArgs} args - Arguments to find a HospitalRequest
+     * @example
+     * // Get one HospitalRequest
+     * const hospitalRequest = await prisma.hospitalRequest.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends HospitalRequestFindUniqueArgs>(args: SelectSubset<T, HospitalRequestFindUniqueArgs<ExtArgs>>): Prisma__HospitalRequestClient<$Result.GetResult<Prisma.$HospitalRequestPayload<ExtArgs>, T, "findUnique", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find one HospitalRequest that matches the filter or throw an error with `error.code='P2025'`
+     * if no matches were found.
+     * @param {HospitalRequestFindUniqueOrThrowArgs} args - Arguments to find a HospitalRequest
+     * @example
+     * // Get one HospitalRequest
+     * const hospitalRequest = await prisma.hospitalRequest.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends HospitalRequestFindUniqueOrThrowArgs>(args: SelectSubset<T, HospitalRequestFindUniqueOrThrowArgs<ExtArgs>>): Prisma__HospitalRequestClient<$Result.GetResult<Prisma.$HospitalRequestPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first HospitalRequest that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {HospitalRequestFindFirstArgs} args - Arguments to find a HospitalRequest
+     * @example
+     * // Get one HospitalRequest
+     * const hospitalRequest = await prisma.hospitalRequest.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends HospitalRequestFindFirstArgs>(args?: SelectSubset<T, HospitalRequestFindFirstArgs<ExtArgs>>): Prisma__HospitalRequestClient<$Result.GetResult<Prisma.$HospitalRequestPayload<ExtArgs>, T, "findFirst", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first HospitalRequest that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {HospitalRequestFindFirstOrThrowArgs} args - Arguments to find a HospitalRequest
+     * @example
+     * // Get one HospitalRequest
+     * const hospitalRequest = await prisma.hospitalRequest.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends HospitalRequestFindFirstOrThrowArgs>(args?: SelectSubset<T, HospitalRequestFindFirstOrThrowArgs<ExtArgs>>): Prisma__HospitalRequestClient<$Result.GetResult<Prisma.$HospitalRequestPayload<ExtArgs>, T, "findFirstOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find zero or more HospitalRequests that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {HospitalRequestFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all HospitalRequests
+     * const hospitalRequests = await prisma.hospitalRequest.findMany()
+     * 
+     * // Get first 10 HospitalRequests
+     * const hospitalRequests = await prisma.hospitalRequest.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const hospitalRequestWithIdOnly = await prisma.hospitalRequest.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends HospitalRequestFindManyArgs>(args?: SelectSubset<T, HospitalRequestFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$HospitalRequestPayload<ExtArgs>, T, "findMany", GlobalOmitOptions>>
+
+    /**
+     * Create a HospitalRequest.
+     * @param {HospitalRequestCreateArgs} args - Arguments to create a HospitalRequest.
+     * @example
+     * // Create one HospitalRequest
+     * const HospitalRequest = await prisma.hospitalRequest.create({
+     *   data: {
+     *     // ... data to create a HospitalRequest
+     *   }
+     * })
+     * 
+     */
+    create<T extends HospitalRequestCreateArgs>(args: SelectSubset<T, HospitalRequestCreateArgs<ExtArgs>>): Prisma__HospitalRequestClient<$Result.GetResult<Prisma.$HospitalRequestPayload<ExtArgs>, T, "create", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Create many HospitalRequests.
+     * @param {HospitalRequestCreateManyArgs} args - Arguments to create many HospitalRequests.
+     * @example
+     * // Create many HospitalRequests
+     * const hospitalRequest = await prisma.hospitalRequest.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends HospitalRequestCreateManyArgs>(args?: SelectSubset<T, HospitalRequestCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create many HospitalRequests and returns the data saved in the database.
+     * @param {HospitalRequestCreateManyAndReturnArgs} args - Arguments to create many HospitalRequests.
+     * @example
+     * // Create many HospitalRequests
+     * const hospitalRequest = await prisma.hospitalRequest.createManyAndReturn({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Create many HospitalRequests and only return the `id`
+     * const hospitalRequestWithIdOnly = await prisma.hospitalRequest.createManyAndReturn({
+     *   select: { id: true },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    createManyAndReturn<T extends HospitalRequestCreateManyAndReturnArgs>(args?: SelectSubset<T, HospitalRequestCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$HospitalRequestPayload<ExtArgs>, T, "createManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Delete a HospitalRequest.
+     * @param {HospitalRequestDeleteArgs} args - Arguments to delete one HospitalRequest.
+     * @example
+     * // Delete one HospitalRequest
+     * const HospitalRequest = await prisma.hospitalRequest.delete({
+     *   where: {
+     *     // ... filter to delete one HospitalRequest
+     *   }
+     * })
+     * 
+     */
+    delete<T extends HospitalRequestDeleteArgs>(args: SelectSubset<T, HospitalRequestDeleteArgs<ExtArgs>>): Prisma__HospitalRequestClient<$Result.GetResult<Prisma.$HospitalRequestPayload<ExtArgs>, T, "delete", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Update one HospitalRequest.
+     * @param {HospitalRequestUpdateArgs} args - Arguments to update one HospitalRequest.
+     * @example
+     * // Update one HospitalRequest
+     * const hospitalRequest = await prisma.hospitalRequest.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends HospitalRequestUpdateArgs>(args: SelectSubset<T, HospitalRequestUpdateArgs<ExtArgs>>): Prisma__HospitalRequestClient<$Result.GetResult<Prisma.$HospitalRequestPayload<ExtArgs>, T, "update", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Delete zero or more HospitalRequests.
+     * @param {HospitalRequestDeleteManyArgs} args - Arguments to filter HospitalRequests to delete.
+     * @example
+     * // Delete a few HospitalRequests
+     * const { count } = await prisma.hospitalRequest.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends HospitalRequestDeleteManyArgs>(args?: SelectSubset<T, HospitalRequestDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more HospitalRequests.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {HospitalRequestUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many HospitalRequests
+     * const hospitalRequest = await prisma.hospitalRequest.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends HospitalRequestUpdateManyArgs>(args: SelectSubset<T, HospitalRequestUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more HospitalRequests and returns the data updated in the database.
+     * @param {HospitalRequestUpdateManyAndReturnArgs} args - Arguments to update many HospitalRequests.
+     * @example
+     * // Update many HospitalRequests
+     * const hospitalRequest = await prisma.hospitalRequest.updateManyAndReturn({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Update zero or more HospitalRequests and only return the `id`
+     * const hospitalRequestWithIdOnly = await prisma.hospitalRequest.updateManyAndReturn({
+     *   select: { id: true },
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    updateManyAndReturn<T extends HospitalRequestUpdateManyAndReturnArgs>(args: SelectSubset<T, HospitalRequestUpdateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$HospitalRequestPayload<ExtArgs>, T, "updateManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Create or update one HospitalRequest.
+     * @param {HospitalRequestUpsertArgs} args - Arguments to update or create a HospitalRequest.
+     * @example
+     * // Update or create a HospitalRequest
+     * const hospitalRequest = await prisma.hospitalRequest.upsert({
+     *   create: {
+     *     // ... data to create a HospitalRequest
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the HospitalRequest we want to update
+     *   }
+     * })
+     */
+    upsert<T extends HospitalRequestUpsertArgs>(args: SelectSubset<T, HospitalRequestUpsertArgs<ExtArgs>>): Prisma__HospitalRequestClient<$Result.GetResult<Prisma.$HospitalRequestPayload<ExtArgs>, T, "upsert", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+
+    /**
+     * Count the number of HospitalRequests.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {HospitalRequestCountArgs} args - Arguments to filter HospitalRequests to count.
+     * @example
+     * // Count the number of HospitalRequests
+     * const count = await prisma.hospitalRequest.count({
+     *   where: {
+     *     // ... the filter for the HospitalRequests we want to count
+     *   }
+     * })
+    **/
+    count<T extends HospitalRequestCountArgs>(
+      args?: Subset<T, HospitalRequestCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], HospitalRequestCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a HospitalRequest.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {HospitalRequestAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends HospitalRequestAggregateArgs>(args: Subset<T, HospitalRequestAggregateArgs>): Prisma.PrismaPromise<GetHospitalRequestAggregateType<T>>
+
+    /**
+     * Group by HospitalRequest.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {HospitalRequestGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends HospitalRequestGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: HospitalRequestGroupByArgs['orderBy'] }
+        : { orderBy?: HospitalRequestGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, HospitalRequestGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetHospitalRequestGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the HospitalRequest model
+   */
+  readonly fields: HospitalRequestFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for HospitalRequest.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__HospitalRequestClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    hospital<T extends HospitalDefaultArgs<ExtArgs> = {}>(args?: Subset<T, HospitalDefaultArgs<ExtArgs>>): Prisma__HospitalClient<$Result.GetResult<Prisma.$HospitalPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+    user<T extends UserDefaultArgs<ExtArgs> = {}>(args?: Subset<T, UserDefaultArgs<ExtArgs>>): Prisma__UserClient<$Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+    booking<T extends HospitalRequest$bookingArgs<ExtArgs> = {}>(args?: Subset<T, HospitalRequest$bookingArgs<ExtArgs>>): Prisma__BookingClient<$Result.GetResult<Prisma.$BookingPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the HospitalRequest model
+   */
+  interface HospitalRequestFieldRefs {
+    readonly id: FieldRef<"HospitalRequest", 'String'>
+    readonly hospitalId: FieldRef<"HospitalRequest", 'String'>
+    readonly userId: FieldRef<"HospitalRequest", 'String'>
+    readonly requestType: FieldRef<"HospitalRequest", 'RequestType'>
+    readonly status: FieldRef<"HospitalRequest", 'RequestStatus'>
+    readonly title: FieldRef<"HospitalRequest", 'String'>
+    readonly description: FieldRef<"HospitalRequest", 'String'>
+    readonly bookingId: FieldRef<"HospitalRequest", 'String'>
+    readonly treatmentId: FieldRef<"HospitalRequest", 'String'>
+    readonly priority: FieldRef<"HospitalRequest", 'String'>
+    readonly requestedDate: FieldRef<"HospitalRequest", 'DateTime'>
+    readonly completedDate: FieldRef<"HospitalRequest", 'DateTime'>
+    readonly notes: FieldRef<"HospitalRequest", 'String'>
+    readonly createdAt: FieldRef<"HospitalRequest", 'DateTime'>
+    readonly updatedAt: FieldRef<"HospitalRequest", 'DateTime'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * HospitalRequest findUnique
+   */
+  export type HospitalRequestFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the HospitalRequest
+     */
+    select?: HospitalRequestSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the HospitalRequest
+     */
+    omit?: HospitalRequestOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: HospitalRequestInclude<ExtArgs> | null
+    /**
+     * Filter, which HospitalRequest to fetch.
+     */
+    where: HospitalRequestWhereUniqueInput
+  }
+
+  /**
+   * HospitalRequest findUniqueOrThrow
+   */
+  export type HospitalRequestFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the HospitalRequest
+     */
+    select?: HospitalRequestSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the HospitalRequest
+     */
+    omit?: HospitalRequestOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: HospitalRequestInclude<ExtArgs> | null
+    /**
+     * Filter, which HospitalRequest to fetch.
+     */
+    where: HospitalRequestWhereUniqueInput
+  }
+
+  /**
+   * HospitalRequest findFirst
+   */
+  export type HospitalRequestFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the HospitalRequest
+     */
+    select?: HospitalRequestSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the HospitalRequest
+     */
+    omit?: HospitalRequestOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: HospitalRequestInclude<ExtArgs> | null
+    /**
+     * Filter, which HospitalRequest to fetch.
+     */
+    where?: HospitalRequestWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of HospitalRequests to fetch.
+     */
+    orderBy?: HospitalRequestOrderByWithRelationInput | HospitalRequestOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for HospitalRequests.
+     */
+    cursor?: HospitalRequestWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` HospitalRequests from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` HospitalRequests.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of HospitalRequests.
+     */
+    distinct?: HospitalRequestScalarFieldEnum | HospitalRequestScalarFieldEnum[]
+  }
+
+  /**
+   * HospitalRequest findFirstOrThrow
+   */
+  export type HospitalRequestFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the HospitalRequest
+     */
+    select?: HospitalRequestSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the HospitalRequest
+     */
+    omit?: HospitalRequestOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: HospitalRequestInclude<ExtArgs> | null
+    /**
+     * Filter, which HospitalRequest to fetch.
+     */
+    where?: HospitalRequestWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of HospitalRequests to fetch.
+     */
+    orderBy?: HospitalRequestOrderByWithRelationInput | HospitalRequestOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for HospitalRequests.
+     */
+    cursor?: HospitalRequestWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` HospitalRequests from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` HospitalRequests.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of HospitalRequests.
+     */
+    distinct?: HospitalRequestScalarFieldEnum | HospitalRequestScalarFieldEnum[]
+  }
+
+  /**
+   * HospitalRequest findMany
+   */
+  export type HospitalRequestFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the HospitalRequest
+     */
+    select?: HospitalRequestSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the HospitalRequest
+     */
+    omit?: HospitalRequestOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: HospitalRequestInclude<ExtArgs> | null
+    /**
+     * Filter, which HospitalRequests to fetch.
+     */
+    where?: HospitalRequestWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of HospitalRequests to fetch.
+     */
+    orderBy?: HospitalRequestOrderByWithRelationInput | HospitalRequestOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing HospitalRequests.
+     */
+    cursor?: HospitalRequestWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` HospitalRequests from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` HospitalRequests.
+     */
+    skip?: number
+    distinct?: HospitalRequestScalarFieldEnum | HospitalRequestScalarFieldEnum[]
+  }
+
+  /**
+   * HospitalRequest create
+   */
+  export type HospitalRequestCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the HospitalRequest
+     */
+    select?: HospitalRequestSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the HospitalRequest
+     */
+    omit?: HospitalRequestOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: HospitalRequestInclude<ExtArgs> | null
+    /**
+     * The data needed to create a HospitalRequest.
+     */
+    data: XOR<HospitalRequestCreateInput, HospitalRequestUncheckedCreateInput>
+  }
+
+  /**
+   * HospitalRequest createMany
+   */
+  export type HospitalRequestCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many HospitalRequests.
+     */
+    data: HospitalRequestCreateManyInput | HospitalRequestCreateManyInput[]
+    skipDuplicates?: boolean
+  }
+
+  /**
+   * HospitalRequest createManyAndReturn
+   */
+  export type HospitalRequestCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the HospitalRequest
+     */
+    select?: HospitalRequestSelectCreateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the HospitalRequest
+     */
+    omit?: HospitalRequestOmit<ExtArgs> | null
+    /**
+     * The data used to create many HospitalRequests.
+     */
+    data: HospitalRequestCreateManyInput | HospitalRequestCreateManyInput[]
+    skipDuplicates?: boolean
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: HospitalRequestIncludeCreateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * HospitalRequest update
+   */
+  export type HospitalRequestUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the HospitalRequest
+     */
+    select?: HospitalRequestSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the HospitalRequest
+     */
+    omit?: HospitalRequestOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: HospitalRequestInclude<ExtArgs> | null
+    /**
+     * The data needed to update a HospitalRequest.
+     */
+    data: XOR<HospitalRequestUpdateInput, HospitalRequestUncheckedUpdateInput>
+    /**
+     * Choose, which HospitalRequest to update.
+     */
+    where: HospitalRequestWhereUniqueInput
+  }
+
+  /**
+   * HospitalRequest updateMany
+   */
+  export type HospitalRequestUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update HospitalRequests.
+     */
+    data: XOR<HospitalRequestUpdateManyMutationInput, HospitalRequestUncheckedUpdateManyInput>
+    /**
+     * Filter which HospitalRequests to update
+     */
+    where?: HospitalRequestWhereInput
+    /**
+     * Limit how many HospitalRequests to update.
+     */
+    limit?: number
+  }
+
+  /**
+   * HospitalRequest updateManyAndReturn
+   */
+  export type HospitalRequestUpdateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the HospitalRequest
+     */
+    select?: HospitalRequestSelectUpdateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the HospitalRequest
+     */
+    omit?: HospitalRequestOmit<ExtArgs> | null
+    /**
+     * The data used to update HospitalRequests.
+     */
+    data: XOR<HospitalRequestUpdateManyMutationInput, HospitalRequestUncheckedUpdateManyInput>
+    /**
+     * Filter which HospitalRequests to update
+     */
+    where?: HospitalRequestWhereInput
+    /**
+     * Limit how many HospitalRequests to update.
+     */
+    limit?: number
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: HospitalRequestIncludeUpdateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * HospitalRequest upsert
+   */
+  export type HospitalRequestUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the HospitalRequest
+     */
+    select?: HospitalRequestSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the HospitalRequest
+     */
+    omit?: HospitalRequestOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: HospitalRequestInclude<ExtArgs> | null
+    /**
+     * The filter to search for the HospitalRequest to update in case it exists.
+     */
+    where: HospitalRequestWhereUniqueInput
+    /**
+     * In case the HospitalRequest found by the `where` argument doesn't exist, create a new HospitalRequest with this data.
+     */
+    create: XOR<HospitalRequestCreateInput, HospitalRequestUncheckedCreateInput>
+    /**
+     * In case the HospitalRequest was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<HospitalRequestUpdateInput, HospitalRequestUncheckedUpdateInput>
+  }
+
+  /**
+   * HospitalRequest delete
+   */
+  export type HospitalRequestDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the HospitalRequest
+     */
+    select?: HospitalRequestSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the HospitalRequest
+     */
+    omit?: HospitalRequestOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: HospitalRequestInclude<ExtArgs> | null
+    /**
+     * Filter which HospitalRequest to delete.
+     */
+    where: HospitalRequestWhereUniqueInput
+  }
+
+  /**
+   * HospitalRequest deleteMany
+   */
+  export type HospitalRequestDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which HospitalRequests to delete
+     */
+    where?: HospitalRequestWhereInput
+    /**
+     * Limit how many HospitalRequests to delete.
+     */
+    limit?: number
+  }
+
+  /**
+   * HospitalRequest.booking
+   */
+  export type HospitalRequest$bookingArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Booking
+     */
+    select?: BookingSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Booking
+     */
+    omit?: BookingOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: BookingInclude<ExtArgs> | null
+    where?: BookingWhereInput
+  }
+
+  /**
+   * HospitalRequest without action
+   */
+  export type HospitalRequestDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the HospitalRequest
+     */
+    select?: HospitalRequestSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the HospitalRequest
+     */
+    omit?: HospitalRequestOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: HospitalRequestInclude<ExtArgs> | null
+  }
+
+
+  /**
+   * Model UserPreference
+   */
+
+  export type AggregateUserPreference = {
+    _count: UserPreferenceCountAggregateOutputType | null
+    _min: UserPreferenceMinAggregateOutputType | null
+    _max: UserPreferenceMaxAggregateOutputType | null
+  }
+
+  export type UserPreferenceMinAggregateOutputType = {
+    id: string | null
+    userId: string | null
+    hospitalId: string | null
+    preferenceType: string | null
+    notes: string | null
+    createdAt: Date | null
+    updatedAt: Date | null
+  }
+
+  export type UserPreferenceMaxAggregateOutputType = {
+    id: string | null
+    userId: string | null
+    hospitalId: string | null
+    preferenceType: string | null
+    notes: string | null
+    createdAt: Date | null
+    updatedAt: Date | null
+  }
+
+  export type UserPreferenceCountAggregateOutputType = {
+    id: number
+    userId: number
+    hospitalId: number
+    preferenceType: number
+    notes: number
+    createdAt: number
+    updatedAt: number
+    _all: number
+  }
+
+
+  export type UserPreferenceMinAggregateInputType = {
+    id?: true
+    userId?: true
+    hospitalId?: true
+    preferenceType?: true
+    notes?: true
+    createdAt?: true
+    updatedAt?: true
+  }
+
+  export type UserPreferenceMaxAggregateInputType = {
+    id?: true
+    userId?: true
+    hospitalId?: true
+    preferenceType?: true
+    notes?: true
+    createdAt?: true
+    updatedAt?: true
+  }
+
+  export type UserPreferenceCountAggregateInputType = {
+    id?: true
+    userId?: true
+    hospitalId?: true
+    preferenceType?: true
+    notes?: true
+    createdAt?: true
+    updatedAt?: true
+    _all?: true
+  }
+
+  export type UserPreferenceAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which UserPreference to aggregate.
+     */
+    where?: UserPreferenceWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of UserPreferences to fetch.
+     */
+    orderBy?: UserPreferenceOrderByWithRelationInput | UserPreferenceOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: UserPreferenceWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` UserPreferences from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` UserPreferences.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned UserPreferences
+    **/
+    _count?: true | UserPreferenceCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: UserPreferenceMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: UserPreferenceMaxAggregateInputType
+  }
+
+  export type GetUserPreferenceAggregateType<T extends UserPreferenceAggregateArgs> = {
+        [P in keyof T & keyof AggregateUserPreference]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateUserPreference[P]>
+      : GetScalarType<T[P], AggregateUserPreference[P]>
+  }
+
+
+
+
+  export type UserPreferenceGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: UserPreferenceWhereInput
+    orderBy?: UserPreferenceOrderByWithAggregationInput | UserPreferenceOrderByWithAggregationInput[]
+    by: UserPreferenceScalarFieldEnum[] | UserPreferenceScalarFieldEnum
+    having?: UserPreferenceScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: UserPreferenceCountAggregateInputType | true
+    _min?: UserPreferenceMinAggregateInputType
+    _max?: UserPreferenceMaxAggregateInputType
+  }
+
+  export type UserPreferenceGroupByOutputType = {
+    id: string
+    userId: string
+    hospitalId: string
+    preferenceType: string
+    notes: string | null
+    createdAt: Date
+    updatedAt: Date
+    _count: UserPreferenceCountAggregateOutputType | null
+    _min: UserPreferenceMinAggregateOutputType | null
+    _max: UserPreferenceMaxAggregateOutputType | null
+  }
+
+  type GetUserPreferenceGroupByPayload<T extends UserPreferenceGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<UserPreferenceGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof UserPreferenceGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], UserPreferenceGroupByOutputType[P]>
+            : GetScalarType<T[P], UserPreferenceGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type UserPreferenceSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    userId?: boolean
+    hospitalId?: boolean
+    preferenceType?: boolean
+    notes?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+    user?: boolean | UserDefaultArgs<ExtArgs>
+    hospital?: boolean | HospitalDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["userPreference"]>
+
+  export type UserPreferenceSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    userId?: boolean
+    hospitalId?: boolean
+    preferenceType?: boolean
+    notes?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+    user?: boolean | UserDefaultArgs<ExtArgs>
+    hospital?: boolean | HospitalDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["userPreference"]>
+
+  export type UserPreferenceSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    userId?: boolean
+    hospitalId?: boolean
+    preferenceType?: boolean
+    notes?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+    user?: boolean | UserDefaultArgs<ExtArgs>
+    hospital?: boolean | HospitalDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["userPreference"]>
+
+  export type UserPreferenceSelectScalar = {
+    id?: boolean
+    userId?: boolean
+    hospitalId?: boolean
+    preferenceType?: boolean
+    notes?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+  }
+
+  export type UserPreferenceOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "userId" | "hospitalId" | "preferenceType" | "notes" | "createdAt" | "updatedAt", ExtArgs["result"]["userPreference"]>
+  export type UserPreferenceInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    user?: boolean | UserDefaultArgs<ExtArgs>
+    hospital?: boolean | HospitalDefaultArgs<ExtArgs>
+  }
+  export type UserPreferenceIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    user?: boolean | UserDefaultArgs<ExtArgs>
+    hospital?: boolean | HospitalDefaultArgs<ExtArgs>
+  }
+  export type UserPreferenceIncludeUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    user?: boolean | UserDefaultArgs<ExtArgs>
+    hospital?: boolean | HospitalDefaultArgs<ExtArgs>
+  }
+
+  export type $UserPreferencePayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "UserPreference"
+    objects: {
+      user: Prisma.$UserPayload<ExtArgs>
+      hospital: Prisma.$HospitalPayload<ExtArgs>
+    }
+    scalars: $Extensions.GetPayloadResult<{
+      id: string
+      userId: string
+      hospitalId: string
+      preferenceType: string
+      notes: string | null
+      createdAt: Date
+      updatedAt: Date
+    }, ExtArgs["result"]["userPreference"]>
+    composites: {}
+  }
+
+  type UserPreferenceGetPayload<S extends boolean | null | undefined | UserPreferenceDefaultArgs> = $Result.GetResult<Prisma.$UserPreferencePayload, S>
+
+  type UserPreferenceCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
+    Omit<UserPreferenceFindManyArgs, 'select' | 'include' | 'distinct' | 'omit'> & {
+      select?: UserPreferenceCountAggregateInputType | true
+    }
+
+  export interface UserPreferenceDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['UserPreference'], meta: { name: 'UserPreference' } }
+    /**
+     * Find zero or one UserPreference that matches the filter.
+     * @param {UserPreferenceFindUniqueArgs} args - Arguments to find a UserPreference
+     * @example
+     * // Get one UserPreference
+     * const userPreference = await prisma.userPreference.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends UserPreferenceFindUniqueArgs>(args: SelectSubset<T, UserPreferenceFindUniqueArgs<ExtArgs>>): Prisma__UserPreferenceClient<$Result.GetResult<Prisma.$UserPreferencePayload<ExtArgs>, T, "findUnique", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find one UserPreference that matches the filter or throw an error with `error.code='P2025'`
+     * if no matches were found.
+     * @param {UserPreferenceFindUniqueOrThrowArgs} args - Arguments to find a UserPreference
+     * @example
+     * // Get one UserPreference
+     * const userPreference = await prisma.userPreference.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends UserPreferenceFindUniqueOrThrowArgs>(args: SelectSubset<T, UserPreferenceFindUniqueOrThrowArgs<ExtArgs>>): Prisma__UserPreferenceClient<$Result.GetResult<Prisma.$UserPreferencePayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first UserPreference that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {UserPreferenceFindFirstArgs} args - Arguments to find a UserPreference
+     * @example
+     * // Get one UserPreference
+     * const userPreference = await prisma.userPreference.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends UserPreferenceFindFirstArgs>(args?: SelectSubset<T, UserPreferenceFindFirstArgs<ExtArgs>>): Prisma__UserPreferenceClient<$Result.GetResult<Prisma.$UserPreferencePayload<ExtArgs>, T, "findFirst", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first UserPreference that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {UserPreferenceFindFirstOrThrowArgs} args - Arguments to find a UserPreference
+     * @example
+     * // Get one UserPreference
+     * const userPreference = await prisma.userPreference.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends UserPreferenceFindFirstOrThrowArgs>(args?: SelectSubset<T, UserPreferenceFindFirstOrThrowArgs<ExtArgs>>): Prisma__UserPreferenceClient<$Result.GetResult<Prisma.$UserPreferencePayload<ExtArgs>, T, "findFirstOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find zero or more UserPreferences that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {UserPreferenceFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all UserPreferences
+     * const userPreferences = await prisma.userPreference.findMany()
+     * 
+     * // Get first 10 UserPreferences
+     * const userPreferences = await prisma.userPreference.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const userPreferenceWithIdOnly = await prisma.userPreference.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends UserPreferenceFindManyArgs>(args?: SelectSubset<T, UserPreferenceFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$UserPreferencePayload<ExtArgs>, T, "findMany", GlobalOmitOptions>>
+
+    /**
+     * Create a UserPreference.
+     * @param {UserPreferenceCreateArgs} args - Arguments to create a UserPreference.
+     * @example
+     * // Create one UserPreference
+     * const UserPreference = await prisma.userPreference.create({
+     *   data: {
+     *     // ... data to create a UserPreference
+     *   }
+     * })
+     * 
+     */
+    create<T extends UserPreferenceCreateArgs>(args: SelectSubset<T, UserPreferenceCreateArgs<ExtArgs>>): Prisma__UserPreferenceClient<$Result.GetResult<Prisma.$UserPreferencePayload<ExtArgs>, T, "create", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Create many UserPreferences.
+     * @param {UserPreferenceCreateManyArgs} args - Arguments to create many UserPreferences.
+     * @example
+     * // Create many UserPreferences
+     * const userPreference = await prisma.userPreference.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends UserPreferenceCreateManyArgs>(args?: SelectSubset<T, UserPreferenceCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create many UserPreferences and returns the data saved in the database.
+     * @param {UserPreferenceCreateManyAndReturnArgs} args - Arguments to create many UserPreferences.
+     * @example
+     * // Create many UserPreferences
+     * const userPreference = await prisma.userPreference.createManyAndReturn({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Create many UserPreferences and only return the `id`
+     * const userPreferenceWithIdOnly = await prisma.userPreference.createManyAndReturn({
+     *   select: { id: true },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    createManyAndReturn<T extends UserPreferenceCreateManyAndReturnArgs>(args?: SelectSubset<T, UserPreferenceCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$UserPreferencePayload<ExtArgs>, T, "createManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Delete a UserPreference.
+     * @param {UserPreferenceDeleteArgs} args - Arguments to delete one UserPreference.
+     * @example
+     * // Delete one UserPreference
+     * const UserPreference = await prisma.userPreference.delete({
+     *   where: {
+     *     // ... filter to delete one UserPreference
+     *   }
+     * })
+     * 
+     */
+    delete<T extends UserPreferenceDeleteArgs>(args: SelectSubset<T, UserPreferenceDeleteArgs<ExtArgs>>): Prisma__UserPreferenceClient<$Result.GetResult<Prisma.$UserPreferencePayload<ExtArgs>, T, "delete", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Update one UserPreference.
+     * @param {UserPreferenceUpdateArgs} args - Arguments to update one UserPreference.
+     * @example
+     * // Update one UserPreference
+     * const userPreference = await prisma.userPreference.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends UserPreferenceUpdateArgs>(args: SelectSubset<T, UserPreferenceUpdateArgs<ExtArgs>>): Prisma__UserPreferenceClient<$Result.GetResult<Prisma.$UserPreferencePayload<ExtArgs>, T, "update", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Delete zero or more UserPreferences.
+     * @param {UserPreferenceDeleteManyArgs} args - Arguments to filter UserPreferences to delete.
+     * @example
+     * // Delete a few UserPreferences
+     * const { count } = await prisma.userPreference.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends UserPreferenceDeleteManyArgs>(args?: SelectSubset<T, UserPreferenceDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more UserPreferences.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {UserPreferenceUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many UserPreferences
+     * const userPreference = await prisma.userPreference.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends UserPreferenceUpdateManyArgs>(args: SelectSubset<T, UserPreferenceUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more UserPreferences and returns the data updated in the database.
+     * @param {UserPreferenceUpdateManyAndReturnArgs} args - Arguments to update many UserPreferences.
+     * @example
+     * // Update many UserPreferences
+     * const userPreference = await prisma.userPreference.updateManyAndReturn({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Update zero or more UserPreferences and only return the `id`
+     * const userPreferenceWithIdOnly = await prisma.userPreference.updateManyAndReturn({
+     *   select: { id: true },
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    updateManyAndReturn<T extends UserPreferenceUpdateManyAndReturnArgs>(args: SelectSubset<T, UserPreferenceUpdateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$UserPreferencePayload<ExtArgs>, T, "updateManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Create or update one UserPreference.
+     * @param {UserPreferenceUpsertArgs} args - Arguments to update or create a UserPreference.
+     * @example
+     * // Update or create a UserPreference
+     * const userPreference = await prisma.userPreference.upsert({
+     *   create: {
+     *     // ... data to create a UserPreference
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the UserPreference we want to update
+     *   }
+     * })
+     */
+    upsert<T extends UserPreferenceUpsertArgs>(args: SelectSubset<T, UserPreferenceUpsertArgs<ExtArgs>>): Prisma__UserPreferenceClient<$Result.GetResult<Prisma.$UserPreferencePayload<ExtArgs>, T, "upsert", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+
+    /**
+     * Count the number of UserPreferences.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {UserPreferenceCountArgs} args - Arguments to filter UserPreferences to count.
+     * @example
+     * // Count the number of UserPreferences
+     * const count = await prisma.userPreference.count({
+     *   where: {
+     *     // ... the filter for the UserPreferences we want to count
+     *   }
+     * })
+    **/
+    count<T extends UserPreferenceCountArgs>(
+      args?: Subset<T, UserPreferenceCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], UserPreferenceCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a UserPreference.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {UserPreferenceAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends UserPreferenceAggregateArgs>(args: Subset<T, UserPreferenceAggregateArgs>): Prisma.PrismaPromise<GetUserPreferenceAggregateType<T>>
+
+    /**
+     * Group by UserPreference.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {UserPreferenceGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends UserPreferenceGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: UserPreferenceGroupByArgs['orderBy'] }
+        : { orderBy?: UserPreferenceGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, UserPreferenceGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetUserPreferenceGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the UserPreference model
+   */
+  readonly fields: UserPreferenceFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for UserPreference.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__UserPreferenceClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    user<T extends UserDefaultArgs<ExtArgs> = {}>(args?: Subset<T, UserDefaultArgs<ExtArgs>>): Prisma__UserClient<$Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+    hospital<T extends HospitalDefaultArgs<ExtArgs> = {}>(args?: Subset<T, HospitalDefaultArgs<ExtArgs>>): Prisma__HospitalClient<$Result.GetResult<Prisma.$HospitalPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the UserPreference model
+   */
+  interface UserPreferenceFieldRefs {
+    readonly id: FieldRef<"UserPreference", 'String'>
+    readonly userId: FieldRef<"UserPreference", 'String'>
+    readonly hospitalId: FieldRef<"UserPreference", 'String'>
+    readonly preferenceType: FieldRef<"UserPreference", 'String'>
+    readonly notes: FieldRef<"UserPreference", 'String'>
+    readonly createdAt: FieldRef<"UserPreference", 'DateTime'>
+    readonly updatedAt: FieldRef<"UserPreference", 'DateTime'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * UserPreference findUnique
+   */
+  export type UserPreferenceFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the UserPreference
+     */
+    select?: UserPreferenceSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the UserPreference
+     */
+    omit?: UserPreferenceOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: UserPreferenceInclude<ExtArgs> | null
+    /**
+     * Filter, which UserPreference to fetch.
+     */
+    where: UserPreferenceWhereUniqueInput
+  }
+
+  /**
+   * UserPreference findUniqueOrThrow
+   */
+  export type UserPreferenceFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the UserPreference
+     */
+    select?: UserPreferenceSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the UserPreference
+     */
+    omit?: UserPreferenceOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: UserPreferenceInclude<ExtArgs> | null
+    /**
+     * Filter, which UserPreference to fetch.
+     */
+    where: UserPreferenceWhereUniqueInput
+  }
+
+  /**
+   * UserPreference findFirst
+   */
+  export type UserPreferenceFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the UserPreference
+     */
+    select?: UserPreferenceSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the UserPreference
+     */
+    omit?: UserPreferenceOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: UserPreferenceInclude<ExtArgs> | null
+    /**
+     * Filter, which UserPreference to fetch.
+     */
+    where?: UserPreferenceWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of UserPreferences to fetch.
+     */
+    orderBy?: UserPreferenceOrderByWithRelationInput | UserPreferenceOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for UserPreferences.
+     */
+    cursor?: UserPreferenceWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` UserPreferences from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` UserPreferences.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of UserPreferences.
+     */
+    distinct?: UserPreferenceScalarFieldEnum | UserPreferenceScalarFieldEnum[]
+  }
+
+  /**
+   * UserPreference findFirstOrThrow
+   */
+  export type UserPreferenceFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the UserPreference
+     */
+    select?: UserPreferenceSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the UserPreference
+     */
+    omit?: UserPreferenceOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: UserPreferenceInclude<ExtArgs> | null
+    /**
+     * Filter, which UserPreference to fetch.
+     */
+    where?: UserPreferenceWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of UserPreferences to fetch.
+     */
+    orderBy?: UserPreferenceOrderByWithRelationInput | UserPreferenceOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for UserPreferences.
+     */
+    cursor?: UserPreferenceWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` UserPreferences from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` UserPreferences.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of UserPreferences.
+     */
+    distinct?: UserPreferenceScalarFieldEnum | UserPreferenceScalarFieldEnum[]
+  }
+
+  /**
+   * UserPreference findMany
+   */
+  export type UserPreferenceFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the UserPreference
+     */
+    select?: UserPreferenceSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the UserPreference
+     */
+    omit?: UserPreferenceOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: UserPreferenceInclude<ExtArgs> | null
+    /**
+     * Filter, which UserPreferences to fetch.
+     */
+    where?: UserPreferenceWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of UserPreferences to fetch.
+     */
+    orderBy?: UserPreferenceOrderByWithRelationInput | UserPreferenceOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing UserPreferences.
+     */
+    cursor?: UserPreferenceWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` UserPreferences from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` UserPreferences.
+     */
+    skip?: number
+    distinct?: UserPreferenceScalarFieldEnum | UserPreferenceScalarFieldEnum[]
+  }
+
+  /**
+   * UserPreference create
+   */
+  export type UserPreferenceCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the UserPreference
+     */
+    select?: UserPreferenceSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the UserPreference
+     */
+    omit?: UserPreferenceOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: UserPreferenceInclude<ExtArgs> | null
+    /**
+     * The data needed to create a UserPreference.
+     */
+    data: XOR<UserPreferenceCreateInput, UserPreferenceUncheckedCreateInput>
+  }
+
+  /**
+   * UserPreference createMany
+   */
+  export type UserPreferenceCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many UserPreferences.
+     */
+    data: UserPreferenceCreateManyInput | UserPreferenceCreateManyInput[]
+    skipDuplicates?: boolean
+  }
+
+  /**
+   * UserPreference createManyAndReturn
+   */
+  export type UserPreferenceCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the UserPreference
+     */
+    select?: UserPreferenceSelectCreateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the UserPreference
+     */
+    omit?: UserPreferenceOmit<ExtArgs> | null
+    /**
+     * The data used to create many UserPreferences.
+     */
+    data: UserPreferenceCreateManyInput | UserPreferenceCreateManyInput[]
+    skipDuplicates?: boolean
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: UserPreferenceIncludeCreateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * UserPreference update
+   */
+  export type UserPreferenceUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the UserPreference
+     */
+    select?: UserPreferenceSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the UserPreference
+     */
+    omit?: UserPreferenceOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: UserPreferenceInclude<ExtArgs> | null
+    /**
+     * The data needed to update a UserPreference.
+     */
+    data: XOR<UserPreferenceUpdateInput, UserPreferenceUncheckedUpdateInput>
+    /**
+     * Choose, which UserPreference to update.
+     */
+    where: UserPreferenceWhereUniqueInput
+  }
+
+  /**
+   * UserPreference updateMany
+   */
+  export type UserPreferenceUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update UserPreferences.
+     */
+    data: XOR<UserPreferenceUpdateManyMutationInput, UserPreferenceUncheckedUpdateManyInput>
+    /**
+     * Filter which UserPreferences to update
+     */
+    where?: UserPreferenceWhereInput
+    /**
+     * Limit how many UserPreferences to update.
+     */
+    limit?: number
+  }
+
+  /**
+   * UserPreference updateManyAndReturn
+   */
+  export type UserPreferenceUpdateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the UserPreference
+     */
+    select?: UserPreferenceSelectUpdateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the UserPreference
+     */
+    omit?: UserPreferenceOmit<ExtArgs> | null
+    /**
+     * The data used to update UserPreferences.
+     */
+    data: XOR<UserPreferenceUpdateManyMutationInput, UserPreferenceUncheckedUpdateManyInput>
+    /**
+     * Filter which UserPreferences to update
+     */
+    where?: UserPreferenceWhereInput
+    /**
+     * Limit how many UserPreferences to update.
+     */
+    limit?: number
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: UserPreferenceIncludeUpdateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * UserPreference upsert
+   */
+  export type UserPreferenceUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the UserPreference
+     */
+    select?: UserPreferenceSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the UserPreference
+     */
+    omit?: UserPreferenceOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: UserPreferenceInclude<ExtArgs> | null
+    /**
+     * The filter to search for the UserPreference to update in case it exists.
+     */
+    where: UserPreferenceWhereUniqueInput
+    /**
+     * In case the UserPreference found by the `where` argument doesn't exist, create a new UserPreference with this data.
+     */
+    create: XOR<UserPreferenceCreateInput, UserPreferenceUncheckedCreateInput>
+    /**
+     * In case the UserPreference was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<UserPreferenceUpdateInput, UserPreferenceUncheckedUpdateInput>
+  }
+
+  /**
+   * UserPreference delete
+   */
+  export type UserPreferenceDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the UserPreference
+     */
+    select?: UserPreferenceSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the UserPreference
+     */
+    omit?: UserPreferenceOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: UserPreferenceInclude<ExtArgs> | null
+    /**
+     * Filter which UserPreference to delete.
+     */
+    where: UserPreferenceWhereUniqueInput
+  }
+
+  /**
+   * UserPreference deleteMany
+   */
+  export type UserPreferenceDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which UserPreferences to delete
+     */
+    where?: UserPreferenceWhereInput
+    /**
+     * Limit how many UserPreferences to delete.
+     */
+    limit?: number
+  }
+
+  /**
+   * UserPreference without action
+   */
+  export type UserPreferenceDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the UserPreference
+     */
+    select?: UserPreferenceSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the UserPreference
+     */
+    omit?: UserPreferenceOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: UserPreferenceInclude<ExtArgs> | null
+  }
+
+
+  /**
+   * Model TreatmentPreference
+   */
+
+  export type AggregateTreatmentPreference = {
+    _count: TreatmentPreferenceCountAggregateOutputType | null
+    _min: TreatmentPreferenceMinAggregateOutputType | null
+    _max: TreatmentPreferenceMaxAggregateOutputType | null
+  }
+
+  export type TreatmentPreferenceMinAggregateOutputType = {
+    id: string | null
+    treatmentId: string | null
+    treatmentName: string | null
+    hospitalId: string | null
+    preferenceType: string | null
+    notes: string | null
+    createdAt: Date | null
+    updatedAt: Date | null
+  }
+
+  export type TreatmentPreferenceMaxAggregateOutputType = {
+    id: string | null
+    treatmentId: string | null
+    treatmentName: string | null
+    hospitalId: string | null
+    preferenceType: string | null
+    notes: string | null
+    createdAt: Date | null
+    updatedAt: Date | null
+  }
+
+  export type TreatmentPreferenceCountAggregateOutputType = {
+    id: number
+    treatmentId: number
+    treatmentName: number
+    hospitalId: number
+    preferenceType: number
+    notes: number
+    createdAt: number
+    updatedAt: number
+    _all: number
+  }
+
+
+  export type TreatmentPreferenceMinAggregateInputType = {
+    id?: true
+    treatmentId?: true
+    treatmentName?: true
+    hospitalId?: true
+    preferenceType?: true
+    notes?: true
+    createdAt?: true
+    updatedAt?: true
+  }
+
+  export type TreatmentPreferenceMaxAggregateInputType = {
+    id?: true
+    treatmentId?: true
+    treatmentName?: true
+    hospitalId?: true
+    preferenceType?: true
+    notes?: true
+    createdAt?: true
+    updatedAt?: true
+  }
+
+  export type TreatmentPreferenceCountAggregateInputType = {
+    id?: true
+    treatmentId?: true
+    treatmentName?: true
+    hospitalId?: true
+    preferenceType?: true
+    notes?: true
+    createdAt?: true
+    updatedAt?: true
+    _all?: true
+  }
+
+  export type TreatmentPreferenceAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which TreatmentPreference to aggregate.
+     */
+    where?: TreatmentPreferenceWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of TreatmentPreferences to fetch.
+     */
+    orderBy?: TreatmentPreferenceOrderByWithRelationInput | TreatmentPreferenceOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: TreatmentPreferenceWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` TreatmentPreferences from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` TreatmentPreferences.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned TreatmentPreferences
+    **/
+    _count?: true | TreatmentPreferenceCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: TreatmentPreferenceMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: TreatmentPreferenceMaxAggregateInputType
+  }
+
+  export type GetTreatmentPreferenceAggregateType<T extends TreatmentPreferenceAggregateArgs> = {
+        [P in keyof T & keyof AggregateTreatmentPreference]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateTreatmentPreference[P]>
+      : GetScalarType<T[P], AggregateTreatmentPreference[P]>
+  }
+
+
+
+
+  export type TreatmentPreferenceGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: TreatmentPreferenceWhereInput
+    orderBy?: TreatmentPreferenceOrderByWithAggregationInput | TreatmentPreferenceOrderByWithAggregationInput[]
+    by: TreatmentPreferenceScalarFieldEnum[] | TreatmentPreferenceScalarFieldEnum
+    having?: TreatmentPreferenceScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: TreatmentPreferenceCountAggregateInputType | true
+    _min?: TreatmentPreferenceMinAggregateInputType
+    _max?: TreatmentPreferenceMaxAggregateInputType
+  }
+
+  export type TreatmentPreferenceGroupByOutputType = {
+    id: string
+    treatmentId: string
+    treatmentName: string
+    hospitalId: string
+    preferenceType: string
+    notes: string | null
+    createdAt: Date
+    updatedAt: Date
+    _count: TreatmentPreferenceCountAggregateOutputType | null
+    _min: TreatmentPreferenceMinAggregateOutputType | null
+    _max: TreatmentPreferenceMaxAggregateOutputType | null
+  }
+
+  type GetTreatmentPreferenceGroupByPayload<T extends TreatmentPreferenceGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<TreatmentPreferenceGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof TreatmentPreferenceGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], TreatmentPreferenceGroupByOutputType[P]>
+            : GetScalarType<T[P], TreatmentPreferenceGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type TreatmentPreferenceSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    treatmentId?: boolean
+    treatmentName?: boolean
+    hospitalId?: boolean
+    preferenceType?: boolean
+    notes?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+    hospital?: boolean | HospitalDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["treatmentPreference"]>
+
+  export type TreatmentPreferenceSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    treatmentId?: boolean
+    treatmentName?: boolean
+    hospitalId?: boolean
+    preferenceType?: boolean
+    notes?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+    hospital?: boolean | HospitalDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["treatmentPreference"]>
+
+  export type TreatmentPreferenceSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    treatmentId?: boolean
+    treatmentName?: boolean
+    hospitalId?: boolean
+    preferenceType?: boolean
+    notes?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+    hospital?: boolean | HospitalDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["treatmentPreference"]>
+
+  export type TreatmentPreferenceSelectScalar = {
+    id?: boolean
+    treatmentId?: boolean
+    treatmentName?: boolean
+    hospitalId?: boolean
+    preferenceType?: boolean
+    notes?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+  }
+
+  export type TreatmentPreferenceOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "treatmentId" | "treatmentName" | "hospitalId" | "preferenceType" | "notes" | "createdAt" | "updatedAt", ExtArgs["result"]["treatmentPreference"]>
+  export type TreatmentPreferenceInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    hospital?: boolean | HospitalDefaultArgs<ExtArgs>
+  }
+  export type TreatmentPreferenceIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    hospital?: boolean | HospitalDefaultArgs<ExtArgs>
+  }
+  export type TreatmentPreferenceIncludeUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    hospital?: boolean | HospitalDefaultArgs<ExtArgs>
+  }
+
+  export type $TreatmentPreferencePayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "TreatmentPreference"
+    objects: {
+      hospital: Prisma.$HospitalPayload<ExtArgs>
+    }
+    scalars: $Extensions.GetPayloadResult<{
+      id: string
+      treatmentId: string
+      treatmentName: string
+      hospitalId: string
+      preferenceType: string
+      notes: string | null
+      createdAt: Date
+      updatedAt: Date
+    }, ExtArgs["result"]["treatmentPreference"]>
+    composites: {}
+  }
+
+  type TreatmentPreferenceGetPayload<S extends boolean | null | undefined | TreatmentPreferenceDefaultArgs> = $Result.GetResult<Prisma.$TreatmentPreferencePayload, S>
+
+  type TreatmentPreferenceCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
+    Omit<TreatmentPreferenceFindManyArgs, 'select' | 'include' | 'distinct' | 'omit'> & {
+      select?: TreatmentPreferenceCountAggregateInputType | true
+    }
+
+  export interface TreatmentPreferenceDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['TreatmentPreference'], meta: { name: 'TreatmentPreference' } }
+    /**
+     * Find zero or one TreatmentPreference that matches the filter.
+     * @param {TreatmentPreferenceFindUniqueArgs} args - Arguments to find a TreatmentPreference
+     * @example
+     * // Get one TreatmentPreference
+     * const treatmentPreference = await prisma.treatmentPreference.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends TreatmentPreferenceFindUniqueArgs>(args: SelectSubset<T, TreatmentPreferenceFindUniqueArgs<ExtArgs>>): Prisma__TreatmentPreferenceClient<$Result.GetResult<Prisma.$TreatmentPreferencePayload<ExtArgs>, T, "findUnique", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find one TreatmentPreference that matches the filter or throw an error with `error.code='P2025'`
+     * if no matches were found.
+     * @param {TreatmentPreferenceFindUniqueOrThrowArgs} args - Arguments to find a TreatmentPreference
+     * @example
+     * // Get one TreatmentPreference
+     * const treatmentPreference = await prisma.treatmentPreference.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends TreatmentPreferenceFindUniqueOrThrowArgs>(args: SelectSubset<T, TreatmentPreferenceFindUniqueOrThrowArgs<ExtArgs>>): Prisma__TreatmentPreferenceClient<$Result.GetResult<Prisma.$TreatmentPreferencePayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first TreatmentPreference that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {TreatmentPreferenceFindFirstArgs} args - Arguments to find a TreatmentPreference
+     * @example
+     * // Get one TreatmentPreference
+     * const treatmentPreference = await prisma.treatmentPreference.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends TreatmentPreferenceFindFirstArgs>(args?: SelectSubset<T, TreatmentPreferenceFindFirstArgs<ExtArgs>>): Prisma__TreatmentPreferenceClient<$Result.GetResult<Prisma.$TreatmentPreferencePayload<ExtArgs>, T, "findFirst", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first TreatmentPreference that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {TreatmentPreferenceFindFirstOrThrowArgs} args - Arguments to find a TreatmentPreference
+     * @example
+     * // Get one TreatmentPreference
+     * const treatmentPreference = await prisma.treatmentPreference.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends TreatmentPreferenceFindFirstOrThrowArgs>(args?: SelectSubset<T, TreatmentPreferenceFindFirstOrThrowArgs<ExtArgs>>): Prisma__TreatmentPreferenceClient<$Result.GetResult<Prisma.$TreatmentPreferencePayload<ExtArgs>, T, "findFirstOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find zero or more TreatmentPreferences that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {TreatmentPreferenceFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all TreatmentPreferences
+     * const treatmentPreferences = await prisma.treatmentPreference.findMany()
+     * 
+     * // Get first 10 TreatmentPreferences
+     * const treatmentPreferences = await prisma.treatmentPreference.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const treatmentPreferenceWithIdOnly = await prisma.treatmentPreference.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends TreatmentPreferenceFindManyArgs>(args?: SelectSubset<T, TreatmentPreferenceFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$TreatmentPreferencePayload<ExtArgs>, T, "findMany", GlobalOmitOptions>>
+
+    /**
+     * Create a TreatmentPreference.
+     * @param {TreatmentPreferenceCreateArgs} args - Arguments to create a TreatmentPreference.
+     * @example
+     * // Create one TreatmentPreference
+     * const TreatmentPreference = await prisma.treatmentPreference.create({
+     *   data: {
+     *     // ... data to create a TreatmentPreference
+     *   }
+     * })
+     * 
+     */
+    create<T extends TreatmentPreferenceCreateArgs>(args: SelectSubset<T, TreatmentPreferenceCreateArgs<ExtArgs>>): Prisma__TreatmentPreferenceClient<$Result.GetResult<Prisma.$TreatmentPreferencePayload<ExtArgs>, T, "create", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Create many TreatmentPreferences.
+     * @param {TreatmentPreferenceCreateManyArgs} args - Arguments to create many TreatmentPreferences.
+     * @example
+     * // Create many TreatmentPreferences
+     * const treatmentPreference = await prisma.treatmentPreference.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends TreatmentPreferenceCreateManyArgs>(args?: SelectSubset<T, TreatmentPreferenceCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create many TreatmentPreferences and returns the data saved in the database.
+     * @param {TreatmentPreferenceCreateManyAndReturnArgs} args - Arguments to create many TreatmentPreferences.
+     * @example
+     * // Create many TreatmentPreferences
+     * const treatmentPreference = await prisma.treatmentPreference.createManyAndReturn({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Create many TreatmentPreferences and only return the `id`
+     * const treatmentPreferenceWithIdOnly = await prisma.treatmentPreference.createManyAndReturn({
+     *   select: { id: true },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    createManyAndReturn<T extends TreatmentPreferenceCreateManyAndReturnArgs>(args?: SelectSubset<T, TreatmentPreferenceCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$TreatmentPreferencePayload<ExtArgs>, T, "createManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Delete a TreatmentPreference.
+     * @param {TreatmentPreferenceDeleteArgs} args - Arguments to delete one TreatmentPreference.
+     * @example
+     * // Delete one TreatmentPreference
+     * const TreatmentPreference = await prisma.treatmentPreference.delete({
+     *   where: {
+     *     // ... filter to delete one TreatmentPreference
+     *   }
+     * })
+     * 
+     */
+    delete<T extends TreatmentPreferenceDeleteArgs>(args: SelectSubset<T, TreatmentPreferenceDeleteArgs<ExtArgs>>): Prisma__TreatmentPreferenceClient<$Result.GetResult<Prisma.$TreatmentPreferencePayload<ExtArgs>, T, "delete", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Update one TreatmentPreference.
+     * @param {TreatmentPreferenceUpdateArgs} args - Arguments to update one TreatmentPreference.
+     * @example
+     * // Update one TreatmentPreference
+     * const treatmentPreference = await prisma.treatmentPreference.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends TreatmentPreferenceUpdateArgs>(args: SelectSubset<T, TreatmentPreferenceUpdateArgs<ExtArgs>>): Prisma__TreatmentPreferenceClient<$Result.GetResult<Prisma.$TreatmentPreferencePayload<ExtArgs>, T, "update", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Delete zero or more TreatmentPreferences.
+     * @param {TreatmentPreferenceDeleteManyArgs} args - Arguments to filter TreatmentPreferences to delete.
+     * @example
+     * // Delete a few TreatmentPreferences
+     * const { count } = await prisma.treatmentPreference.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends TreatmentPreferenceDeleteManyArgs>(args?: SelectSubset<T, TreatmentPreferenceDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more TreatmentPreferences.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {TreatmentPreferenceUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many TreatmentPreferences
+     * const treatmentPreference = await prisma.treatmentPreference.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends TreatmentPreferenceUpdateManyArgs>(args: SelectSubset<T, TreatmentPreferenceUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more TreatmentPreferences and returns the data updated in the database.
+     * @param {TreatmentPreferenceUpdateManyAndReturnArgs} args - Arguments to update many TreatmentPreferences.
+     * @example
+     * // Update many TreatmentPreferences
+     * const treatmentPreference = await prisma.treatmentPreference.updateManyAndReturn({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Update zero or more TreatmentPreferences and only return the `id`
+     * const treatmentPreferenceWithIdOnly = await prisma.treatmentPreference.updateManyAndReturn({
+     *   select: { id: true },
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    updateManyAndReturn<T extends TreatmentPreferenceUpdateManyAndReturnArgs>(args: SelectSubset<T, TreatmentPreferenceUpdateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$TreatmentPreferencePayload<ExtArgs>, T, "updateManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Create or update one TreatmentPreference.
+     * @param {TreatmentPreferenceUpsertArgs} args - Arguments to update or create a TreatmentPreference.
+     * @example
+     * // Update or create a TreatmentPreference
+     * const treatmentPreference = await prisma.treatmentPreference.upsert({
+     *   create: {
+     *     // ... data to create a TreatmentPreference
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the TreatmentPreference we want to update
+     *   }
+     * })
+     */
+    upsert<T extends TreatmentPreferenceUpsertArgs>(args: SelectSubset<T, TreatmentPreferenceUpsertArgs<ExtArgs>>): Prisma__TreatmentPreferenceClient<$Result.GetResult<Prisma.$TreatmentPreferencePayload<ExtArgs>, T, "upsert", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+
+    /**
+     * Count the number of TreatmentPreferences.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {TreatmentPreferenceCountArgs} args - Arguments to filter TreatmentPreferences to count.
+     * @example
+     * // Count the number of TreatmentPreferences
+     * const count = await prisma.treatmentPreference.count({
+     *   where: {
+     *     // ... the filter for the TreatmentPreferences we want to count
+     *   }
+     * })
+    **/
+    count<T extends TreatmentPreferenceCountArgs>(
+      args?: Subset<T, TreatmentPreferenceCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], TreatmentPreferenceCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a TreatmentPreference.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {TreatmentPreferenceAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends TreatmentPreferenceAggregateArgs>(args: Subset<T, TreatmentPreferenceAggregateArgs>): Prisma.PrismaPromise<GetTreatmentPreferenceAggregateType<T>>
+
+    /**
+     * Group by TreatmentPreference.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {TreatmentPreferenceGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends TreatmentPreferenceGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: TreatmentPreferenceGroupByArgs['orderBy'] }
+        : { orderBy?: TreatmentPreferenceGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, TreatmentPreferenceGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetTreatmentPreferenceGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the TreatmentPreference model
+   */
+  readonly fields: TreatmentPreferenceFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for TreatmentPreference.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__TreatmentPreferenceClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    hospital<T extends HospitalDefaultArgs<ExtArgs> = {}>(args?: Subset<T, HospitalDefaultArgs<ExtArgs>>): Prisma__HospitalClient<$Result.GetResult<Prisma.$HospitalPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the TreatmentPreference model
+   */
+  interface TreatmentPreferenceFieldRefs {
+    readonly id: FieldRef<"TreatmentPreference", 'String'>
+    readonly treatmentId: FieldRef<"TreatmentPreference", 'String'>
+    readonly treatmentName: FieldRef<"TreatmentPreference", 'String'>
+    readonly hospitalId: FieldRef<"TreatmentPreference", 'String'>
+    readonly preferenceType: FieldRef<"TreatmentPreference", 'String'>
+    readonly notes: FieldRef<"TreatmentPreference", 'String'>
+    readonly createdAt: FieldRef<"TreatmentPreference", 'DateTime'>
+    readonly updatedAt: FieldRef<"TreatmentPreference", 'DateTime'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * TreatmentPreference findUnique
+   */
+  export type TreatmentPreferenceFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the TreatmentPreference
+     */
+    select?: TreatmentPreferenceSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the TreatmentPreference
+     */
+    omit?: TreatmentPreferenceOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: TreatmentPreferenceInclude<ExtArgs> | null
+    /**
+     * Filter, which TreatmentPreference to fetch.
+     */
+    where: TreatmentPreferenceWhereUniqueInput
+  }
+
+  /**
+   * TreatmentPreference findUniqueOrThrow
+   */
+  export type TreatmentPreferenceFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the TreatmentPreference
+     */
+    select?: TreatmentPreferenceSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the TreatmentPreference
+     */
+    omit?: TreatmentPreferenceOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: TreatmentPreferenceInclude<ExtArgs> | null
+    /**
+     * Filter, which TreatmentPreference to fetch.
+     */
+    where: TreatmentPreferenceWhereUniqueInput
+  }
+
+  /**
+   * TreatmentPreference findFirst
+   */
+  export type TreatmentPreferenceFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the TreatmentPreference
+     */
+    select?: TreatmentPreferenceSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the TreatmentPreference
+     */
+    omit?: TreatmentPreferenceOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: TreatmentPreferenceInclude<ExtArgs> | null
+    /**
+     * Filter, which TreatmentPreference to fetch.
+     */
+    where?: TreatmentPreferenceWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of TreatmentPreferences to fetch.
+     */
+    orderBy?: TreatmentPreferenceOrderByWithRelationInput | TreatmentPreferenceOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for TreatmentPreferences.
+     */
+    cursor?: TreatmentPreferenceWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` TreatmentPreferences from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` TreatmentPreferences.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of TreatmentPreferences.
+     */
+    distinct?: TreatmentPreferenceScalarFieldEnum | TreatmentPreferenceScalarFieldEnum[]
+  }
+
+  /**
+   * TreatmentPreference findFirstOrThrow
+   */
+  export type TreatmentPreferenceFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the TreatmentPreference
+     */
+    select?: TreatmentPreferenceSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the TreatmentPreference
+     */
+    omit?: TreatmentPreferenceOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: TreatmentPreferenceInclude<ExtArgs> | null
+    /**
+     * Filter, which TreatmentPreference to fetch.
+     */
+    where?: TreatmentPreferenceWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of TreatmentPreferences to fetch.
+     */
+    orderBy?: TreatmentPreferenceOrderByWithRelationInput | TreatmentPreferenceOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for TreatmentPreferences.
+     */
+    cursor?: TreatmentPreferenceWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` TreatmentPreferences from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` TreatmentPreferences.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of TreatmentPreferences.
+     */
+    distinct?: TreatmentPreferenceScalarFieldEnum | TreatmentPreferenceScalarFieldEnum[]
+  }
+
+  /**
+   * TreatmentPreference findMany
+   */
+  export type TreatmentPreferenceFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the TreatmentPreference
+     */
+    select?: TreatmentPreferenceSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the TreatmentPreference
+     */
+    omit?: TreatmentPreferenceOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: TreatmentPreferenceInclude<ExtArgs> | null
+    /**
+     * Filter, which TreatmentPreferences to fetch.
+     */
+    where?: TreatmentPreferenceWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of TreatmentPreferences to fetch.
+     */
+    orderBy?: TreatmentPreferenceOrderByWithRelationInput | TreatmentPreferenceOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing TreatmentPreferences.
+     */
+    cursor?: TreatmentPreferenceWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` TreatmentPreferences from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` TreatmentPreferences.
+     */
+    skip?: number
+    distinct?: TreatmentPreferenceScalarFieldEnum | TreatmentPreferenceScalarFieldEnum[]
+  }
+
+  /**
+   * TreatmentPreference create
+   */
+  export type TreatmentPreferenceCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the TreatmentPreference
+     */
+    select?: TreatmentPreferenceSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the TreatmentPreference
+     */
+    omit?: TreatmentPreferenceOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: TreatmentPreferenceInclude<ExtArgs> | null
+    /**
+     * The data needed to create a TreatmentPreference.
+     */
+    data: XOR<TreatmentPreferenceCreateInput, TreatmentPreferenceUncheckedCreateInput>
+  }
+
+  /**
+   * TreatmentPreference createMany
+   */
+  export type TreatmentPreferenceCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many TreatmentPreferences.
+     */
+    data: TreatmentPreferenceCreateManyInput | TreatmentPreferenceCreateManyInput[]
+    skipDuplicates?: boolean
+  }
+
+  /**
+   * TreatmentPreference createManyAndReturn
+   */
+  export type TreatmentPreferenceCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the TreatmentPreference
+     */
+    select?: TreatmentPreferenceSelectCreateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the TreatmentPreference
+     */
+    omit?: TreatmentPreferenceOmit<ExtArgs> | null
+    /**
+     * The data used to create many TreatmentPreferences.
+     */
+    data: TreatmentPreferenceCreateManyInput | TreatmentPreferenceCreateManyInput[]
+    skipDuplicates?: boolean
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: TreatmentPreferenceIncludeCreateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * TreatmentPreference update
+   */
+  export type TreatmentPreferenceUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the TreatmentPreference
+     */
+    select?: TreatmentPreferenceSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the TreatmentPreference
+     */
+    omit?: TreatmentPreferenceOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: TreatmentPreferenceInclude<ExtArgs> | null
+    /**
+     * The data needed to update a TreatmentPreference.
+     */
+    data: XOR<TreatmentPreferenceUpdateInput, TreatmentPreferenceUncheckedUpdateInput>
+    /**
+     * Choose, which TreatmentPreference to update.
+     */
+    where: TreatmentPreferenceWhereUniqueInput
+  }
+
+  /**
+   * TreatmentPreference updateMany
+   */
+  export type TreatmentPreferenceUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update TreatmentPreferences.
+     */
+    data: XOR<TreatmentPreferenceUpdateManyMutationInput, TreatmentPreferenceUncheckedUpdateManyInput>
+    /**
+     * Filter which TreatmentPreferences to update
+     */
+    where?: TreatmentPreferenceWhereInput
+    /**
+     * Limit how many TreatmentPreferences to update.
+     */
+    limit?: number
+  }
+
+  /**
+   * TreatmentPreference updateManyAndReturn
+   */
+  export type TreatmentPreferenceUpdateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the TreatmentPreference
+     */
+    select?: TreatmentPreferenceSelectUpdateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the TreatmentPreference
+     */
+    omit?: TreatmentPreferenceOmit<ExtArgs> | null
+    /**
+     * The data used to update TreatmentPreferences.
+     */
+    data: XOR<TreatmentPreferenceUpdateManyMutationInput, TreatmentPreferenceUncheckedUpdateManyInput>
+    /**
+     * Filter which TreatmentPreferences to update
+     */
+    where?: TreatmentPreferenceWhereInput
+    /**
+     * Limit how many TreatmentPreferences to update.
+     */
+    limit?: number
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: TreatmentPreferenceIncludeUpdateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * TreatmentPreference upsert
+   */
+  export type TreatmentPreferenceUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the TreatmentPreference
+     */
+    select?: TreatmentPreferenceSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the TreatmentPreference
+     */
+    omit?: TreatmentPreferenceOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: TreatmentPreferenceInclude<ExtArgs> | null
+    /**
+     * The filter to search for the TreatmentPreference to update in case it exists.
+     */
+    where: TreatmentPreferenceWhereUniqueInput
+    /**
+     * In case the TreatmentPreference found by the `where` argument doesn't exist, create a new TreatmentPreference with this data.
+     */
+    create: XOR<TreatmentPreferenceCreateInput, TreatmentPreferenceUncheckedCreateInput>
+    /**
+     * In case the TreatmentPreference was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<TreatmentPreferenceUpdateInput, TreatmentPreferenceUncheckedUpdateInput>
+  }
+
+  /**
+   * TreatmentPreference delete
+   */
+  export type TreatmentPreferenceDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the TreatmentPreference
+     */
+    select?: TreatmentPreferenceSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the TreatmentPreference
+     */
+    omit?: TreatmentPreferenceOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: TreatmentPreferenceInclude<ExtArgs> | null
+    /**
+     * Filter which TreatmentPreference to delete.
+     */
+    where: TreatmentPreferenceWhereUniqueInput
+  }
+
+  /**
+   * TreatmentPreference deleteMany
+   */
+  export type TreatmentPreferenceDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which TreatmentPreferences to delete
+     */
+    where?: TreatmentPreferenceWhereInput
+    /**
+     * Limit how many TreatmentPreferences to delete.
+     */
+    limit?: number
+  }
+
+  /**
+   * TreatmentPreference without action
+   */
+  export type TreatmentPreferenceDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the TreatmentPreference
+     */
+    select?: TreatmentPreferenceSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the TreatmentPreference
+     */
+    omit?: TreatmentPreferenceOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: TreatmentPreferenceInclude<ExtArgs> | null
   }
 
 
@@ -9815,6 +13845,8 @@ export namespace Prisma {
     address: 'address',
     about: 'about',
     userType: 'userType',
+    authProvider: 'authProvider',
+    providerId: 'providerId',
     hospitalId: 'hospitalId',
     createdAt: 'createdAt',
     updatedAt: 'updatedAt'
@@ -9835,6 +13867,10 @@ export namespace Prisma {
     verified: 'verified',
     walletAddress: 'walletAddress',
     ownerId: 'ownerId',
+    totalRequests: 'totalRequests',
+    totalDonors: 'totalDonors',
+    totalCustomers: 'totalCustomers',
+    totalTreatments: 'totalTreatments',
     createdAt: 'createdAt',
     updatedAt: 'updatedAt'
   };
@@ -9856,6 +13892,54 @@ export namespace Prisma {
   };
 
   export type BookingScalarFieldEnum = (typeof BookingScalarFieldEnum)[keyof typeof BookingScalarFieldEnum]
+
+
+  export const HospitalRequestScalarFieldEnum: {
+    id: 'id',
+    hospitalId: 'hospitalId',
+    userId: 'userId',
+    requestType: 'requestType',
+    status: 'status',
+    title: 'title',
+    description: 'description',
+    bookingId: 'bookingId',
+    treatmentId: 'treatmentId',
+    priority: 'priority',
+    requestedDate: 'requestedDate',
+    completedDate: 'completedDate',
+    notes: 'notes',
+    createdAt: 'createdAt',
+    updatedAt: 'updatedAt'
+  };
+
+  export type HospitalRequestScalarFieldEnum = (typeof HospitalRequestScalarFieldEnum)[keyof typeof HospitalRequestScalarFieldEnum]
+
+
+  export const UserPreferenceScalarFieldEnum: {
+    id: 'id',
+    userId: 'userId',
+    hospitalId: 'hospitalId',
+    preferenceType: 'preferenceType',
+    notes: 'notes',
+    createdAt: 'createdAt',
+    updatedAt: 'updatedAt'
+  };
+
+  export type UserPreferenceScalarFieldEnum = (typeof UserPreferenceScalarFieldEnum)[keyof typeof UserPreferenceScalarFieldEnum]
+
+
+  export const TreatmentPreferenceScalarFieldEnum: {
+    id: 'id',
+    treatmentId: 'treatmentId',
+    treatmentName: 'treatmentName',
+    hospitalId: 'hospitalId',
+    preferenceType: 'preferenceType',
+    notes: 'notes',
+    createdAt: 'createdAt',
+    updatedAt: 'updatedAt'
+  };
+
+  export type TreatmentPreferenceScalarFieldEnum = (typeof TreatmentPreferenceScalarFieldEnum)[keyof typeof TreatmentPreferenceScalarFieldEnum]
 
 
   export const SortOrder: {
@@ -9944,6 +14028,20 @@ export namespace Prisma {
 
 
   /**
+   * Reference to a field of type 'AuthProvider'
+   */
+  export type EnumAuthProviderFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'AuthProvider'>
+    
+
+
+  /**
+   * Reference to a field of type 'AuthProvider[]'
+   */
+  export type ListEnumAuthProviderFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'AuthProvider[]'>
+    
+
+
+  /**
    * Reference to a field of type 'Float'
    */
   export type FloatFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Float'>
@@ -9961,6 +14059,34 @@ export namespace Prisma {
    * Reference to a field of type 'Boolean'
    */
   export type BooleanFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Boolean'>
+    
+
+
+  /**
+   * Reference to a field of type 'RequestType'
+   */
+  export type EnumRequestTypeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'RequestType'>
+    
+
+
+  /**
+   * Reference to a field of type 'RequestType[]'
+   */
+  export type ListEnumRequestTypeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'RequestType[]'>
+    
+
+
+  /**
+   * Reference to a field of type 'RequestStatus'
+   */
+  export type EnumRequestStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'RequestStatus'>
+    
+
+
+  /**
+   * Reference to a field of type 'RequestStatus[]'
+   */
+  export type ListEnumRequestStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'RequestStatus[]'>
     
   /**
    * Deep Input Types
@@ -10346,36 +14472,44 @@ export namespace Prisma {
     id?: StringFilter<"User"> | string
     fullname?: StringFilter<"User"> | string
     email?: StringFilter<"User"> | string
-    password?: StringFilter<"User"> | string
+    password?: StringNullableFilter<"User"> | string | null
     witnesshash?: StringFilter<"User"> | string
     phone?: StringFilter<"User"> | string
     address?: StringFilter<"User"> | string
     about?: StringNullableFilter<"User"> | string | null
     userType?: EnumUserTypeFilter<"User"> | $Enums.UserType
+    authProvider?: EnumAuthProviderFilter<"User"> | $Enums.AuthProvider
+    providerId?: StringNullableFilter<"User"> | string | null
     hospitalId?: StringNullableFilter<"User"> | string | null
     createdAt?: DateTimeFilter<"User"> | Date | string
     updatedAt?: DateTimeFilter<"User"> | Date | string
     hospital?: XOR<HospitalInformationNullableScalarRelationFilter, HospitalInformationWhereInput> | null
     registeredHospital?: XOR<HospitalNullableScalarRelationFilter, HospitalWhereInput> | null
     bookings?: BookingListRelationFilter
+    requests?: HospitalRequestListRelationFilter
+    preferredHospitals?: UserPreferenceListRelationFilter
   }
 
   export type UserOrderByWithRelationInput = {
     id?: SortOrder
     fullname?: SortOrder
     email?: SortOrder
-    password?: SortOrder
+    password?: SortOrderInput | SortOrder
     witnesshash?: SortOrder
     phone?: SortOrder
     address?: SortOrder
     about?: SortOrderInput | SortOrder
     userType?: SortOrder
+    authProvider?: SortOrder
+    providerId?: SortOrderInput | SortOrder
     hospitalId?: SortOrderInput | SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
     hospital?: HospitalInformationOrderByWithRelationInput
     registeredHospital?: HospitalOrderByWithRelationInput
     bookings?: BookingOrderByRelationAggregateInput
+    requests?: HospitalRequestOrderByRelationAggregateInput
+    preferredHospitals?: UserPreferenceOrderByRelationAggregateInput
   }
 
   export type UserWhereUniqueInput = Prisma.AtLeast<{
@@ -10386,29 +14520,35 @@ export namespace Prisma {
     OR?: UserWhereInput[]
     NOT?: UserWhereInput | UserWhereInput[]
     fullname?: StringFilter<"User"> | string
-    password?: StringFilter<"User"> | string
+    password?: StringNullableFilter<"User"> | string | null
     phone?: StringFilter<"User"> | string
     address?: StringFilter<"User"> | string
     about?: StringNullableFilter<"User"> | string | null
     userType?: EnumUserTypeFilter<"User"> | $Enums.UserType
+    authProvider?: EnumAuthProviderFilter<"User"> | $Enums.AuthProvider
+    providerId?: StringNullableFilter<"User"> | string | null
     hospitalId?: StringNullableFilter<"User"> | string | null
     createdAt?: DateTimeFilter<"User"> | Date | string
     updatedAt?: DateTimeFilter<"User"> | Date | string
     hospital?: XOR<HospitalInformationNullableScalarRelationFilter, HospitalInformationWhereInput> | null
     registeredHospital?: XOR<HospitalNullableScalarRelationFilter, HospitalWhereInput> | null
     bookings?: BookingListRelationFilter
+    requests?: HospitalRequestListRelationFilter
+    preferredHospitals?: UserPreferenceListRelationFilter
   }, "id" | "email" | "witnesshash">
 
   export type UserOrderByWithAggregationInput = {
     id?: SortOrder
     fullname?: SortOrder
     email?: SortOrder
-    password?: SortOrder
+    password?: SortOrderInput | SortOrder
     witnesshash?: SortOrder
     phone?: SortOrder
     address?: SortOrder
     about?: SortOrderInput | SortOrder
     userType?: SortOrder
+    authProvider?: SortOrder
+    providerId?: SortOrderInput | SortOrder
     hospitalId?: SortOrderInput | SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
@@ -10424,12 +14564,14 @@ export namespace Prisma {
     id?: StringWithAggregatesFilter<"User"> | string
     fullname?: StringWithAggregatesFilter<"User"> | string
     email?: StringWithAggregatesFilter<"User"> | string
-    password?: StringWithAggregatesFilter<"User"> | string
+    password?: StringNullableWithAggregatesFilter<"User"> | string | null
     witnesshash?: StringWithAggregatesFilter<"User"> | string
     phone?: StringWithAggregatesFilter<"User"> | string
     address?: StringWithAggregatesFilter<"User"> | string
     about?: StringNullableWithAggregatesFilter<"User"> | string | null
     userType?: EnumUserTypeWithAggregatesFilter<"User"> | $Enums.UserType
+    authProvider?: EnumAuthProviderWithAggregatesFilter<"User"> | $Enums.AuthProvider
+    providerId?: StringNullableWithAggregatesFilter<"User"> | string | null
     hospitalId?: StringNullableWithAggregatesFilter<"User"> | string | null
     createdAt?: DateTimeWithAggregatesFilter<"User"> | Date | string
     updatedAt?: DateTimeWithAggregatesFilter<"User"> | Date | string
@@ -10450,10 +14592,17 @@ export namespace Prisma {
     verified?: BoolFilter<"Hospital"> | boolean
     walletAddress?: StringFilter<"Hospital"> | string
     ownerId?: StringFilter<"Hospital"> | string
+    totalRequests?: IntFilter<"Hospital"> | number
+    totalDonors?: IntFilter<"Hospital"> | number
+    totalCustomers?: IntFilter<"Hospital"> | number
+    totalTreatments?: IntFilter<"Hospital"> | number
     createdAt?: DateTimeFilter<"Hospital"> | Date | string
     updatedAt?: DateTimeFilter<"Hospital"> | Date | string
     owner?: XOR<UserScalarRelationFilter, UserWhereInput>
     bookings?: BookingListRelationFilter
+    requests?: HospitalRequestListRelationFilter
+    preferredUsers?: UserPreferenceListRelationFilter
+    preferredTreatments?: TreatmentPreferenceListRelationFilter
   }
 
   export type HospitalOrderByWithRelationInput = {
@@ -10468,10 +14617,17 @@ export namespace Prisma {
     verified?: SortOrder
     walletAddress?: SortOrder
     ownerId?: SortOrder
+    totalRequests?: SortOrder
+    totalDonors?: SortOrder
+    totalCustomers?: SortOrder
+    totalTreatments?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
     owner?: UserOrderByWithRelationInput
     bookings?: BookingOrderByRelationAggregateInput
+    requests?: HospitalRequestOrderByRelationAggregateInput
+    preferredUsers?: UserPreferenceOrderByRelationAggregateInput
+    preferredTreatments?: TreatmentPreferenceOrderByRelationAggregateInput
   }
 
   export type HospitalWhereUniqueInput = Prisma.AtLeast<{
@@ -10489,10 +14645,17 @@ export namespace Prisma {
     reviews?: IntFilter<"Hospital"> | number
     verified?: BoolFilter<"Hospital"> | boolean
     walletAddress?: StringFilter<"Hospital"> | string
+    totalRequests?: IntFilter<"Hospital"> | number
+    totalDonors?: IntFilter<"Hospital"> | number
+    totalCustomers?: IntFilter<"Hospital"> | number
+    totalTreatments?: IntFilter<"Hospital"> | number
     createdAt?: DateTimeFilter<"Hospital"> | Date | string
     updatedAt?: DateTimeFilter<"Hospital"> | Date | string
     owner?: XOR<UserScalarRelationFilter, UserWhereInput>
     bookings?: BookingListRelationFilter
+    requests?: HospitalRequestListRelationFilter
+    preferredUsers?: UserPreferenceListRelationFilter
+    preferredTreatments?: TreatmentPreferenceListRelationFilter
   }, "id" | "ownerId">
 
   export type HospitalOrderByWithAggregationInput = {
@@ -10507,6 +14670,10 @@ export namespace Prisma {
     verified?: SortOrder
     walletAddress?: SortOrder
     ownerId?: SortOrder
+    totalRequests?: SortOrder
+    totalDonors?: SortOrder
+    totalCustomers?: SortOrder
+    totalTreatments?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
     _count?: HospitalCountOrderByAggregateInput
@@ -10531,6 +14698,10 @@ export namespace Prisma {
     verified?: BoolWithAggregatesFilter<"Hospital"> | boolean
     walletAddress?: StringWithAggregatesFilter<"Hospital"> | string
     ownerId?: StringWithAggregatesFilter<"Hospital"> | string
+    totalRequests?: IntWithAggregatesFilter<"Hospital"> | number
+    totalDonors?: IntWithAggregatesFilter<"Hospital"> | number
+    totalCustomers?: IntWithAggregatesFilter<"Hospital"> | number
+    totalTreatments?: IntWithAggregatesFilter<"Hospital"> | number
     createdAt?: DateTimeWithAggregatesFilter<"Hospital"> | Date | string
     updatedAt?: DateTimeWithAggregatesFilter<"Hospital"> | Date | string
   }
@@ -10551,6 +14722,7 @@ export namespace Prisma {
     updatedAt?: DateTimeFilter<"Booking"> | Date | string
     hospital?: XOR<HospitalScalarRelationFilter, HospitalWhereInput>
     user?: XOR<UserScalarRelationFilter, UserWhereInput>
+    request?: XOR<HospitalRequestNullableScalarRelationFilter, HospitalRequestWhereInput> | null
   }
 
   export type BookingOrderByWithRelationInput = {
@@ -10566,6 +14738,7 @@ export namespace Prisma {
     updatedAt?: SortOrder
     hospital?: HospitalOrderByWithRelationInput
     user?: UserOrderByWithRelationInput
+    request?: HospitalRequestOrderByWithRelationInput
   }
 
   export type BookingWhereUniqueInput = Prisma.AtLeast<{
@@ -10584,6 +14757,7 @@ export namespace Prisma {
     updatedAt?: DateTimeFilter<"Booking"> | Date | string
     hospital?: XOR<HospitalScalarRelationFilter, HospitalWhereInput>
     user?: XOR<UserScalarRelationFilter, UserWhereInput>
+    request?: XOR<HospitalRequestNullableScalarRelationFilter, HospitalRequestWhereInput> | null
   }, "id">
 
   export type BookingOrderByWithAggregationInput = {
@@ -10618,6 +14792,257 @@ export namespace Prisma {
     status?: StringWithAggregatesFilter<"Booking"> | string
     createdAt?: DateTimeWithAggregatesFilter<"Booking"> | Date | string
     updatedAt?: DateTimeWithAggregatesFilter<"Booking"> | Date | string
+  }
+
+  export type HospitalRequestWhereInput = {
+    AND?: HospitalRequestWhereInput | HospitalRequestWhereInput[]
+    OR?: HospitalRequestWhereInput[]
+    NOT?: HospitalRequestWhereInput | HospitalRequestWhereInput[]
+    id?: StringFilter<"HospitalRequest"> | string
+    hospitalId?: StringFilter<"HospitalRequest"> | string
+    userId?: StringFilter<"HospitalRequest"> | string
+    requestType?: EnumRequestTypeFilter<"HospitalRequest"> | $Enums.RequestType
+    status?: EnumRequestStatusFilter<"HospitalRequest"> | $Enums.RequestStatus
+    title?: StringFilter<"HospitalRequest"> | string
+    description?: StringNullableFilter<"HospitalRequest"> | string | null
+    bookingId?: StringNullableFilter<"HospitalRequest"> | string | null
+    treatmentId?: StringNullableFilter<"HospitalRequest"> | string | null
+    priority?: StringFilter<"HospitalRequest"> | string
+    requestedDate?: DateTimeNullableFilter<"HospitalRequest"> | Date | string | null
+    completedDate?: DateTimeNullableFilter<"HospitalRequest"> | Date | string | null
+    notes?: StringNullableFilter<"HospitalRequest"> | string | null
+    createdAt?: DateTimeFilter<"HospitalRequest"> | Date | string
+    updatedAt?: DateTimeFilter<"HospitalRequest"> | Date | string
+    hospital?: XOR<HospitalScalarRelationFilter, HospitalWhereInput>
+    user?: XOR<UserScalarRelationFilter, UserWhereInput>
+    booking?: XOR<BookingNullableScalarRelationFilter, BookingWhereInput> | null
+  }
+
+  export type HospitalRequestOrderByWithRelationInput = {
+    id?: SortOrder
+    hospitalId?: SortOrder
+    userId?: SortOrder
+    requestType?: SortOrder
+    status?: SortOrder
+    title?: SortOrder
+    description?: SortOrderInput | SortOrder
+    bookingId?: SortOrderInput | SortOrder
+    treatmentId?: SortOrderInput | SortOrder
+    priority?: SortOrder
+    requestedDate?: SortOrderInput | SortOrder
+    completedDate?: SortOrderInput | SortOrder
+    notes?: SortOrderInput | SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+    hospital?: HospitalOrderByWithRelationInput
+    user?: UserOrderByWithRelationInput
+    booking?: BookingOrderByWithRelationInput
+  }
+
+  export type HospitalRequestWhereUniqueInput = Prisma.AtLeast<{
+    id?: string
+    bookingId?: string
+    AND?: HospitalRequestWhereInput | HospitalRequestWhereInput[]
+    OR?: HospitalRequestWhereInput[]
+    NOT?: HospitalRequestWhereInput | HospitalRequestWhereInput[]
+    hospitalId?: StringFilter<"HospitalRequest"> | string
+    userId?: StringFilter<"HospitalRequest"> | string
+    requestType?: EnumRequestTypeFilter<"HospitalRequest"> | $Enums.RequestType
+    status?: EnumRequestStatusFilter<"HospitalRequest"> | $Enums.RequestStatus
+    title?: StringFilter<"HospitalRequest"> | string
+    description?: StringNullableFilter<"HospitalRequest"> | string | null
+    treatmentId?: StringNullableFilter<"HospitalRequest"> | string | null
+    priority?: StringFilter<"HospitalRequest"> | string
+    requestedDate?: DateTimeNullableFilter<"HospitalRequest"> | Date | string | null
+    completedDate?: DateTimeNullableFilter<"HospitalRequest"> | Date | string | null
+    notes?: StringNullableFilter<"HospitalRequest"> | string | null
+    createdAt?: DateTimeFilter<"HospitalRequest"> | Date | string
+    updatedAt?: DateTimeFilter<"HospitalRequest"> | Date | string
+    hospital?: XOR<HospitalScalarRelationFilter, HospitalWhereInput>
+    user?: XOR<UserScalarRelationFilter, UserWhereInput>
+    booking?: XOR<BookingNullableScalarRelationFilter, BookingWhereInput> | null
+  }, "id" | "bookingId">
+
+  export type HospitalRequestOrderByWithAggregationInput = {
+    id?: SortOrder
+    hospitalId?: SortOrder
+    userId?: SortOrder
+    requestType?: SortOrder
+    status?: SortOrder
+    title?: SortOrder
+    description?: SortOrderInput | SortOrder
+    bookingId?: SortOrderInput | SortOrder
+    treatmentId?: SortOrderInput | SortOrder
+    priority?: SortOrder
+    requestedDate?: SortOrderInput | SortOrder
+    completedDate?: SortOrderInput | SortOrder
+    notes?: SortOrderInput | SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+    _count?: HospitalRequestCountOrderByAggregateInput
+    _max?: HospitalRequestMaxOrderByAggregateInput
+    _min?: HospitalRequestMinOrderByAggregateInput
+  }
+
+  export type HospitalRequestScalarWhereWithAggregatesInput = {
+    AND?: HospitalRequestScalarWhereWithAggregatesInput | HospitalRequestScalarWhereWithAggregatesInput[]
+    OR?: HospitalRequestScalarWhereWithAggregatesInput[]
+    NOT?: HospitalRequestScalarWhereWithAggregatesInput | HospitalRequestScalarWhereWithAggregatesInput[]
+    id?: StringWithAggregatesFilter<"HospitalRequest"> | string
+    hospitalId?: StringWithAggregatesFilter<"HospitalRequest"> | string
+    userId?: StringWithAggregatesFilter<"HospitalRequest"> | string
+    requestType?: EnumRequestTypeWithAggregatesFilter<"HospitalRequest"> | $Enums.RequestType
+    status?: EnumRequestStatusWithAggregatesFilter<"HospitalRequest"> | $Enums.RequestStatus
+    title?: StringWithAggregatesFilter<"HospitalRequest"> | string
+    description?: StringNullableWithAggregatesFilter<"HospitalRequest"> | string | null
+    bookingId?: StringNullableWithAggregatesFilter<"HospitalRequest"> | string | null
+    treatmentId?: StringNullableWithAggregatesFilter<"HospitalRequest"> | string | null
+    priority?: StringWithAggregatesFilter<"HospitalRequest"> | string
+    requestedDate?: DateTimeNullableWithAggregatesFilter<"HospitalRequest"> | Date | string | null
+    completedDate?: DateTimeNullableWithAggregatesFilter<"HospitalRequest"> | Date | string | null
+    notes?: StringNullableWithAggregatesFilter<"HospitalRequest"> | string | null
+    createdAt?: DateTimeWithAggregatesFilter<"HospitalRequest"> | Date | string
+    updatedAt?: DateTimeWithAggregatesFilter<"HospitalRequest"> | Date | string
+  }
+
+  export type UserPreferenceWhereInput = {
+    AND?: UserPreferenceWhereInput | UserPreferenceWhereInput[]
+    OR?: UserPreferenceWhereInput[]
+    NOT?: UserPreferenceWhereInput | UserPreferenceWhereInput[]
+    id?: StringFilter<"UserPreference"> | string
+    userId?: StringFilter<"UserPreference"> | string
+    hospitalId?: StringFilter<"UserPreference"> | string
+    preferenceType?: StringFilter<"UserPreference"> | string
+    notes?: StringNullableFilter<"UserPreference"> | string | null
+    createdAt?: DateTimeFilter<"UserPreference"> | Date | string
+    updatedAt?: DateTimeFilter<"UserPreference"> | Date | string
+    user?: XOR<UserScalarRelationFilter, UserWhereInput>
+    hospital?: XOR<HospitalScalarRelationFilter, HospitalWhereInput>
+  }
+
+  export type UserPreferenceOrderByWithRelationInput = {
+    id?: SortOrder
+    userId?: SortOrder
+    hospitalId?: SortOrder
+    preferenceType?: SortOrder
+    notes?: SortOrderInput | SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+    user?: UserOrderByWithRelationInput
+    hospital?: HospitalOrderByWithRelationInput
+  }
+
+  export type UserPreferenceWhereUniqueInput = Prisma.AtLeast<{
+    id?: string
+    userId_hospitalId?: UserPreferenceUserIdHospitalIdCompoundUniqueInput
+    AND?: UserPreferenceWhereInput | UserPreferenceWhereInput[]
+    OR?: UserPreferenceWhereInput[]
+    NOT?: UserPreferenceWhereInput | UserPreferenceWhereInput[]
+    userId?: StringFilter<"UserPreference"> | string
+    hospitalId?: StringFilter<"UserPreference"> | string
+    preferenceType?: StringFilter<"UserPreference"> | string
+    notes?: StringNullableFilter<"UserPreference"> | string | null
+    createdAt?: DateTimeFilter<"UserPreference"> | Date | string
+    updatedAt?: DateTimeFilter<"UserPreference"> | Date | string
+    user?: XOR<UserScalarRelationFilter, UserWhereInput>
+    hospital?: XOR<HospitalScalarRelationFilter, HospitalWhereInput>
+  }, "id" | "userId_hospitalId">
+
+  export type UserPreferenceOrderByWithAggregationInput = {
+    id?: SortOrder
+    userId?: SortOrder
+    hospitalId?: SortOrder
+    preferenceType?: SortOrder
+    notes?: SortOrderInput | SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+    _count?: UserPreferenceCountOrderByAggregateInput
+    _max?: UserPreferenceMaxOrderByAggregateInput
+    _min?: UserPreferenceMinOrderByAggregateInput
+  }
+
+  export type UserPreferenceScalarWhereWithAggregatesInput = {
+    AND?: UserPreferenceScalarWhereWithAggregatesInput | UserPreferenceScalarWhereWithAggregatesInput[]
+    OR?: UserPreferenceScalarWhereWithAggregatesInput[]
+    NOT?: UserPreferenceScalarWhereWithAggregatesInput | UserPreferenceScalarWhereWithAggregatesInput[]
+    id?: StringWithAggregatesFilter<"UserPreference"> | string
+    userId?: StringWithAggregatesFilter<"UserPreference"> | string
+    hospitalId?: StringWithAggregatesFilter<"UserPreference"> | string
+    preferenceType?: StringWithAggregatesFilter<"UserPreference"> | string
+    notes?: StringNullableWithAggregatesFilter<"UserPreference"> | string | null
+    createdAt?: DateTimeWithAggregatesFilter<"UserPreference"> | Date | string
+    updatedAt?: DateTimeWithAggregatesFilter<"UserPreference"> | Date | string
+  }
+
+  export type TreatmentPreferenceWhereInput = {
+    AND?: TreatmentPreferenceWhereInput | TreatmentPreferenceWhereInput[]
+    OR?: TreatmentPreferenceWhereInput[]
+    NOT?: TreatmentPreferenceWhereInput | TreatmentPreferenceWhereInput[]
+    id?: StringFilter<"TreatmentPreference"> | string
+    treatmentId?: StringFilter<"TreatmentPreference"> | string
+    treatmentName?: StringFilter<"TreatmentPreference"> | string
+    hospitalId?: StringFilter<"TreatmentPreference"> | string
+    preferenceType?: StringFilter<"TreatmentPreference"> | string
+    notes?: StringNullableFilter<"TreatmentPreference"> | string | null
+    createdAt?: DateTimeFilter<"TreatmentPreference"> | Date | string
+    updatedAt?: DateTimeFilter<"TreatmentPreference"> | Date | string
+    hospital?: XOR<HospitalScalarRelationFilter, HospitalWhereInput>
+  }
+
+  export type TreatmentPreferenceOrderByWithRelationInput = {
+    id?: SortOrder
+    treatmentId?: SortOrder
+    treatmentName?: SortOrder
+    hospitalId?: SortOrder
+    preferenceType?: SortOrder
+    notes?: SortOrderInput | SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+    hospital?: HospitalOrderByWithRelationInput
+  }
+
+  export type TreatmentPreferenceWhereUniqueInput = Prisma.AtLeast<{
+    id?: string
+    treatmentId_hospitalId?: TreatmentPreferenceTreatmentIdHospitalIdCompoundUniqueInput
+    AND?: TreatmentPreferenceWhereInput | TreatmentPreferenceWhereInput[]
+    OR?: TreatmentPreferenceWhereInput[]
+    NOT?: TreatmentPreferenceWhereInput | TreatmentPreferenceWhereInput[]
+    treatmentId?: StringFilter<"TreatmentPreference"> | string
+    treatmentName?: StringFilter<"TreatmentPreference"> | string
+    hospitalId?: StringFilter<"TreatmentPreference"> | string
+    preferenceType?: StringFilter<"TreatmentPreference"> | string
+    notes?: StringNullableFilter<"TreatmentPreference"> | string | null
+    createdAt?: DateTimeFilter<"TreatmentPreference"> | Date | string
+    updatedAt?: DateTimeFilter<"TreatmentPreference"> | Date | string
+    hospital?: XOR<HospitalScalarRelationFilter, HospitalWhereInput>
+  }, "id" | "treatmentId_hospitalId">
+
+  export type TreatmentPreferenceOrderByWithAggregationInput = {
+    id?: SortOrder
+    treatmentId?: SortOrder
+    treatmentName?: SortOrder
+    hospitalId?: SortOrder
+    preferenceType?: SortOrder
+    notes?: SortOrderInput | SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+    _count?: TreatmentPreferenceCountOrderByAggregateInput
+    _max?: TreatmentPreferenceMaxOrderByAggregateInput
+    _min?: TreatmentPreferenceMinOrderByAggregateInput
+  }
+
+  export type TreatmentPreferenceScalarWhereWithAggregatesInput = {
+    AND?: TreatmentPreferenceScalarWhereWithAggregatesInput | TreatmentPreferenceScalarWhereWithAggregatesInput[]
+    OR?: TreatmentPreferenceScalarWhereWithAggregatesInput[]
+    NOT?: TreatmentPreferenceScalarWhereWithAggregatesInput | TreatmentPreferenceScalarWhereWithAggregatesInput[]
+    id?: StringWithAggregatesFilter<"TreatmentPreference"> | string
+    treatmentId?: StringWithAggregatesFilter<"TreatmentPreference"> | string
+    treatmentName?: StringWithAggregatesFilter<"TreatmentPreference"> | string
+    hospitalId?: StringWithAggregatesFilter<"TreatmentPreference"> | string
+    preferenceType?: StringWithAggregatesFilter<"TreatmentPreference"> | string
+    notes?: StringNullableWithAggregatesFilter<"TreatmentPreference"> | string | null
+    createdAt?: DateTimeWithAggregatesFilter<"TreatmentPreference"> | Date | string
+    updatedAt?: DateTimeWithAggregatesFilter<"TreatmentPreference"> | Date | string
   }
 
   export type FacilityCreateInput = {
@@ -11069,80 +15494,98 @@ export namespace Prisma {
     id?: string
     fullname: string
     email: string
-    password: string
+    password?: string | null
     witnesshash: string
     phone: string
     address: string
     about?: string | null
     userType?: $Enums.UserType
+    authProvider?: $Enums.AuthProvider
+    providerId?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
     hospital?: HospitalInformationCreateNestedOneWithoutUsersInput
     registeredHospital?: HospitalCreateNestedOneWithoutOwnerInput
     bookings?: BookingCreateNestedManyWithoutUserInput
+    requests?: HospitalRequestCreateNestedManyWithoutUserInput
+    preferredHospitals?: UserPreferenceCreateNestedManyWithoutUserInput
   }
 
   export type UserUncheckedCreateInput = {
     id?: string
     fullname: string
     email: string
-    password: string
+    password?: string | null
     witnesshash: string
     phone: string
     address: string
     about?: string | null
     userType?: $Enums.UserType
+    authProvider?: $Enums.AuthProvider
+    providerId?: string | null
     hospitalId?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
     registeredHospital?: HospitalUncheckedCreateNestedOneWithoutOwnerInput
     bookings?: BookingUncheckedCreateNestedManyWithoutUserInput
+    requests?: HospitalRequestUncheckedCreateNestedManyWithoutUserInput
+    preferredHospitals?: UserPreferenceUncheckedCreateNestedManyWithoutUserInput
   }
 
   export type UserUpdateInput = {
     id?: StringFieldUpdateOperationsInput | string
     fullname?: StringFieldUpdateOperationsInput | string
     email?: StringFieldUpdateOperationsInput | string
-    password?: StringFieldUpdateOperationsInput | string
+    password?: NullableStringFieldUpdateOperationsInput | string | null
     witnesshash?: StringFieldUpdateOperationsInput | string
     phone?: StringFieldUpdateOperationsInput | string
     address?: StringFieldUpdateOperationsInput | string
     about?: NullableStringFieldUpdateOperationsInput | string | null
     userType?: EnumUserTypeFieldUpdateOperationsInput | $Enums.UserType
+    authProvider?: EnumAuthProviderFieldUpdateOperationsInput | $Enums.AuthProvider
+    providerId?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     hospital?: HospitalInformationUpdateOneWithoutUsersNestedInput
     registeredHospital?: HospitalUpdateOneWithoutOwnerNestedInput
     bookings?: BookingUpdateManyWithoutUserNestedInput
+    requests?: HospitalRequestUpdateManyWithoutUserNestedInput
+    preferredHospitals?: UserPreferenceUpdateManyWithoutUserNestedInput
   }
 
   export type UserUncheckedUpdateInput = {
     id?: StringFieldUpdateOperationsInput | string
     fullname?: StringFieldUpdateOperationsInput | string
     email?: StringFieldUpdateOperationsInput | string
-    password?: StringFieldUpdateOperationsInput | string
+    password?: NullableStringFieldUpdateOperationsInput | string | null
     witnesshash?: StringFieldUpdateOperationsInput | string
     phone?: StringFieldUpdateOperationsInput | string
     address?: StringFieldUpdateOperationsInput | string
     about?: NullableStringFieldUpdateOperationsInput | string | null
     userType?: EnumUserTypeFieldUpdateOperationsInput | $Enums.UserType
+    authProvider?: EnumAuthProviderFieldUpdateOperationsInput | $Enums.AuthProvider
+    providerId?: NullableStringFieldUpdateOperationsInput | string | null
     hospitalId?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     registeredHospital?: HospitalUncheckedUpdateOneWithoutOwnerNestedInput
     bookings?: BookingUncheckedUpdateManyWithoutUserNestedInput
+    requests?: HospitalRequestUncheckedUpdateManyWithoutUserNestedInput
+    preferredHospitals?: UserPreferenceUncheckedUpdateManyWithoutUserNestedInput
   }
 
   export type UserCreateManyInput = {
     id?: string
     fullname: string
     email: string
-    password: string
+    password?: string | null
     witnesshash: string
     phone: string
     address: string
     about?: string | null
     userType?: $Enums.UserType
+    authProvider?: $Enums.AuthProvider
+    providerId?: string | null
     hospitalId?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -11152,12 +15595,14 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     fullname?: StringFieldUpdateOperationsInput | string
     email?: StringFieldUpdateOperationsInput | string
-    password?: StringFieldUpdateOperationsInput | string
+    password?: NullableStringFieldUpdateOperationsInput | string | null
     witnesshash?: StringFieldUpdateOperationsInput | string
     phone?: StringFieldUpdateOperationsInput | string
     address?: StringFieldUpdateOperationsInput | string
     about?: NullableStringFieldUpdateOperationsInput | string | null
     userType?: EnumUserTypeFieldUpdateOperationsInput | $Enums.UserType
+    authProvider?: EnumAuthProviderFieldUpdateOperationsInput | $Enums.AuthProvider
+    providerId?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -11166,12 +15611,14 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     fullname?: StringFieldUpdateOperationsInput | string
     email?: StringFieldUpdateOperationsInput | string
-    password?: StringFieldUpdateOperationsInput | string
+    password?: NullableStringFieldUpdateOperationsInput | string | null
     witnesshash?: StringFieldUpdateOperationsInput | string
     phone?: StringFieldUpdateOperationsInput | string
     address?: StringFieldUpdateOperationsInput | string
     about?: NullableStringFieldUpdateOperationsInput | string | null
     userType?: EnumUserTypeFieldUpdateOperationsInput | $Enums.UserType
+    authProvider?: EnumAuthProviderFieldUpdateOperationsInput | $Enums.AuthProvider
+    providerId?: NullableStringFieldUpdateOperationsInput | string | null
     hospitalId?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -11188,10 +15635,17 @@ export namespace Prisma {
     reviews?: number
     verified?: boolean
     walletAddress: string
+    totalRequests?: number
+    totalDonors?: number
+    totalCustomers?: number
+    totalTreatments?: number
     createdAt?: Date | string
     updatedAt?: Date | string
     owner: UserCreateNestedOneWithoutRegisteredHospitalInput
     bookings?: BookingCreateNestedManyWithoutHospitalInput
+    requests?: HospitalRequestCreateNestedManyWithoutHospitalInput
+    preferredUsers?: UserPreferenceCreateNestedManyWithoutHospitalInput
+    preferredTreatments?: TreatmentPreferenceCreateNestedManyWithoutHospitalInput
   }
 
   export type HospitalUncheckedCreateInput = {
@@ -11206,9 +15660,16 @@ export namespace Prisma {
     verified?: boolean
     walletAddress: string
     ownerId: string
+    totalRequests?: number
+    totalDonors?: number
+    totalCustomers?: number
+    totalTreatments?: number
     createdAt?: Date | string
     updatedAt?: Date | string
     bookings?: BookingUncheckedCreateNestedManyWithoutHospitalInput
+    requests?: HospitalRequestUncheckedCreateNestedManyWithoutHospitalInput
+    preferredUsers?: UserPreferenceUncheckedCreateNestedManyWithoutHospitalInput
+    preferredTreatments?: TreatmentPreferenceUncheckedCreateNestedManyWithoutHospitalInput
   }
 
   export type HospitalUpdateInput = {
@@ -11222,10 +15683,17 @@ export namespace Prisma {
     reviews?: IntFieldUpdateOperationsInput | number
     verified?: BoolFieldUpdateOperationsInput | boolean
     walletAddress?: StringFieldUpdateOperationsInput | string
+    totalRequests?: IntFieldUpdateOperationsInput | number
+    totalDonors?: IntFieldUpdateOperationsInput | number
+    totalCustomers?: IntFieldUpdateOperationsInput | number
+    totalTreatments?: IntFieldUpdateOperationsInput | number
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     owner?: UserUpdateOneRequiredWithoutRegisteredHospitalNestedInput
     bookings?: BookingUpdateManyWithoutHospitalNestedInput
+    requests?: HospitalRequestUpdateManyWithoutHospitalNestedInput
+    preferredUsers?: UserPreferenceUpdateManyWithoutHospitalNestedInput
+    preferredTreatments?: TreatmentPreferenceUpdateManyWithoutHospitalNestedInput
   }
 
   export type HospitalUncheckedUpdateInput = {
@@ -11240,9 +15708,16 @@ export namespace Prisma {
     verified?: BoolFieldUpdateOperationsInput | boolean
     walletAddress?: StringFieldUpdateOperationsInput | string
     ownerId?: StringFieldUpdateOperationsInput | string
+    totalRequests?: IntFieldUpdateOperationsInput | number
+    totalDonors?: IntFieldUpdateOperationsInput | number
+    totalCustomers?: IntFieldUpdateOperationsInput | number
+    totalTreatments?: IntFieldUpdateOperationsInput | number
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     bookings?: BookingUncheckedUpdateManyWithoutHospitalNestedInput
+    requests?: HospitalRequestUncheckedUpdateManyWithoutHospitalNestedInput
+    preferredUsers?: UserPreferenceUncheckedUpdateManyWithoutHospitalNestedInput
+    preferredTreatments?: TreatmentPreferenceUncheckedUpdateManyWithoutHospitalNestedInput
   }
 
   export type HospitalCreateManyInput = {
@@ -11257,6 +15732,10 @@ export namespace Prisma {
     verified?: boolean
     walletAddress: string
     ownerId: string
+    totalRequests?: number
+    totalDonors?: number
+    totalCustomers?: number
+    totalTreatments?: number
     createdAt?: Date | string
     updatedAt?: Date | string
   }
@@ -11272,6 +15751,10 @@ export namespace Prisma {
     reviews?: IntFieldUpdateOperationsInput | number
     verified?: BoolFieldUpdateOperationsInput | boolean
     walletAddress?: StringFieldUpdateOperationsInput | string
+    totalRequests?: IntFieldUpdateOperationsInput | number
+    totalDonors?: IntFieldUpdateOperationsInput | number
+    totalCustomers?: IntFieldUpdateOperationsInput | number
+    totalTreatments?: IntFieldUpdateOperationsInput | number
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -11288,6 +15771,10 @@ export namespace Prisma {
     verified?: BoolFieldUpdateOperationsInput | boolean
     walletAddress?: StringFieldUpdateOperationsInput | string
     ownerId?: StringFieldUpdateOperationsInput | string
+    totalRequests?: IntFieldUpdateOperationsInput | number
+    totalDonors?: IntFieldUpdateOperationsInput | number
+    totalCustomers?: IntFieldUpdateOperationsInput | number
+    totalTreatments?: IntFieldUpdateOperationsInput | number
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -11303,6 +15790,7 @@ export namespace Prisma {
     updatedAt?: Date | string
     hospital: HospitalCreateNestedOneWithoutBookingsInput
     user: UserCreateNestedOneWithoutBookingsInput
+    request?: HospitalRequestCreateNestedOneWithoutBookingInput
   }
 
   export type BookingUncheckedCreateInput = {
@@ -11316,6 +15804,7 @@ export namespace Prisma {
     status?: string
     createdAt?: Date | string
     updatedAt?: Date | string
+    request?: HospitalRequestUncheckedCreateNestedOneWithoutBookingInput
   }
 
   export type BookingUpdateInput = {
@@ -11329,6 +15818,7 @@ export namespace Prisma {
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     hospital?: HospitalUpdateOneRequiredWithoutBookingsNestedInput
     user?: UserUpdateOneRequiredWithoutBookingsNestedInput
+    request?: HospitalRequestUpdateOneWithoutBookingNestedInput
   }
 
   export type BookingUncheckedUpdateInput = {
@@ -11342,6 +15832,7 @@ export namespace Prisma {
     status?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    request?: HospitalRequestUncheckedUpdateOneWithoutBookingNestedInput
   }
 
   export type BookingCreateManyInput = {
@@ -11377,6 +15868,273 @@ export namespace Prisma {
     purpose?: StringFieldUpdateOperationsInput | string
     additionalNotes?: NullableStringFieldUpdateOperationsInput | string | null
     status?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type HospitalRequestCreateInput = {
+    id?: string
+    requestType: $Enums.RequestType
+    status?: $Enums.RequestStatus
+    title: string
+    description?: string | null
+    treatmentId?: string | null
+    priority?: string
+    requestedDate?: Date | string | null
+    completedDate?: Date | string | null
+    notes?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    hospital: HospitalCreateNestedOneWithoutRequestsInput
+    user: UserCreateNestedOneWithoutRequestsInput
+    booking?: BookingCreateNestedOneWithoutRequestInput
+  }
+
+  export type HospitalRequestUncheckedCreateInput = {
+    id?: string
+    hospitalId: string
+    userId: string
+    requestType: $Enums.RequestType
+    status?: $Enums.RequestStatus
+    title: string
+    description?: string | null
+    bookingId?: string | null
+    treatmentId?: string | null
+    priority?: string
+    requestedDate?: Date | string | null
+    completedDate?: Date | string | null
+    notes?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type HospitalRequestUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    requestType?: EnumRequestTypeFieldUpdateOperationsInput | $Enums.RequestType
+    status?: EnumRequestStatusFieldUpdateOperationsInput | $Enums.RequestStatus
+    title?: StringFieldUpdateOperationsInput | string
+    description?: NullableStringFieldUpdateOperationsInput | string | null
+    treatmentId?: NullableStringFieldUpdateOperationsInput | string | null
+    priority?: StringFieldUpdateOperationsInput | string
+    requestedDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    completedDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    hospital?: HospitalUpdateOneRequiredWithoutRequestsNestedInput
+    user?: UserUpdateOneRequiredWithoutRequestsNestedInput
+    booking?: BookingUpdateOneWithoutRequestNestedInput
+  }
+
+  export type HospitalRequestUncheckedUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    hospitalId?: StringFieldUpdateOperationsInput | string
+    userId?: StringFieldUpdateOperationsInput | string
+    requestType?: EnumRequestTypeFieldUpdateOperationsInput | $Enums.RequestType
+    status?: EnumRequestStatusFieldUpdateOperationsInput | $Enums.RequestStatus
+    title?: StringFieldUpdateOperationsInput | string
+    description?: NullableStringFieldUpdateOperationsInput | string | null
+    bookingId?: NullableStringFieldUpdateOperationsInput | string | null
+    treatmentId?: NullableStringFieldUpdateOperationsInput | string | null
+    priority?: StringFieldUpdateOperationsInput | string
+    requestedDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    completedDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type HospitalRequestCreateManyInput = {
+    id?: string
+    hospitalId: string
+    userId: string
+    requestType: $Enums.RequestType
+    status?: $Enums.RequestStatus
+    title: string
+    description?: string | null
+    bookingId?: string | null
+    treatmentId?: string | null
+    priority?: string
+    requestedDate?: Date | string | null
+    completedDate?: Date | string | null
+    notes?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type HospitalRequestUpdateManyMutationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    requestType?: EnumRequestTypeFieldUpdateOperationsInput | $Enums.RequestType
+    status?: EnumRequestStatusFieldUpdateOperationsInput | $Enums.RequestStatus
+    title?: StringFieldUpdateOperationsInput | string
+    description?: NullableStringFieldUpdateOperationsInput | string | null
+    treatmentId?: NullableStringFieldUpdateOperationsInput | string | null
+    priority?: StringFieldUpdateOperationsInput | string
+    requestedDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    completedDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type HospitalRequestUncheckedUpdateManyInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    hospitalId?: StringFieldUpdateOperationsInput | string
+    userId?: StringFieldUpdateOperationsInput | string
+    requestType?: EnumRequestTypeFieldUpdateOperationsInput | $Enums.RequestType
+    status?: EnumRequestStatusFieldUpdateOperationsInput | $Enums.RequestStatus
+    title?: StringFieldUpdateOperationsInput | string
+    description?: NullableStringFieldUpdateOperationsInput | string | null
+    bookingId?: NullableStringFieldUpdateOperationsInput | string | null
+    treatmentId?: NullableStringFieldUpdateOperationsInput | string | null
+    priority?: StringFieldUpdateOperationsInput | string
+    requestedDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    completedDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type UserPreferenceCreateInput = {
+    id?: string
+    preferenceType?: string
+    notes?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    user: UserCreateNestedOneWithoutPreferredHospitalsInput
+    hospital: HospitalCreateNestedOneWithoutPreferredUsersInput
+  }
+
+  export type UserPreferenceUncheckedCreateInput = {
+    id?: string
+    userId: string
+    hospitalId: string
+    preferenceType?: string
+    notes?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type UserPreferenceUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    preferenceType?: StringFieldUpdateOperationsInput | string
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    user?: UserUpdateOneRequiredWithoutPreferredHospitalsNestedInput
+    hospital?: HospitalUpdateOneRequiredWithoutPreferredUsersNestedInput
+  }
+
+  export type UserPreferenceUncheckedUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    userId?: StringFieldUpdateOperationsInput | string
+    hospitalId?: StringFieldUpdateOperationsInput | string
+    preferenceType?: StringFieldUpdateOperationsInput | string
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type UserPreferenceCreateManyInput = {
+    id?: string
+    userId: string
+    hospitalId: string
+    preferenceType?: string
+    notes?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type UserPreferenceUpdateManyMutationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    preferenceType?: StringFieldUpdateOperationsInput | string
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type UserPreferenceUncheckedUpdateManyInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    userId?: StringFieldUpdateOperationsInput | string
+    hospitalId?: StringFieldUpdateOperationsInput | string
+    preferenceType?: StringFieldUpdateOperationsInput | string
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type TreatmentPreferenceCreateInput = {
+    id?: string
+    treatmentId: string
+    treatmentName: string
+    preferenceType?: string
+    notes?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    hospital: HospitalCreateNestedOneWithoutPreferredTreatmentsInput
+  }
+
+  export type TreatmentPreferenceUncheckedCreateInput = {
+    id?: string
+    treatmentId: string
+    treatmentName: string
+    hospitalId: string
+    preferenceType?: string
+    notes?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type TreatmentPreferenceUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    treatmentId?: StringFieldUpdateOperationsInput | string
+    treatmentName?: StringFieldUpdateOperationsInput | string
+    preferenceType?: StringFieldUpdateOperationsInput | string
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    hospital?: HospitalUpdateOneRequiredWithoutPreferredTreatmentsNestedInput
+  }
+
+  export type TreatmentPreferenceUncheckedUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    treatmentId?: StringFieldUpdateOperationsInput | string
+    treatmentName?: StringFieldUpdateOperationsInput | string
+    hospitalId?: StringFieldUpdateOperationsInput | string
+    preferenceType?: StringFieldUpdateOperationsInput | string
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type TreatmentPreferenceCreateManyInput = {
+    id?: string
+    treatmentId: string
+    treatmentName: string
+    hospitalId: string
+    preferenceType?: string
+    notes?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type TreatmentPreferenceUpdateManyMutationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    treatmentId?: StringFieldUpdateOperationsInput | string
+    treatmentName?: StringFieldUpdateOperationsInput | string
+    preferenceType?: StringFieldUpdateOperationsInput | string
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type TreatmentPreferenceUncheckedUpdateManyInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    treatmentId?: StringFieldUpdateOperationsInput | string
+    treatmentName?: StringFieldUpdateOperationsInput | string
+    hospitalId?: StringFieldUpdateOperationsInput | string
+    preferenceType?: StringFieldUpdateOperationsInput | string
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -11748,6 +16506,13 @@ export namespace Prisma {
     not?: NestedEnumUserTypeFilter<$PrismaModel> | $Enums.UserType
   }
 
+  export type EnumAuthProviderFilter<$PrismaModel = never> = {
+    equals?: $Enums.AuthProvider | EnumAuthProviderFieldRefInput<$PrismaModel>
+    in?: $Enums.AuthProvider[] | ListEnumAuthProviderFieldRefInput<$PrismaModel>
+    notIn?: $Enums.AuthProvider[] | ListEnumAuthProviderFieldRefInput<$PrismaModel>
+    not?: NestedEnumAuthProviderFilter<$PrismaModel> | $Enums.AuthProvider
+  }
+
   export type HospitalInformationNullableScalarRelationFilter = {
     is?: HospitalInformationWhereInput | null
     isNot?: HospitalInformationWhereInput | null
@@ -11764,7 +16529,27 @@ export namespace Prisma {
     none?: BookingWhereInput
   }
 
+  export type HospitalRequestListRelationFilter = {
+    every?: HospitalRequestWhereInput
+    some?: HospitalRequestWhereInput
+    none?: HospitalRequestWhereInput
+  }
+
+  export type UserPreferenceListRelationFilter = {
+    every?: UserPreferenceWhereInput
+    some?: UserPreferenceWhereInput
+    none?: UserPreferenceWhereInput
+  }
+
   export type BookingOrderByRelationAggregateInput = {
+    _count?: SortOrder
+  }
+
+  export type HospitalRequestOrderByRelationAggregateInput = {
+    _count?: SortOrder
+  }
+
+  export type UserPreferenceOrderByRelationAggregateInput = {
     _count?: SortOrder
   }
 
@@ -11778,6 +16563,8 @@ export namespace Prisma {
     address?: SortOrder
     about?: SortOrder
     userType?: SortOrder
+    authProvider?: SortOrder
+    providerId?: SortOrder
     hospitalId?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
@@ -11793,6 +16580,8 @@ export namespace Prisma {
     address?: SortOrder
     about?: SortOrder
     userType?: SortOrder
+    authProvider?: SortOrder
+    providerId?: SortOrder
     hospitalId?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
@@ -11808,6 +16597,8 @@ export namespace Prisma {
     address?: SortOrder
     about?: SortOrder
     userType?: SortOrder
+    authProvider?: SortOrder
+    providerId?: SortOrder
     hospitalId?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
@@ -11821,6 +16612,16 @@ export namespace Prisma {
     _count?: NestedIntFilter<$PrismaModel>
     _min?: NestedEnumUserTypeFilter<$PrismaModel>
     _max?: NestedEnumUserTypeFilter<$PrismaModel>
+  }
+
+  export type EnumAuthProviderWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: $Enums.AuthProvider | EnumAuthProviderFieldRefInput<$PrismaModel>
+    in?: $Enums.AuthProvider[] | ListEnumAuthProviderFieldRefInput<$PrismaModel>
+    notIn?: $Enums.AuthProvider[] | ListEnumAuthProviderFieldRefInput<$PrismaModel>
+    not?: NestedEnumAuthProviderWithAggregatesFilter<$PrismaModel> | $Enums.AuthProvider
+    _count?: NestedIntFilter<$PrismaModel>
+    _min?: NestedEnumAuthProviderFilter<$PrismaModel>
+    _max?: NestedEnumAuthProviderFilter<$PrismaModel>
   }
 
   export type FloatFilter<$PrismaModel = never> = {
@@ -11852,6 +16653,16 @@ export namespace Prisma {
     isNot?: UserWhereInput
   }
 
+  export type TreatmentPreferenceListRelationFilter = {
+    every?: TreatmentPreferenceWhereInput
+    some?: TreatmentPreferenceWhereInput
+    none?: TreatmentPreferenceWhereInput
+  }
+
+  export type TreatmentPreferenceOrderByRelationAggregateInput = {
+    _count?: SortOrder
+  }
+
   export type HospitalCountOrderByAggregateInput = {
     id?: SortOrder
     name?: SortOrder
@@ -11864,6 +16675,10 @@ export namespace Prisma {
     verified?: SortOrder
     walletAddress?: SortOrder
     ownerId?: SortOrder
+    totalRequests?: SortOrder
+    totalDonors?: SortOrder
+    totalCustomers?: SortOrder
+    totalTreatments?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
   }
@@ -11871,6 +16686,10 @@ export namespace Prisma {
   export type HospitalAvgOrderByAggregateInput = {
     rating?: SortOrder
     reviews?: SortOrder
+    totalRequests?: SortOrder
+    totalDonors?: SortOrder
+    totalCustomers?: SortOrder
+    totalTreatments?: SortOrder
   }
 
   export type HospitalMaxOrderByAggregateInput = {
@@ -11884,6 +16703,10 @@ export namespace Prisma {
     verified?: SortOrder
     walletAddress?: SortOrder
     ownerId?: SortOrder
+    totalRequests?: SortOrder
+    totalDonors?: SortOrder
+    totalCustomers?: SortOrder
+    totalTreatments?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
   }
@@ -11899,6 +16722,10 @@ export namespace Prisma {
     verified?: SortOrder
     walletAddress?: SortOrder
     ownerId?: SortOrder
+    totalRequests?: SortOrder
+    totalDonors?: SortOrder
+    totalCustomers?: SortOrder
+    totalTreatments?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
   }
@@ -11906,6 +16733,10 @@ export namespace Prisma {
   export type HospitalSumOrderByAggregateInput = {
     rating?: SortOrder
     reviews?: SortOrder
+    totalRequests?: SortOrder
+    totalDonors?: SortOrder
+    totalCustomers?: SortOrder
+    totalTreatments?: SortOrder
   }
 
   export type FloatWithAggregatesFilter<$PrismaModel = never> = {
@@ -11935,6 +16766,11 @@ export namespace Prisma {
   export type HospitalScalarRelationFilter = {
     is?: HospitalWhereInput
     isNot?: HospitalWhereInput
+  }
+
+  export type HospitalRequestNullableScalarRelationFilter = {
+    is?: HospitalRequestWhereInput | null
+    isNot?: HospitalRequestWhereInput | null
   }
 
   export type BookingCountOrderByAggregateInput = {
@@ -11982,6 +16818,197 @@ export namespace Prisma {
 
   export type BookingSumOrderByAggregateInput = {
     duration?: SortOrder
+  }
+
+  export type EnumRequestTypeFilter<$PrismaModel = never> = {
+    equals?: $Enums.RequestType | EnumRequestTypeFieldRefInput<$PrismaModel>
+    in?: $Enums.RequestType[] | ListEnumRequestTypeFieldRefInput<$PrismaModel>
+    notIn?: $Enums.RequestType[] | ListEnumRequestTypeFieldRefInput<$PrismaModel>
+    not?: NestedEnumRequestTypeFilter<$PrismaModel> | $Enums.RequestType
+  }
+
+  export type EnumRequestStatusFilter<$PrismaModel = never> = {
+    equals?: $Enums.RequestStatus | EnumRequestStatusFieldRefInput<$PrismaModel>
+    in?: $Enums.RequestStatus[] | ListEnumRequestStatusFieldRefInput<$PrismaModel>
+    notIn?: $Enums.RequestStatus[] | ListEnumRequestStatusFieldRefInput<$PrismaModel>
+    not?: NestedEnumRequestStatusFilter<$PrismaModel> | $Enums.RequestStatus
+  }
+
+  export type DateTimeNullableFilter<$PrismaModel = never> = {
+    equals?: Date | string | DateTimeFieldRefInput<$PrismaModel> | null
+    in?: Date[] | string[] | ListDateTimeFieldRefInput<$PrismaModel> | null
+    notIn?: Date[] | string[] | ListDateTimeFieldRefInput<$PrismaModel> | null
+    lt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    lte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    gt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    gte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    not?: NestedDateTimeNullableFilter<$PrismaModel> | Date | string | null
+  }
+
+  export type BookingNullableScalarRelationFilter = {
+    is?: BookingWhereInput | null
+    isNot?: BookingWhereInput | null
+  }
+
+  export type HospitalRequestCountOrderByAggregateInput = {
+    id?: SortOrder
+    hospitalId?: SortOrder
+    userId?: SortOrder
+    requestType?: SortOrder
+    status?: SortOrder
+    title?: SortOrder
+    description?: SortOrder
+    bookingId?: SortOrder
+    treatmentId?: SortOrder
+    priority?: SortOrder
+    requestedDate?: SortOrder
+    completedDate?: SortOrder
+    notes?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type HospitalRequestMaxOrderByAggregateInput = {
+    id?: SortOrder
+    hospitalId?: SortOrder
+    userId?: SortOrder
+    requestType?: SortOrder
+    status?: SortOrder
+    title?: SortOrder
+    description?: SortOrder
+    bookingId?: SortOrder
+    treatmentId?: SortOrder
+    priority?: SortOrder
+    requestedDate?: SortOrder
+    completedDate?: SortOrder
+    notes?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type HospitalRequestMinOrderByAggregateInput = {
+    id?: SortOrder
+    hospitalId?: SortOrder
+    userId?: SortOrder
+    requestType?: SortOrder
+    status?: SortOrder
+    title?: SortOrder
+    description?: SortOrder
+    bookingId?: SortOrder
+    treatmentId?: SortOrder
+    priority?: SortOrder
+    requestedDate?: SortOrder
+    completedDate?: SortOrder
+    notes?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type EnumRequestTypeWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: $Enums.RequestType | EnumRequestTypeFieldRefInput<$PrismaModel>
+    in?: $Enums.RequestType[] | ListEnumRequestTypeFieldRefInput<$PrismaModel>
+    notIn?: $Enums.RequestType[] | ListEnumRequestTypeFieldRefInput<$PrismaModel>
+    not?: NestedEnumRequestTypeWithAggregatesFilter<$PrismaModel> | $Enums.RequestType
+    _count?: NestedIntFilter<$PrismaModel>
+    _min?: NestedEnumRequestTypeFilter<$PrismaModel>
+    _max?: NestedEnumRequestTypeFilter<$PrismaModel>
+  }
+
+  export type EnumRequestStatusWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: $Enums.RequestStatus | EnumRequestStatusFieldRefInput<$PrismaModel>
+    in?: $Enums.RequestStatus[] | ListEnumRequestStatusFieldRefInput<$PrismaModel>
+    notIn?: $Enums.RequestStatus[] | ListEnumRequestStatusFieldRefInput<$PrismaModel>
+    not?: NestedEnumRequestStatusWithAggregatesFilter<$PrismaModel> | $Enums.RequestStatus
+    _count?: NestedIntFilter<$PrismaModel>
+    _min?: NestedEnumRequestStatusFilter<$PrismaModel>
+    _max?: NestedEnumRequestStatusFilter<$PrismaModel>
+  }
+
+  export type DateTimeNullableWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: Date | string | DateTimeFieldRefInput<$PrismaModel> | null
+    in?: Date[] | string[] | ListDateTimeFieldRefInput<$PrismaModel> | null
+    notIn?: Date[] | string[] | ListDateTimeFieldRefInput<$PrismaModel> | null
+    lt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    lte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    gt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    gte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    not?: NestedDateTimeNullableWithAggregatesFilter<$PrismaModel> | Date | string | null
+    _count?: NestedIntNullableFilter<$PrismaModel>
+    _min?: NestedDateTimeNullableFilter<$PrismaModel>
+    _max?: NestedDateTimeNullableFilter<$PrismaModel>
+  }
+
+  export type UserPreferenceUserIdHospitalIdCompoundUniqueInput = {
+    userId: string
+    hospitalId: string
+  }
+
+  export type UserPreferenceCountOrderByAggregateInput = {
+    id?: SortOrder
+    userId?: SortOrder
+    hospitalId?: SortOrder
+    preferenceType?: SortOrder
+    notes?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type UserPreferenceMaxOrderByAggregateInput = {
+    id?: SortOrder
+    userId?: SortOrder
+    hospitalId?: SortOrder
+    preferenceType?: SortOrder
+    notes?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type UserPreferenceMinOrderByAggregateInput = {
+    id?: SortOrder
+    userId?: SortOrder
+    hospitalId?: SortOrder
+    preferenceType?: SortOrder
+    notes?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type TreatmentPreferenceTreatmentIdHospitalIdCompoundUniqueInput = {
+    treatmentId: string
+    hospitalId: string
+  }
+
+  export type TreatmentPreferenceCountOrderByAggregateInput = {
+    id?: SortOrder
+    treatmentId?: SortOrder
+    treatmentName?: SortOrder
+    hospitalId?: SortOrder
+    preferenceType?: SortOrder
+    notes?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type TreatmentPreferenceMaxOrderByAggregateInput = {
+    id?: SortOrder
+    treatmentId?: SortOrder
+    treatmentName?: SortOrder
+    hospitalId?: SortOrder
+    preferenceType?: SortOrder
+    notes?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type TreatmentPreferenceMinOrderByAggregateInput = {
+    id?: SortOrder
+    treatmentId?: SortOrder
+    treatmentName?: SortOrder
+    hospitalId?: SortOrder
+    preferenceType?: SortOrder
+    notes?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
   }
 
   export type StringFieldUpdateOperationsInput = {
@@ -12065,6 +17092,20 @@ export namespace Prisma {
     connect?: BookingWhereUniqueInput | BookingWhereUniqueInput[]
   }
 
+  export type HospitalRequestCreateNestedManyWithoutUserInput = {
+    create?: XOR<HospitalRequestCreateWithoutUserInput, HospitalRequestUncheckedCreateWithoutUserInput> | HospitalRequestCreateWithoutUserInput[] | HospitalRequestUncheckedCreateWithoutUserInput[]
+    connectOrCreate?: HospitalRequestCreateOrConnectWithoutUserInput | HospitalRequestCreateOrConnectWithoutUserInput[]
+    createMany?: HospitalRequestCreateManyUserInputEnvelope
+    connect?: HospitalRequestWhereUniqueInput | HospitalRequestWhereUniqueInput[]
+  }
+
+  export type UserPreferenceCreateNestedManyWithoutUserInput = {
+    create?: XOR<UserPreferenceCreateWithoutUserInput, UserPreferenceUncheckedCreateWithoutUserInput> | UserPreferenceCreateWithoutUserInput[] | UserPreferenceUncheckedCreateWithoutUserInput[]
+    connectOrCreate?: UserPreferenceCreateOrConnectWithoutUserInput | UserPreferenceCreateOrConnectWithoutUserInput[]
+    createMany?: UserPreferenceCreateManyUserInputEnvelope
+    connect?: UserPreferenceWhereUniqueInput | UserPreferenceWhereUniqueInput[]
+  }
+
   export type HospitalUncheckedCreateNestedOneWithoutOwnerInput = {
     create?: XOR<HospitalCreateWithoutOwnerInput, HospitalUncheckedCreateWithoutOwnerInput>
     connectOrCreate?: HospitalCreateOrConnectWithoutOwnerInput
@@ -12078,8 +17119,26 @@ export namespace Prisma {
     connect?: BookingWhereUniqueInput | BookingWhereUniqueInput[]
   }
 
+  export type HospitalRequestUncheckedCreateNestedManyWithoutUserInput = {
+    create?: XOR<HospitalRequestCreateWithoutUserInput, HospitalRequestUncheckedCreateWithoutUserInput> | HospitalRequestCreateWithoutUserInput[] | HospitalRequestUncheckedCreateWithoutUserInput[]
+    connectOrCreate?: HospitalRequestCreateOrConnectWithoutUserInput | HospitalRequestCreateOrConnectWithoutUserInput[]
+    createMany?: HospitalRequestCreateManyUserInputEnvelope
+    connect?: HospitalRequestWhereUniqueInput | HospitalRequestWhereUniqueInput[]
+  }
+
+  export type UserPreferenceUncheckedCreateNestedManyWithoutUserInput = {
+    create?: XOR<UserPreferenceCreateWithoutUserInput, UserPreferenceUncheckedCreateWithoutUserInput> | UserPreferenceCreateWithoutUserInput[] | UserPreferenceUncheckedCreateWithoutUserInput[]
+    connectOrCreate?: UserPreferenceCreateOrConnectWithoutUserInput | UserPreferenceCreateOrConnectWithoutUserInput[]
+    createMany?: UserPreferenceCreateManyUserInputEnvelope
+    connect?: UserPreferenceWhereUniqueInput | UserPreferenceWhereUniqueInput[]
+  }
+
   export type EnumUserTypeFieldUpdateOperationsInput = {
     set?: $Enums.UserType
+  }
+
+  export type EnumAuthProviderFieldUpdateOperationsInput = {
+    set?: $Enums.AuthProvider
   }
 
   export type HospitalInformationUpdateOneWithoutUsersNestedInput = {
@@ -12116,6 +17175,34 @@ export namespace Prisma {
     deleteMany?: BookingScalarWhereInput | BookingScalarWhereInput[]
   }
 
+  export type HospitalRequestUpdateManyWithoutUserNestedInput = {
+    create?: XOR<HospitalRequestCreateWithoutUserInput, HospitalRequestUncheckedCreateWithoutUserInput> | HospitalRequestCreateWithoutUserInput[] | HospitalRequestUncheckedCreateWithoutUserInput[]
+    connectOrCreate?: HospitalRequestCreateOrConnectWithoutUserInput | HospitalRequestCreateOrConnectWithoutUserInput[]
+    upsert?: HospitalRequestUpsertWithWhereUniqueWithoutUserInput | HospitalRequestUpsertWithWhereUniqueWithoutUserInput[]
+    createMany?: HospitalRequestCreateManyUserInputEnvelope
+    set?: HospitalRequestWhereUniqueInput | HospitalRequestWhereUniqueInput[]
+    disconnect?: HospitalRequestWhereUniqueInput | HospitalRequestWhereUniqueInput[]
+    delete?: HospitalRequestWhereUniqueInput | HospitalRequestWhereUniqueInput[]
+    connect?: HospitalRequestWhereUniqueInput | HospitalRequestWhereUniqueInput[]
+    update?: HospitalRequestUpdateWithWhereUniqueWithoutUserInput | HospitalRequestUpdateWithWhereUniqueWithoutUserInput[]
+    updateMany?: HospitalRequestUpdateManyWithWhereWithoutUserInput | HospitalRequestUpdateManyWithWhereWithoutUserInput[]
+    deleteMany?: HospitalRequestScalarWhereInput | HospitalRequestScalarWhereInput[]
+  }
+
+  export type UserPreferenceUpdateManyWithoutUserNestedInput = {
+    create?: XOR<UserPreferenceCreateWithoutUserInput, UserPreferenceUncheckedCreateWithoutUserInput> | UserPreferenceCreateWithoutUserInput[] | UserPreferenceUncheckedCreateWithoutUserInput[]
+    connectOrCreate?: UserPreferenceCreateOrConnectWithoutUserInput | UserPreferenceCreateOrConnectWithoutUserInput[]
+    upsert?: UserPreferenceUpsertWithWhereUniqueWithoutUserInput | UserPreferenceUpsertWithWhereUniqueWithoutUserInput[]
+    createMany?: UserPreferenceCreateManyUserInputEnvelope
+    set?: UserPreferenceWhereUniqueInput | UserPreferenceWhereUniqueInput[]
+    disconnect?: UserPreferenceWhereUniqueInput | UserPreferenceWhereUniqueInput[]
+    delete?: UserPreferenceWhereUniqueInput | UserPreferenceWhereUniqueInput[]
+    connect?: UserPreferenceWhereUniqueInput | UserPreferenceWhereUniqueInput[]
+    update?: UserPreferenceUpdateWithWhereUniqueWithoutUserInput | UserPreferenceUpdateWithWhereUniqueWithoutUserInput[]
+    updateMany?: UserPreferenceUpdateManyWithWhereWithoutUserInput | UserPreferenceUpdateManyWithWhereWithoutUserInput[]
+    deleteMany?: UserPreferenceScalarWhereInput | UserPreferenceScalarWhereInput[]
+  }
+
   export type HospitalUncheckedUpdateOneWithoutOwnerNestedInput = {
     create?: XOR<HospitalCreateWithoutOwnerInput, HospitalUncheckedCreateWithoutOwnerInput>
     connectOrCreate?: HospitalCreateOrConnectWithoutOwnerInput
@@ -12140,6 +17227,34 @@ export namespace Prisma {
     deleteMany?: BookingScalarWhereInput | BookingScalarWhereInput[]
   }
 
+  export type HospitalRequestUncheckedUpdateManyWithoutUserNestedInput = {
+    create?: XOR<HospitalRequestCreateWithoutUserInput, HospitalRequestUncheckedCreateWithoutUserInput> | HospitalRequestCreateWithoutUserInput[] | HospitalRequestUncheckedCreateWithoutUserInput[]
+    connectOrCreate?: HospitalRequestCreateOrConnectWithoutUserInput | HospitalRequestCreateOrConnectWithoutUserInput[]
+    upsert?: HospitalRequestUpsertWithWhereUniqueWithoutUserInput | HospitalRequestUpsertWithWhereUniqueWithoutUserInput[]
+    createMany?: HospitalRequestCreateManyUserInputEnvelope
+    set?: HospitalRequestWhereUniqueInput | HospitalRequestWhereUniqueInput[]
+    disconnect?: HospitalRequestWhereUniqueInput | HospitalRequestWhereUniqueInput[]
+    delete?: HospitalRequestWhereUniqueInput | HospitalRequestWhereUniqueInput[]
+    connect?: HospitalRequestWhereUniqueInput | HospitalRequestWhereUniqueInput[]
+    update?: HospitalRequestUpdateWithWhereUniqueWithoutUserInput | HospitalRequestUpdateWithWhereUniqueWithoutUserInput[]
+    updateMany?: HospitalRequestUpdateManyWithWhereWithoutUserInput | HospitalRequestUpdateManyWithWhereWithoutUserInput[]
+    deleteMany?: HospitalRequestScalarWhereInput | HospitalRequestScalarWhereInput[]
+  }
+
+  export type UserPreferenceUncheckedUpdateManyWithoutUserNestedInput = {
+    create?: XOR<UserPreferenceCreateWithoutUserInput, UserPreferenceUncheckedCreateWithoutUserInput> | UserPreferenceCreateWithoutUserInput[] | UserPreferenceUncheckedCreateWithoutUserInput[]
+    connectOrCreate?: UserPreferenceCreateOrConnectWithoutUserInput | UserPreferenceCreateOrConnectWithoutUserInput[]
+    upsert?: UserPreferenceUpsertWithWhereUniqueWithoutUserInput | UserPreferenceUpsertWithWhereUniqueWithoutUserInput[]
+    createMany?: UserPreferenceCreateManyUserInputEnvelope
+    set?: UserPreferenceWhereUniqueInput | UserPreferenceWhereUniqueInput[]
+    disconnect?: UserPreferenceWhereUniqueInput | UserPreferenceWhereUniqueInput[]
+    delete?: UserPreferenceWhereUniqueInput | UserPreferenceWhereUniqueInput[]
+    connect?: UserPreferenceWhereUniqueInput | UserPreferenceWhereUniqueInput[]
+    update?: UserPreferenceUpdateWithWhereUniqueWithoutUserInput | UserPreferenceUpdateWithWhereUniqueWithoutUserInput[]
+    updateMany?: UserPreferenceUpdateManyWithWhereWithoutUserInput | UserPreferenceUpdateManyWithWhereWithoutUserInput[]
+    deleteMany?: UserPreferenceScalarWhereInput | UserPreferenceScalarWhereInput[]
+  }
+
   export type HospitalCreatespecialtiesInput = {
     set: string[]
   }
@@ -12157,11 +17272,53 @@ export namespace Prisma {
     connect?: BookingWhereUniqueInput | BookingWhereUniqueInput[]
   }
 
+  export type HospitalRequestCreateNestedManyWithoutHospitalInput = {
+    create?: XOR<HospitalRequestCreateWithoutHospitalInput, HospitalRequestUncheckedCreateWithoutHospitalInput> | HospitalRequestCreateWithoutHospitalInput[] | HospitalRequestUncheckedCreateWithoutHospitalInput[]
+    connectOrCreate?: HospitalRequestCreateOrConnectWithoutHospitalInput | HospitalRequestCreateOrConnectWithoutHospitalInput[]
+    createMany?: HospitalRequestCreateManyHospitalInputEnvelope
+    connect?: HospitalRequestWhereUniqueInput | HospitalRequestWhereUniqueInput[]
+  }
+
+  export type UserPreferenceCreateNestedManyWithoutHospitalInput = {
+    create?: XOR<UserPreferenceCreateWithoutHospitalInput, UserPreferenceUncheckedCreateWithoutHospitalInput> | UserPreferenceCreateWithoutHospitalInput[] | UserPreferenceUncheckedCreateWithoutHospitalInput[]
+    connectOrCreate?: UserPreferenceCreateOrConnectWithoutHospitalInput | UserPreferenceCreateOrConnectWithoutHospitalInput[]
+    createMany?: UserPreferenceCreateManyHospitalInputEnvelope
+    connect?: UserPreferenceWhereUniqueInput | UserPreferenceWhereUniqueInput[]
+  }
+
+  export type TreatmentPreferenceCreateNestedManyWithoutHospitalInput = {
+    create?: XOR<TreatmentPreferenceCreateWithoutHospitalInput, TreatmentPreferenceUncheckedCreateWithoutHospitalInput> | TreatmentPreferenceCreateWithoutHospitalInput[] | TreatmentPreferenceUncheckedCreateWithoutHospitalInput[]
+    connectOrCreate?: TreatmentPreferenceCreateOrConnectWithoutHospitalInput | TreatmentPreferenceCreateOrConnectWithoutHospitalInput[]
+    createMany?: TreatmentPreferenceCreateManyHospitalInputEnvelope
+    connect?: TreatmentPreferenceWhereUniqueInput | TreatmentPreferenceWhereUniqueInput[]
+  }
+
   export type BookingUncheckedCreateNestedManyWithoutHospitalInput = {
     create?: XOR<BookingCreateWithoutHospitalInput, BookingUncheckedCreateWithoutHospitalInput> | BookingCreateWithoutHospitalInput[] | BookingUncheckedCreateWithoutHospitalInput[]
     connectOrCreate?: BookingCreateOrConnectWithoutHospitalInput | BookingCreateOrConnectWithoutHospitalInput[]
     createMany?: BookingCreateManyHospitalInputEnvelope
     connect?: BookingWhereUniqueInput | BookingWhereUniqueInput[]
+  }
+
+  export type HospitalRequestUncheckedCreateNestedManyWithoutHospitalInput = {
+    create?: XOR<HospitalRequestCreateWithoutHospitalInput, HospitalRequestUncheckedCreateWithoutHospitalInput> | HospitalRequestCreateWithoutHospitalInput[] | HospitalRequestUncheckedCreateWithoutHospitalInput[]
+    connectOrCreate?: HospitalRequestCreateOrConnectWithoutHospitalInput | HospitalRequestCreateOrConnectWithoutHospitalInput[]
+    createMany?: HospitalRequestCreateManyHospitalInputEnvelope
+    connect?: HospitalRequestWhereUniqueInput | HospitalRequestWhereUniqueInput[]
+  }
+
+  export type UserPreferenceUncheckedCreateNestedManyWithoutHospitalInput = {
+    create?: XOR<UserPreferenceCreateWithoutHospitalInput, UserPreferenceUncheckedCreateWithoutHospitalInput> | UserPreferenceCreateWithoutHospitalInput[] | UserPreferenceUncheckedCreateWithoutHospitalInput[]
+    connectOrCreate?: UserPreferenceCreateOrConnectWithoutHospitalInput | UserPreferenceCreateOrConnectWithoutHospitalInput[]
+    createMany?: UserPreferenceCreateManyHospitalInputEnvelope
+    connect?: UserPreferenceWhereUniqueInput | UserPreferenceWhereUniqueInput[]
+  }
+
+  export type TreatmentPreferenceUncheckedCreateNestedManyWithoutHospitalInput = {
+    create?: XOR<TreatmentPreferenceCreateWithoutHospitalInput, TreatmentPreferenceUncheckedCreateWithoutHospitalInput> | TreatmentPreferenceCreateWithoutHospitalInput[] | TreatmentPreferenceUncheckedCreateWithoutHospitalInput[]
+    connectOrCreate?: TreatmentPreferenceCreateOrConnectWithoutHospitalInput | TreatmentPreferenceCreateOrConnectWithoutHospitalInput[]
+    createMany?: TreatmentPreferenceCreateManyHospitalInputEnvelope
+    connect?: TreatmentPreferenceWhereUniqueInput | TreatmentPreferenceWhereUniqueInput[]
   }
 
   export type FloatFieldUpdateOperationsInput = {
@@ -12203,6 +17360,48 @@ export namespace Prisma {
     deleteMany?: BookingScalarWhereInput | BookingScalarWhereInput[]
   }
 
+  export type HospitalRequestUpdateManyWithoutHospitalNestedInput = {
+    create?: XOR<HospitalRequestCreateWithoutHospitalInput, HospitalRequestUncheckedCreateWithoutHospitalInput> | HospitalRequestCreateWithoutHospitalInput[] | HospitalRequestUncheckedCreateWithoutHospitalInput[]
+    connectOrCreate?: HospitalRequestCreateOrConnectWithoutHospitalInput | HospitalRequestCreateOrConnectWithoutHospitalInput[]
+    upsert?: HospitalRequestUpsertWithWhereUniqueWithoutHospitalInput | HospitalRequestUpsertWithWhereUniqueWithoutHospitalInput[]
+    createMany?: HospitalRequestCreateManyHospitalInputEnvelope
+    set?: HospitalRequestWhereUniqueInput | HospitalRequestWhereUniqueInput[]
+    disconnect?: HospitalRequestWhereUniqueInput | HospitalRequestWhereUniqueInput[]
+    delete?: HospitalRequestWhereUniqueInput | HospitalRequestWhereUniqueInput[]
+    connect?: HospitalRequestWhereUniqueInput | HospitalRequestWhereUniqueInput[]
+    update?: HospitalRequestUpdateWithWhereUniqueWithoutHospitalInput | HospitalRequestUpdateWithWhereUniqueWithoutHospitalInput[]
+    updateMany?: HospitalRequestUpdateManyWithWhereWithoutHospitalInput | HospitalRequestUpdateManyWithWhereWithoutHospitalInput[]
+    deleteMany?: HospitalRequestScalarWhereInput | HospitalRequestScalarWhereInput[]
+  }
+
+  export type UserPreferenceUpdateManyWithoutHospitalNestedInput = {
+    create?: XOR<UserPreferenceCreateWithoutHospitalInput, UserPreferenceUncheckedCreateWithoutHospitalInput> | UserPreferenceCreateWithoutHospitalInput[] | UserPreferenceUncheckedCreateWithoutHospitalInput[]
+    connectOrCreate?: UserPreferenceCreateOrConnectWithoutHospitalInput | UserPreferenceCreateOrConnectWithoutHospitalInput[]
+    upsert?: UserPreferenceUpsertWithWhereUniqueWithoutHospitalInput | UserPreferenceUpsertWithWhereUniqueWithoutHospitalInput[]
+    createMany?: UserPreferenceCreateManyHospitalInputEnvelope
+    set?: UserPreferenceWhereUniqueInput | UserPreferenceWhereUniqueInput[]
+    disconnect?: UserPreferenceWhereUniqueInput | UserPreferenceWhereUniqueInput[]
+    delete?: UserPreferenceWhereUniqueInput | UserPreferenceWhereUniqueInput[]
+    connect?: UserPreferenceWhereUniqueInput | UserPreferenceWhereUniqueInput[]
+    update?: UserPreferenceUpdateWithWhereUniqueWithoutHospitalInput | UserPreferenceUpdateWithWhereUniqueWithoutHospitalInput[]
+    updateMany?: UserPreferenceUpdateManyWithWhereWithoutHospitalInput | UserPreferenceUpdateManyWithWhereWithoutHospitalInput[]
+    deleteMany?: UserPreferenceScalarWhereInput | UserPreferenceScalarWhereInput[]
+  }
+
+  export type TreatmentPreferenceUpdateManyWithoutHospitalNestedInput = {
+    create?: XOR<TreatmentPreferenceCreateWithoutHospitalInput, TreatmentPreferenceUncheckedCreateWithoutHospitalInput> | TreatmentPreferenceCreateWithoutHospitalInput[] | TreatmentPreferenceUncheckedCreateWithoutHospitalInput[]
+    connectOrCreate?: TreatmentPreferenceCreateOrConnectWithoutHospitalInput | TreatmentPreferenceCreateOrConnectWithoutHospitalInput[]
+    upsert?: TreatmentPreferenceUpsertWithWhereUniqueWithoutHospitalInput | TreatmentPreferenceUpsertWithWhereUniqueWithoutHospitalInput[]
+    createMany?: TreatmentPreferenceCreateManyHospitalInputEnvelope
+    set?: TreatmentPreferenceWhereUniqueInput | TreatmentPreferenceWhereUniqueInput[]
+    disconnect?: TreatmentPreferenceWhereUniqueInput | TreatmentPreferenceWhereUniqueInput[]
+    delete?: TreatmentPreferenceWhereUniqueInput | TreatmentPreferenceWhereUniqueInput[]
+    connect?: TreatmentPreferenceWhereUniqueInput | TreatmentPreferenceWhereUniqueInput[]
+    update?: TreatmentPreferenceUpdateWithWhereUniqueWithoutHospitalInput | TreatmentPreferenceUpdateWithWhereUniqueWithoutHospitalInput[]
+    updateMany?: TreatmentPreferenceUpdateManyWithWhereWithoutHospitalInput | TreatmentPreferenceUpdateManyWithWhereWithoutHospitalInput[]
+    deleteMany?: TreatmentPreferenceScalarWhereInput | TreatmentPreferenceScalarWhereInput[]
+  }
+
   export type BookingUncheckedUpdateManyWithoutHospitalNestedInput = {
     create?: XOR<BookingCreateWithoutHospitalInput, BookingUncheckedCreateWithoutHospitalInput> | BookingCreateWithoutHospitalInput[] | BookingUncheckedCreateWithoutHospitalInput[]
     connectOrCreate?: BookingCreateOrConnectWithoutHospitalInput | BookingCreateOrConnectWithoutHospitalInput[]
@@ -12217,6 +17416,48 @@ export namespace Prisma {
     deleteMany?: BookingScalarWhereInput | BookingScalarWhereInput[]
   }
 
+  export type HospitalRequestUncheckedUpdateManyWithoutHospitalNestedInput = {
+    create?: XOR<HospitalRequestCreateWithoutHospitalInput, HospitalRequestUncheckedCreateWithoutHospitalInput> | HospitalRequestCreateWithoutHospitalInput[] | HospitalRequestUncheckedCreateWithoutHospitalInput[]
+    connectOrCreate?: HospitalRequestCreateOrConnectWithoutHospitalInput | HospitalRequestCreateOrConnectWithoutHospitalInput[]
+    upsert?: HospitalRequestUpsertWithWhereUniqueWithoutHospitalInput | HospitalRequestUpsertWithWhereUniqueWithoutHospitalInput[]
+    createMany?: HospitalRequestCreateManyHospitalInputEnvelope
+    set?: HospitalRequestWhereUniqueInput | HospitalRequestWhereUniqueInput[]
+    disconnect?: HospitalRequestWhereUniqueInput | HospitalRequestWhereUniqueInput[]
+    delete?: HospitalRequestWhereUniqueInput | HospitalRequestWhereUniqueInput[]
+    connect?: HospitalRequestWhereUniqueInput | HospitalRequestWhereUniqueInput[]
+    update?: HospitalRequestUpdateWithWhereUniqueWithoutHospitalInput | HospitalRequestUpdateWithWhereUniqueWithoutHospitalInput[]
+    updateMany?: HospitalRequestUpdateManyWithWhereWithoutHospitalInput | HospitalRequestUpdateManyWithWhereWithoutHospitalInput[]
+    deleteMany?: HospitalRequestScalarWhereInput | HospitalRequestScalarWhereInput[]
+  }
+
+  export type UserPreferenceUncheckedUpdateManyWithoutHospitalNestedInput = {
+    create?: XOR<UserPreferenceCreateWithoutHospitalInput, UserPreferenceUncheckedCreateWithoutHospitalInput> | UserPreferenceCreateWithoutHospitalInput[] | UserPreferenceUncheckedCreateWithoutHospitalInput[]
+    connectOrCreate?: UserPreferenceCreateOrConnectWithoutHospitalInput | UserPreferenceCreateOrConnectWithoutHospitalInput[]
+    upsert?: UserPreferenceUpsertWithWhereUniqueWithoutHospitalInput | UserPreferenceUpsertWithWhereUniqueWithoutHospitalInput[]
+    createMany?: UserPreferenceCreateManyHospitalInputEnvelope
+    set?: UserPreferenceWhereUniqueInput | UserPreferenceWhereUniqueInput[]
+    disconnect?: UserPreferenceWhereUniqueInput | UserPreferenceWhereUniqueInput[]
+    delete?: UserPreferenceWhereUniqueInput | UserPreferenceWhereUniqueInput[]
+    connect?: UserPreferenceWhereUniqueInput | UserPreferenceWhereUniqueInput[]
+    update?: UserPreferenceUpdateWithWhereUniqueWithoutHospitalInput | UserPreferenceUpdateWithWhereUniqueWithoutHospitalInput[]
+    updateMany?: UserPreferenceUpdateManyWithWhereWithoutHospitalInput | UserPreferenceUpdateManyWithWhereWithoutHospitalInput[]
+    deleteMany?: UserPreferenceScalarWhereInput | UserPreferenceScalarWhereInput[]
+  }
+
+  export type TreatmentPreferenceUncheckedUpdateManyWithoutHospitalNestedInput = {
+    create?: XOR<TreatmentPreferenceCreateWithoutHospitalInput, TreatmentPreferenceUncheckedCreateWithoutHospitalInput> | TreatmentPreferenceCreateWithoutHospitalInput[] | TreatmentPreferenceUncheckedCreateWithoutHospitalInput[]
+    connectOrCreate?: TreatmentPreferenceCreateOrConnectWithoutHospitalInput | TreatmentPreferenceCreateOrConnectWithoutHospitalInput[]
+    upsert?: TreatmentPreferenceUpsertWithWhereUniqueWithoutHospitalInput | TreatmentPreferenceUpsertWithWhereUniqueWithoutHospitalInput[]
+    createMany?: TreatmentPreferenceCreateManyHospitalInputEnvelope
+    set?: TreatmentPreferenceWhereUniqueInput | TreatmentPreferenceWhereUniqueInput[]
+    disconnect?: TreatmentPreferenceWhereUniqueInput | TreatmentPreferenceWhereUniqueInput[]
+    delete?: TreatmentPreferenceWhereUniqueInput | TreatmentPreferenceWhereUniqueInput[]
+    connect?: TreatmentPreferenceWhereUniqueInput | TreatmentPreferenceWhereUniqueInput[]
+    update?: TreatmentPreferenceUpdateWithWhereUniqueWithoutHospitalInput | TreatmentPreferenceUpdateWithWhereUniqueWithoutHospitalInput[]
+    updateMany?: TreatmentPreferenceUpdateManyWithWhereWithoutHospitalInput | TreatmentPreferenceUpdateManyWithWhereWithoutHospitalInput[]
+    deleteMany?: TreatmentPreferenceScalarWhereInput | TreatmentPreferenceScalarWhereInput[]
+  }
+
   export type HospitalCreateNestedOneWithoutBookingsInput = {
     create?: XOR<HospitalCreateWithoutBookingsInput, HospitalUncheckedCreateWithoutBookingsInput>
     connectOrCreate?: HospitalCreateOrConnectWithoutBookingsInput
@@ -12227,6 +17468,18 @@ export namespace Prisma {
     create?: XOR<UserCreateWithoutBookingsInput, UserUncheckedCreateWithoutBookingsInput>
     connectOrCreate?: UserCreateOrConnectWithoutBookingsInput
     connect?: UserWhereUniqueInput
+  }
+
+  export type HospitalRequestCreateNestedOneWithoutBookingInput = {
+    create?: XOR<HospitalRequestCreateWithoutBookingInput, HospitalRequestUncheckedCreateWithoutBookingInput>
+    connectOrCreate?: HospitalRequestCreateOrConnectWithoutBookingInput
+    connect?: HospitalRequestWhereUniqueInput
+  }
+
+  export type HospitalRequestUncheckedCreateNestedOneWithoutBookingInput = {
+    create?: XOR<HospitalRequestCreateWithoutBookingInput, HospitalRequestUncheckedCreateWithoutBookingInput>
+    connectOrCreate?: HospitalRequestCreateOrConnectWithoutBookingInput
+    connect?: HospitalRequestWhereUniqueInput
   }
 
   export type HospitalUpdateOneRequiredWithoutBookingsNestedInput = {
@@ -12243,6 +17496,124 @@ export namespace Prisma {
     upsert?: UserUpsertWithoutBookingsInput
     connect?: UserWhereUniqueInput
     update?: XOR<XOR<UserUpdateToOneWithWhereWithoutBookingsInput, UserUpdateWithoutBookingsInput>, UserUncheckedUpdateWithoutBookingsInput>
+  }
+
+  export type HospitalRequestUpdateOneWithoutBookingNestedInput = {
+    create?: XOR<HospitalRequestCreateWithoutBookingInput, HospitalRequestUncheckedCreateWithoutBookingInput>
+    connectOrCreate?: HospitalRequestCreateOrConnectWithoutBookingInput
+    upsert?: HospitalRequestUpsertWithoutBookingInput
+    disconnect?: HospitalRequestWhereInput | boolean
+    delete?: HospitalRequestWhereInput | boolean
+    connect?: HospitalRequestWhereUniqueInput
+    update?: XOR<XOR<HospitalRequestUpdateToOneWithWhereWithoutBookingInput, HospitalRequestUpdateWithoutBookingInput>, HospitalRequestUncheckedUpdateWithoutBookingInput>
+  }
+
+  export type HospitalRequestUncheckedUpdateOneWithoutBookingNestedInput = {
+    create?: XOR<HospitalRequestCreateWithoutBookingInput, HospitalRequestUncheckedCreateWithoutBookingInput>
+    connectOrCreate?: HospitalRequestCreateOrConnectWithoutBookingInput
+    upsert?: HospitalRequestUpsertWithoutBookingInput
+    disconnect?: HospitalRequestWhereInput | boolean
+    delete?: HospitalRequestWhereInput | boolean
+    connect?: HospitalRequestWhereUniqueInput
+    update?: XOR<XOR<HospitalRequestUpdateToOneWithWhereWithoutBookingInput, HospitalRequestUpdateWithoutBookingInput>, HospitalRequestUncheckedUpdateWithoutBookingInput>
+  }
+
+  export type HospitalCreateNestedOneWithoutRequestsInput = {
+    create?: XOR<HospitalCreateWithoutRequestsInput, HospitalUncheckedCreateWithoutRequestsInput>
+    connectOrCreate?: HospitalCreateOrConnectWithoutRequestsInput
+    connect?: HospitalWhereUniqueInput
+  }
+
+  export type UserCreateNestedOneWithoutRequestsInput = {
+    create?: XOR<UserCreateWithoutRequestsInput, UserUncheckedCreateWithoutRequestsInput>
+    connectOrCreate?: UserCreateOrConnectWithoutRequestsInput
+    connect?: UserWhereUniqueInput
+  }
+
+  export type BookingCreateNestedOneWithoutRequestInput = {
+    create?: XOR<BookingCreateWithoutRequestInput, BookingUncheckedCreateWithoutRequestInput>
+    connectOrCreate?: BookingCreateOrConnectWithoutRequestInput
+    connect?: BookingWhereUniqueInput
+  }
+
+  export type EnumRequestTypeFieldUpdateOperationsInput = {
+    set?: $Enums.RequestType
+  }
+
+  export type EnumRequestStatusFieldUpdateOperationsInput = {
+    set?: $Enums.RequestStatus
+  }
+
+  export type NullableDateTimeFieldUpdateOperationsInput = {
+    set?: Date | string | null
+  }
+
+  export type HospitalUpdateOneRequiredWithoutRequestsNestedInput = {
+    create?: XOR<HospitalCreateWithoutRequestsInput, HospitalUncheckedCreateWithoutRequestsInput>
+    connectOrCreate?: HospitalCreateOrConnectWithoutRequestsInput
+    upsert?: HospitalUpsertWithoutRequestsInput
+    connect?: HospitalWhereUniqueInput
+    update?: XOR<XOR<HospitalUpdateToOneWithWhereWithoutRequestsInput, HospitalUpdateWithoutRequestsInput>, HospitalUncheckedUpdateWithoutRequestsInput>
+  }
+
+  export type UserUpdateOneRequiredWithoutRequestsNestedInput = {
+    create?: XOR<UserCreateWithoutRequestsInput, UserUncheckedCreateWithoutRequestsInput>
+    connectOrCreate?: UserCreateOrConnectWithoutRequestsInput
+    upsert?: UserUpsertWithoutRequestsInput
+    connect?: UserWhereUniqueInput
+    update?: XOR<XOR<UserUpdateToOneWithWhereWithoutRequestsInput, UserUpdateWithoutRequestsInput>, UserUncheckedUpdateWithoutRequestsInput>
+  }
+
+  export type BookingUpdateOneWithoutRequestNestedInput = {
+    create?: XOR<BookingCreateWithoutRequestInput, BookingUncheckedCreateWithoutRequestInput>
+    connectOrCreate?: BookingCreateOrConnectWithoutRequestInput
+    upsert?: BookingUpsertWithoutRequestInput
+    disconnect?: BookingWhereInput | boolean
+    delete?: BookingWhereInput | boolean
+    connect?: BookingWhereUniqueInput
+    update?: XOR<XOR<BookingUpdateToOneWithWhereWithoutRequestInput, BookingUpdateWithoutRequestInput>, BookingUncheckedUpdateWithoutRequestInput>
+  }
+
+  export type UserCreateNestedOneWithoutPreferredHospitalsInput = {
+    create?: XOR<UserCreateWithoutPreferredHospitalsInput, UserUncheckedCreateWithoutPreferredHospitalsInput>
+    connectOrCreate?: UserCreateOrConnectWithoutPreferredHospitalsInput
+    connect?: UserWhereUniqueInput
+  }
+
+  export type HospitalCreateNestedOneWithoutPreferredUsersInput = {
+    create?: XOR<HospitalCreateWithoutPreferredUsersInput, HospitalUncheckedCreateWithoutPreferredUsersInput>
+    connectOrCreate?: HospitalCreateOrConnectWithoutPreferredUsersInput
+    connect?: HospitalWhereUniqueInput
+  }
+
+  export type UserUpdateOneRequiredWithoutPreferredHospitalsNestedInput = {
+    create?: XOR<UserCreateWithoutPreferredHospitalsInput, UserUncheckedCreateWithoutPreferredHospitalsInput>
+    connectOrCreate?: UserCreateOrConnectWithoutPreferredHospitalsInput
+    upsert?: UserUpsertWithoutPreferredHospitalsInput
+    connect?: UserWhereUniqueInput
+    update?: XOR<XOR<UserUpdateToOneWithWhereWithoutPreferredHospitalsInput, UserUpdateWithoutPreferredHospitalsInput>, UserUncheckedUpdateWithoutPreferredHospitalsInput>
+  }
+
+  export type HospitalUpdateOneRequiredWithoutPreferredUsersNestedInput = {
+    create?: XOR<HospitalCreateWithoutPreferredUsersInput, HospitalUncheckedCreateWithoutPreferredUsersInput>
+    connectOrCreate?: HospitalCreateOrConnectWithoutPreferredUsersInput
+    upsert?: HospitalUpsertWithoutPreferredUsersInput
+    connect?: HospitalWhereUniqueInput
+    update?: XOR<XOR<HospitalUpdateToOneWithWhereWithoutPreferredUsersInput, HospitalUpdateWithoutPreferredUsersInput>, HospitalUncheckedUpdateWithoutPreferredUsersInput>
+  }
+
+  export type HospitalCreateNestedOneWithoutPreferredTreatmentsInput = {
+    create?: XOR<HospitalCreateWithoutPreferredTreatmentsInput, HospitalUncheckedCreateWithoutPreferredTreatmentsInput>
+    connectOrCreate?: HospitalCreateOrConnectWithoutPreferredTreatmentsInput
+    connect?: HospitalWhereUniqueInput
+  }
+
+  export type HospitalUpdateOneRequiredWithoutPreferredTreatmentsNestedInput = {
+    create?: XOR<HospitalCreateWithoutPreferredTreatmentsInput, HospitalUncheckedCreateWithoutPreferredTreatmentsInput>
+    connectOrCreate?: HospitalCreateOrConnectWithoutPreferredTreatmentsInput
+    upsert?: HospitalUpsertWithoutPreferredTreatmentsInput
+    connect?: HospitalWhereUniqueInput
+    update?: XOR<XOR<HospitalUpdateToOneWithWhereWithoutPreferredTreatmentsInput, HospitalUpdateWithoutPreferredTreatmentsInput>, HospitalUncheckedUpdateWithoutPreferredTreatmentsInput>
   }
 
   export type NestedStringFilter<$PrismaModel = never> = {
@@ -12388,6 +17759,13 @@ export namespace Prisma {
     not?: NestedEnumUserTypeFilter<$PrismaModel> | $Enums.UserType
   }
 
+  export type NestedEnumAuthProviderFilter<$PrismaModel = never> = {
+    equals?: $Enums.AuthProvider | EnumAuthProviderFieldRefInput<$PrismaModel>
+    in?: $Enums.AuthProvider[] | ListEnumAuthProviderFieldRefInput<$PrismaModel>
+    notIn?: $Enums.AuthProvider[] | ListEnumAuthProviderFieldRefInput<$PrismaModel>
+    not?: NestedEnumAuthProviderFilter<$PrismaModel> | $Enums.AuthProvider
+  }
+
   export type NestedEnumUserTypeWithAggregatesFilter<$PrismaModel = never> = {
     equals?: $Enums.UserType | EnumUserTypeFieldRefInput<$PrismaModel>
     in?: $Enums.UserType[] | ListEnumUserTypeFieldRefInput<$PrismaModel>
@@ -12396,6 +17774,16 @@ export namespace Prisma {
     _count?: NestedIntFilter<$PrismaModel>
     _min?: NestedEnumUserTypeFilter<$PrismaModel>
     _max?: NestedEnumUserTypeFilter<$PrismaModel>
+  }
+
+  export type NestedEnumAuthProviderWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: $Enums.AuthProvider | EnumAuthProviderFieldRefInput<$PrismaModel>
+    in?: $Enums.AuthProvider[] | ListEnumAuthProviderFieldRefInput<$PrismaModel>
+    notIn?: $Enums.AuthProvider[] | ListEnumAuthProviderFieldRefInput<$PrismaModel>
+    not?: NestedEnumAuthProviderWithAggregatesFilter<$PrismaModel> | $Enums.AuthProvider
+    _count?: NestedIntFilter<$PrismaModel>
+    _min?: NestedEnumAuthProviderFilter<$PrismaModel>
+    _max?: NestedEnumAuthProviderFilter<$PrismaModel>
   }
 
   export type NestedBoolFilter<$PrismaModel = never> = {
@@ -12427,36 +17815,103 @@ export namespace Prisma {
     _max?: NestedBoolFilter<$PrismaModel>
   }
 
+  export type NestedEnumRequestTypeFilter<$PrismaModel = never> = {
+    equals?: $Enums.RequestType | EnumRequestTypeFieldRefInput<$PrismaModel>
+    in?: $Enums.RequestType[] | ListEnumRequestTypeFieldRefInput<$PrismaModel>
+    notIn?: $Enums.RequestType[] | ListEnumRequestTypeFieldRefInput<$PrismaModel>
+    not?: NestedEnumRequestTypeFilter<$PrismaModel> | $Enums.RequestType
+  }
+
+  export type NestedEnumRequestStatusFilter<$PrismaModel = never> = {
+    equals?: $Enums.RequestStatus | EnumRequestStatusFieldRefInput<$PrismaModel>
+    in?: $Enums.RequestStatus[] | ListEnumRequestStatusFieldRefInput<$PrismaModel>
+    notIn?: $Enums.RequestStatus[] | ListEnumRequestStatusFieldRefInput<$PrismaModel>
+    not?: NestedEnumRequestStatusFilter<$PrismaModel> | $Enums.RequestStatus
+  }
+
+  export type NestedDateTimeNullableFilter<$PrismaModel = never> = {
+    equals?: Date | string | DateTimeFieldRefInput<$PrismaModel> | null
+    in?: Date[] | string[] | ListDateTimeFieldRefInput<$PrismaModel> | null
+    notIn?: Date[] | string[] | ListDateTimeFieldRefInput<$PrismaModel> | null
+    lt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    lte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    gt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    gte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    not?: NestedDateTimeNullableFilter<$PrismaModel> | Date | string | null
+  }
+
+  export type NestedEnumRequestTypeWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: $Enums.RequestType | EnumRequestTypeFieldRefInput<$PrismaModel>
+    in?: $Enums.RequestType[] | ListEnumRequestTypeFieldRefInput<$PrismaModel>
+    notIn?: $Enums.RequestType[] | ListEnumRequestTypeFieldRefInput<$PrismaModel>
+    not?: NestedEnumRequestTypeWithAggregatesFilter<$PrismaModel> | $Enums.RequestType
+    _count?: NestedIntFilter<$PrismaModel>
+    _min?: NestedEnumRequestTypeFilter<$PrismaModel>
+    _max?: NestedEnumRequestTypeFilter<$PrismaModel>
+  }
+
+  export type NestedEnumRequestStatusWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: $Enums.RequestStatus | EnumRequestStatusFieldRefInput<$PrismaModel>
+    in?: $Enums.RequestStatus[] | ListEnumRequestStatusFieldRefInput<$PrismaModel>
+    notIn?: $Enums.RequestStatus[] | ListEnumRequestStatusFieldRefInput<$PrismaModel>
+    not?: NestedEnumRequestStatusWithAggregatesFilter<$PrismaModel> | $Enums.RequestStatus
+    _count?: NestedIntFilter<$PrismaModel>
+    _min?: NestedEnumRequestStatusFilter<$PrismaModel>
+    _max?: NestedEnumRequestStatusFilter<$PrismaModel>
+  }
+
+  export type NestedDateTimeNullableWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: Date | string | DateTimeFieldRefInput<$PrismaModel> | null
+    in?: Date[] | string[] | ListDateTimeFieldRefInput<$PrismaModel> | null
+    notIn?: Date[] | string[] | ListDateTimeFieldRefInput<$PrismaModel> | null
+    lt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    lte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    gt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    gte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    not?: NestedDateTimeNullableWithAggregatesFilter<$PrismaModel> | Date | string | null
+    _count?: NestedIntNullableFilter<$PrismaModel>
+    _min?: NestedDateTimeNullableFilter<$PrismaModel>
+    _max?: NestedDateTimeNullableFilter<$PrismaModel>
+  }
+
   export type UserCreateWithoutHospitalInput = {
     id?: string
     fullname: string
     email: string
-    password: string
+    password?: string | null
     witnesshash: string
     phone: string
     address: string
     about?: string | null
     userType?: $Enums.UserType
+    authProvider?: $Enums.AuthProvider
+    providerId?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
     registeredHospital?: HospitalCreateNestedOneWithoutOwnerInput
     bookings?: BookingCreateNestedManyWithoutUserInput
+    requests?: HospitalRequestCreateNestedManyWithoutUserInput
+    preferredHospitals?: UserPreferenceCreateNestedManyWithoutUserInput
   }
 
   export type UserUncheckedCreateWithoutHospitalInput = {
     id?: string
     fullname: string
     email: string
-    password: string
+    password?: string | null
     witnesshash: string
     phone: string
     address: string
     about?: string | null
     userType?: $Enums.UserType
+    authProvider?: $Enums.AuthProvider
+    providerId?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
     registeredHospital?: HospitalUncheckedCreateNestedOneWithoutOwnerInput
     bookings?: BookingUncheckedCreateNestedManyWithoutUserInput
+    requests?: HospitalRequestUncheckedCreateNestedManyWithoutUserInput
+    preferredHospitals?: UserPreferenceUncheckedCreateNestedManyWithoutUserInput
   }
 
   export type UserCreateOrConnectWithoutHospitalInput = {
@@ -12492,12 +17947,14 @@ export namespace Prisma {
     id?: StringFilter<"User"> | string
     fullname?: StringFilter<"User"> | string
     email?: StringFilter<"User"> | string
-    password?: StringFilter<"User"> | string
+    password?: StringNullableFilter<"User"> | string | null
     witnesshash?: StringFilter<"User"> | string
     phone?: StringFilter<"User"> | string
     address?: StringFilter<"User"> | string
     about?: StringNullableFilter<"User"> | string | null
     userType?: EnumUserTypeFilter<"User"> | $Enums.UserType
+    authProvider?: EnumAuthProviderFilter<"User"> | $Enums.AuthProvider
+    providerId?: StringNullableFilter<"User"> | string | null
     hospitalId?: StringNullableFilter<"User"> | string | null
     createdAt?: DateTimeFilter<"User"> | Date | string
     updatedAt?: DateTimeFilter<"User"> | Date | string
@@ -12551,9 +18008,16 @@ export namespace Prisma {
     reviews?: number
     verified?: boolean
     walletAddress: string
+    totalRequests?: number
+    totalDonors?: number
+    totalCustomers?: number
+    totalTreatments?: number
     createdAt?: Date | string
     updatedAt?: Date | string
     bookings?: BookingCreateNestedManyWithoutHospitalInput
+    requests?: HospitalRequestCreateNestedManyWithoutHospitalInput
+    preferredUsers?: UserPreferenceCreateNestedManyWithoutHospitalInput
+    preferredTreatments?: TreatmentPreferenceCreateNestedManyWithoutHospitalInput
   }
 
   export type HospitalUncheckedCreateWithoutOwnerInput = {
@@ -12567,9 +18031,16 @@ export namespace Prisma {
     reviews?: number
     verified?: boolean
     walletAddress: string
+    totalRequests?: number
+    totalDonors?: number
+    totalCustomers?: number
+    totalTreatments?: number
     createdAt?: Date | string
     updatedAt?: Date | string
     bookings?: BookingUncheckedCreateNestedManyWithoutHospitalInput
+    requests?: HospitalRequestUncheckedCreateNestedManyWithoutHospitalInput
+    preferredUsers?: UserPreferenceUncheckedCreateNestedManyWithoutHospitalInput
+    preferredTreatments?: TreatmentPreferenceUncheckedCreateNestedManyWithoutHospitalInput
   }
 
   export type HospitalCreateOrConnectWithoutOwnerInput = {
@@ -12587,6 +18058,7 @@ export namespace Prisma {
     createdAt?: Date | string
     updatedAt?: Date | string
     hospital: HospitalCreateNestedOneWithoutBookingsInput
+    request?: HospitalRequestCreateNestedOneWithoutBookingInput
   }
 
   export type BookingUncheckedCreateWithoutUserInput = {
@@ -12599,6 +18071,7 @@ export namespace Prisma {
     status?: string
     createdAt?: Date | string
     updatedAt?: Date | string
+    request?: HospitalRequestUncheckedCreateNestedOneWithoutBookingInput
   }
 
   export type BookingCreateOrConnectWithoutUserInput = {
@@ -12608,6 +18081,78 @@ export namespace Prisma {
 
   export type BookingCreateManyUserInputEnvelope = {
     data: BookingCreateManyUserInput | BookingCreateManyUserInput[]
+    skipDuplicates?: boolean
+  }
+
+  export type HospitalRequestCreateWithoutUserInput = {
+    id?: string
+    requestType: $Enums.RequestType
+    status?: $Enums.RequestStatus
+    title: string
+    description?: string | null
+    treatmentId?: string | null
+    priority?: string
+    requestedDate?: Date | string | null
+    completedDate?: Date | string | null
+    notes?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    hospital: HospitalCreateNestedOneWithoutRequestsInput
+    booking?: BookingCreateNestedOneWithoutRequestInput
+  }
+
+  export type HospitalRequestUncheckedCreateWithoutUserInput = {
+    id?: string
+    hospitalId: string
+    requestType: $Enums.RequestType
+    status?: $Enums.RequestStatus
+    title: string
+    description?: string | null
+    bookingId?: string | null
+    treatmentId?: string | null
+    priority?: string
+    requestedDate?: Date | string | null
+    completedDate?: Date | string | null
+    notes?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type HospitalRequestCreateOrConnectWithoutUserInput = {
+    where: HospitalRequestWhereUniqueInput
+    create: XOR<HospitalRequestCreateWithoutUserInput, HospitalRequestUncheckedCreateWithoutUserInput>
+  }
+
+  export type HospitalRequestCreateManyUserInputEnvelope = {
+    data: HospitalRequestCreateManyUserInput | HospitalRequestCreateManyUserInput[]
+    skipDuplicates?: boolean
+  }
+
+  export type UserPreferenceCreateWithoutUserInput = {
+    id?: string
+    preferenceType?: string
+    notes?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    hospital: HospitalCreateNestedOneWithoutPreferredUsersInput
+  }
+
+  export type UserPreferenceUncheckedCreateWithoutUserInput = {
+    id?: string
+    hospitalId: string
+    preferenceType?: string
+    notes?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type UserPreferenceCreateOrConnectWithoutUserInput = {
+    where: UserPreferenceWhereUniqueInput
+    create: XOR<UserPreferenceCreateWithoutUserInput, UserPreferenceUncheckedCreateWithoutUserInput>
+  }
+
+  export type UserPreferenceCreateManyUserInputEnvelope = {
+    data: UserPreferenceCreateManyUserInput | UserPreferenceCreateManyUserInput[]
     skipDuplicates?: boolean
   }
 
@@ -12676,9 +18221,16 @@ export namespace Prisma {
     reviews?: IntFieldUpdateOperationsInput | number
     verified?: BoolFieldUpdateOperationsInput | boolean
     walletAddress?: StringFieldUpdateOperationsInput | string
+    totalRequests?: IntFieldUpdateOperationsInput | number
+    totalDonors?: IntFieldUpdateOperationsInput | number
+    totalCustomers?: IntFieldUpdateOperationsInput | number
+    totalTreatments?: IntFieldUpdateOperationsInput | number
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     bookings?: BookingUpdateManyWithoutHospitalNestedInput
+    requests?: HospitalRequestUpdateManyWithoutHospitalNestedInput
+    preferredUsers?: UserPreferenceUpdateManyWithoutHospitalNestedInput
+    preferredTreatments?: TreatmentPreferenceUpdateManyWithoutHospitalNestedInput
   }
 
   export type HospitalUncheckedUpdateWithoutOwnerInput = {
@@ -12692,9 +18244,16 @@ export namespace Prisma {
     reviews?: IntFieldUpdateOperationsInput | number
     verified?: BoolFieldUpdateOperationsInput | boolean
     walletAddress?: StringFieldUpdateOperationsInput | string
+    totalRequests?: IntFieldUpdateOperationsInput | number
+    totalDonors?: IntFieldUpdateOperationsInput | number
+    totalCustomers?: IntFieldUpdateOperationsInput | number
+    totalTreatments?: IntFieldUpdateOperationsInput | number
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     bookings?: BookingUncheckedUpdateManyWithoutHospitalNestedInput
+    requests?: HospitalRequestUncheckedUpdateManyWithoutHospitalNestedInput
+    preferredUsers?: UserPreferenceUncheckedUpdateManyWithoutHospitalNestedInput
+    preferredTreatments?: TreatmentPreferenceUncheckedUpdateManyWithoutHospitalNestedInput
   }
 
   export type BookingUpsertWithWhereUniqueWithoutUserInput = {
@@ -12729,36 +18288,110 @@ export namespace Prisma {
     updatedAt?: DateTimeFilter<"Booking"> | Date | string
   }
 
+  export type HospitalRequestUpsertWithWhereUniqueWithoutUserInput = {
+    where: HospitalRequestWhereUniqueInput
+    update: XOR<HospitalRequestUpdateWithoutUserInput, HospitalRequestUncheckedUpdateWithoutUserInput>
+    create: XOR<HospitalRequestCreateWithoutUserInput, HospitalRequestUncheckedCreateWithoutUserInput>
+  }
+
+  export type HospitalRequestUpdateWithWhereUniqueWithoutUserInput = {
+    where: HospitalRequestWhereUniqueInput
+    data: XOR<HospitalRequestUpdateWithoutUserInput, HospitalRequestUncheckedUpdateWithoutUserInput>
+  }
+
+  export type HospitalRequestUpdateManyWithWhereWithoutUserInput = {
+    where: HospitalRequestScalarWhereInput
+    data: XOR<HospitalRequestUpdateManyMutationInput, HospitalRequestUncheckedUpdateManyWithoutUserInput>
+  }
+
+  export type HospitalRequestScalarWhereInput = {
+    AND?: HospitalRequestScalarWhereInput | HospitalRequestScalarWhereInput[]
+    OR?: HospitalRequestScalarWhereInput[]
+    NOT?: HospitalRequestScalarWhereInput | HospitalRequestScalarWhereInput[]
+    id?: StringFilter<"HospitalRequest"> | string
+    hospitalId?: StringFilter<"HospitalRequest"> | string
+    userId?: StringFilter<"HospitalRequest"> | string
+    requestType?: EnumRequestTypeFilter<"HospitalRequest"> | $Enums.RequestType
+    status?: EnumRequestStatusFilter<"HospitalRequest"> | $Enums.RequestStatus
+    title?: StringFilter<"HospitalRequest"> | string
+    description?: StringNullableFilter<"HospitalRequest"> | string | null
+    bookingId?: StringNullableFilter<"HospitalRequest"> | string | null
+    treatmentId?: StringNullableFilter<"HospitalRequest"> | string | null
+    priority?: StringFilter<"HospitalRequest"> | string
+    requestedDate?: DateTimeNullableFilter<"HospitalRequest"> | Date | string | null
+    completedDate?: DateTimeNullableFilter<"HospitalRequest"> | Date | string | null
+    notes?: StringNullableFilter<"HospitalRequest"> | string | null
+    createdAt?: DateTimeFilter<"HospitalRequest"> | Date | string
+    updatedAt?: DateTimeFilter<"HospitalRequest"> | Date | string
+  }
+
+  export type UserPreferenceUpsertWithWhereUniqueWithoutUserInput = {
+    where: UserPreferenceWhereUniqueInput
+    update: XOR<UserPreferenceUpdateWithoutUserInput, UserPreferenceUncheckedUpdateWithoutUserInput>
+    create: XOR<UserPreferenceCreateWithoutUserInput, UserPreferenceUncheckedCreateWithoutUserInput>
+  }
+
+  export type UserPreferenceUpdateWithWhereUniqueWithoutUserInput = {
+    where: UserPreferenceWhereUniqueInput
+    data: XOR<UserPreferenceUpdateWithoutUserInput, UserPreferenceUncheckedUpdateWithoutUserInput>
+  }
+
+  export type UserPreferenceUpdateManyWithWhereWithoutUserInput = {
+    where: UserPreferenceScalarWhereInput
+    data: XOR<UserPreferenceUpdateManyMutationInput, UserPreferenceUncheckedUpdateManyWithoutUserInput>
+  }
+
+  export type UserPreferenceScalarWhereInput = {
+    AND?: UserPreferenceScalarWhereInput | UserPreferenceScalarWhereInput[]
+    OR?: UserPreferenceScalarWhereInput[]
+    NOT?: UserPreferenceScalarWhereInput | UserPreferenceScalarWhereInput[]
+    id?: StringFilter<"UserPreference"> | string
+    userId?: StringFilter<"UserPreference"> | string
+    hospitalId?: StringFilter<"UserPreference"> | string
+    preferenceType?: StringFilter<"UserPreference"> | string
+    notes?: StringNullableFilter<"UserPreference"> | string | null
+    createdAt?: DateTimeFilter<"UserPreference"> | Date | string
+    updatedAt?: DateTimeFilter<"UserPreference"> | Date | string
+  }
+
   export type UserCreateWithoutRegisteredHospitalInput = {
     id?: string
     fullname: string
     email: string
-    password: string
+    password?: string | null
     witnesshash: string
     phone: string
     address: string
     about?: string | null
     userType?: $Enums.UserType
+    authProvider?: $Enums.AuthProvider
+    providerId?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
     hospital?: HospitalInformationCreateNestedOneWithoutUsersInput
     bookings?: BookingCreateNestedManyWithoutUserInput
+    requests?: HospitalRequestCreateNestedManyWithoutUserInput
+    preferredHospitals?: UserPreferenceCreateNestedManyWithoutUserInput
   }
 
   export type UserUncheckedCreateWithoutRegisteredHospitalInput = {
     id?: string
     fullname: string
     email: string
-    password: string
+    password?: string | null
     witnesshash: string
     phone: string
     address: string
     about?: string | null
     userType?: $Enums.UserType
+    authProvider?: $Enums.AuthProvider
+    providerId?: string | null
     hospitalId?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
     bookings?: BookingUncheckedCreateNestedManyWithoutUserInput
+    requests?: HospitalRequestUncheckedCreateNestedManyWithoutUserInput
+    preferredHospitals?: UserPreferenceUncheckedCreateNestedManyWithoutUserInput
   }
 
   export type UserCreateOrConnectWithoutRegisteredHospitalInput = {
@@ -12776,6 +18409,7 @@ export namespace Prisma {
     createdAt?: Date | string
     updatedAt?: Date | string
     user: UserCreateNestedOneWithoutBookingsInput
+    request?: HospitalRequestCreateNestedOneWithoutBookingInput
   }
 
   export type BookingUncheckedCreateWithoutHospitalInput = {
@@ -12788,6 +18422,7 @@ export namespace Prisma {
     status?: string
     createdAt?: Date | string
     updatedAt?: Date | string
+    request?: HospitalRequestUncheckedCreateNestedOneWithoutBookingInput
   }
 
   export type BookingCreateOrConnectWithoutHospitalInput = {
@@ -12797,6 +18432,108 @@ export namespace Prisma {
 
   export type BookingCreateManyHospitalInputEnvelope = {
     data: BookingCreateManyHospitalInput | BookingCreateManyHospitalInput[]
+    skipDuplicates?: boolean
+  }
+
+  export type HospitalRequestCreateWithoutHospitalInput = {
+    id?: string
+    requestType: $Enums.RequestType
+    status?: $Enums.RequestStatus
+    title: string
+    description?: string | null
+    treatmentId?: string | null
+    priority?: string
+    requestedDate?: Date | string | null
+    completedDate?: Date | string | null
+    notes?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    user: UserCreateNestedOneWithoutRequestsInput
+    booking?: BookingCreateNestedOneWithoutRequestInput
+  }
+
+  export type HospitalRequestUncheckedCreateWithoutHospitalInput = {
+    id?: string
+    userId: string
+    requestType: $Enums.RequestType
+    status?: $Enums.RequestStatus
+    title: string
+    description?: string | null
+    bookingId?: string | null
+    treatmentId?: string | null
+    priority?: string
+    requestedDate?: Date | string | null
+    completedDate?: Date | string | null
+    notes?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type HospitalRequestCreateOrConnectWithoutHospitalInput = {
+    where: HospitalRequestWhereUniqueInput
+    create: XOR<HospitalRequestCreateWithoutHospitalInput, HospitalRequestUncheckedCreateWithoutHospitalInput>
+  }
+
+  export type HospitalRequestCreateManyHospitalInputEnvelope = {
+    data: HospitalRequestCreateManyHospitalInput | HospitalRequestCreateManyHospitalInput[]
+    skipDuplicates?: boolean
+  }
+
+  export type UserPreferenceCreateWithoutHospitalInput = {
+    id?: string
+    preferenceType?: string
+    notes?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    user: UserCreateNestedOneWithoutPreferredHospitalsInput
+  }
+
+  export type UserPreferenceUncheckedCreateWithoutHospitalInput = {
+    id?: string
+    userId: string
+    preferenceType?: string
+    notes?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type UserPreferenceCreateOrConnectWithoutHospitalInput = {
+    where: UserPreferenceWhereUniqueInput
+    create: XOR<UserPreferenceCreateWithoutHospitalInput, UserPreferenceUncheckedCreateWithoutHospitalInput>
+  }
+
+  export type UserPreferenceCreateManyHospitalInputEnvelope = {
+    data: UserPreferenceCreateManyHospitalInput | UserPreferenceCreateManyHospitalInput[]
+    skipDuplicates?: boolean
+  }
+
+  export type TreatmentPreferenceCreateWithoutHospitalInput = {
+    id?: string
+    treatmentId: string
+    treatmentName: string
+    preferenceType?: string
+    notes?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type TreatmentPreferenceUncheckedCreateWithoutHospitalInput = {
+    id?: string
+    treatmentId: string
+    treatmentName: string
+    preferenceType?: string
+    notes?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type TreatmentPreferenceCreateOrConnectWithoutHospitalInput = {
+    where: TreatmentPreferenceWhereUniqueInput
+    create: XOR<TreatmentPreferenceCreateWithoutHospitalInput, TreatmentPreferenceUncheckedCreateWithoutHospitalInput>
+  }
+
+  export type TreatmentPreferenceCreateManyHospitalInputEnvelope = {
+    data: TreatmentPreferenceCreateManyHospitalInput | TreatmentPreferenceCreateManyHospitalInput[]
     skipDuplicates?: boolean
   }
 
@@ -12815,32 +18552,40 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     fullname?: StringFieldUpdateOperationsInput | string
     email?: StringFieldUpdateOperationsInput | string
-    password?: StringFieldUpdateOperationsInput | string
+    password?: NullableStringFieldUpdateOperationsInput | string | null
     witnesshash?: StringFieldUpdateOperationsInput | string
     phone?: StringFieldUpdateOperationsInput | string
     address?: StringFieldUpdateOperationsInput | string
     about?: NullableStringFieldUpdateOperationsInput | string | null
     userType?: EnumUserTypeFieldUpdateOperationsInput | $Enums.UserType
+    authProvider?: EnumAuthProviderFieldUpdateOperationsInput | $Enums.AuthProvider
+    providerId?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     hospital?: HospitalInformationUpdateOneWithoutUsersNestedInput
     bookings?: BookingUpdateManyWithoutUserNestedInput
+    requests?: HospitalRequestUpdateManyWithoutUserNestedInput
+    preferredHospitals?: UserPreferenceUpdateManyWithoutUserNestedInput
   }
 
   export type UserUncheckedUpdateWithoutRegisteredHospitalInput = {
     id?: StringFieldUpdateOperationsInput | string
     fullname?: StringFieldUpdateOperationsInput | string
     email?: StringFieldUpdateOperationsInput | string
-    password?: StringFieldUpdateOperationsInput | string
+    password?: NullableStringFieldUpdateOperationsInput | string | null
     witnesshash?: StringFieldUpdateOperationsInput | string
     phone?: StringFieldUpdateOperationsInput | string
     address?: StringFieldUpdateOperationsInput | string
     about?: NullableStringFieldUpdateOperationsInput | string | null
     userType?: EnumUserTypeFieldUpdateOperationsInput | $Enums.UserType
+    authProvider?: EnumAuthProviderFieldUpdateOperationsInput | $Enums.AuthProvider
+    providerId?: NullableStringFieldUpdateOperationsInput | string | null
     hospitalId?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     bookings?: BookingUncheckedUpdateManyWithoutUserNestedInput
+    requests?: HospitalRequestUncheckedUpdateManyWithoutUserNestedInput
+    preferredHospitals?: UserPreferenceUncheckedUpdateManyWithoutUserNestedInput
   }
 
   export type BookingUpsertWithWhereUniqueWithoutHospitalInput = {
@@ -12859,6 +18604,68 @@ export namespace Prisma {
     data: XOR<BookingUpdateManyMutationInput, BookingUncheckedUpdateManyWithoutHospitalInput>
   }
 
+  export type HospitalRequestUpsertWithWhereUniqueWithoutHospitalInput = {
+    where: HospitalRequestWhereUniqueInput
+    update: XOR<HospitalRequestUpdateWithoutHospitalInput, HospitalRequestUncheckedUpdateWithoutHospitalInput>
+    create: XOR<HospitalRequestCreateWithoutHospitalInput, HospitalRequestUncheckedCreateWithoutHospitalInput>
+  }
+
+  export type HospitalRequestUpdateWithWhereUniqueWithoutHospitalInput = {
+    where: HospitalRequestWhereUniqueInput
+    data: XOR<HospitalRequestUpdateWithoutHospitalInput, HospitalRequestUncheckedUpdateWithoutHospitalInput>
+  }
+
+  export type HospitalRequestUpdateManyWithWhereWithoutHospitalInput = {
+    where: HospitalRequestScalarWhereInput
+    data: XOR<HospitalRequestUpdateManyMutationInput, HospitalRequestUncheckedUpdateManyWithoutHospitalInput>
+  }
+
+  export type UserPreferenceUpsertWithWhereUniqueWithoutHospitalInput = {
+    where: UserPreferenceWhereUniqueInput
+    update: XOR<UserPreferenceUpdateWithoutHospitalInput, UserPreferenceUncheckedUpdateWithoutHospitalInput>
+    create: XOR<UserPreferenceCreateWithoutHospitalInput, UserPreferenceUncheckedCreateWithoutHospitalInput>
+  }
+
+  export type UserPreferenceUpdateWithWhereUniqueWithoutHospitalInput = {
+    where: UserPreferenceWhereUniqueInput
+    data: XOR<UserPreferenceUpdateWithoutHospitalInput, UserPreferenceUncheckedUpdateWithoutHospitalInput>
+  }
+
+  export type UserPreferenceUpdateManyWithWhereWithoutHospitalInput = {
+    where: UserPreferenceScalarWhereInput
+    data: XOR<UserPreferenceUpdateManyMutationInput, UserPreferenceUncheckedUpdateManyWithoutHospitalInput>
+  }
+
+  export type TreatmentPreferenceUpsertWithWhereUniqueWithoutHospitalInput = {
+    where: TreatmentPreferenceWhereUniqueInput
+    update: XOR<TreatmentPreferenceUpdateWithoutHospitalInput, TreatmentPreferenceUncheckedUpdateWithoutHospitalInput>
+    create: XOR<TreatmentPreferenceCreateWithoutHospitalInput, TreatmentPreferenceUncheckedCreateWithoutHospitalInput>
+  }
+
+  export type TreatmentPreferenceUpdateWithWhereUniqueWithoutHospitalInput = {
+    where: TreatmentPreferenceWhereUniqueInput
+    data: XOR<TreatmentPreferenceUpdateWithoutHospitalInput, TreatmentPreferenceUncheckedUpdateWithoutHospitalInput>
+  }
+
+  export type TreatmentPreferenceUpdateManyWithWhereWithoutHospitalInput = {
+    where: TreatmentPreferenceScalarWhereInput
+    data: XOR<TreatmentPreferenceUpdateManyMutationInput, TreatmentPreferenceUncheckedUpdateManyWithoutHospitalInput>
+  }
+
+  export type TreatmentPreferenceScalarWhereInput = {
+    AND?: TreatmentPreferenceScalarWhereInput | TreatmentPreferenceScalarWhereInput[]
+    OR?: TreatmentPreferenceScalarWhereInput[]
+    NOT?: TreatmentPreferenceScalarWhereInput | TreatmentPreferenceScalarWhereInput[]
+    id?: StringFilter<"TreatmentPreference"> | string
+    treatmentId?: StringFilter<"TreatmentPreference"> | string
+    treatmentName?: StringFilter<"TreatmentPreference"> | string
+    hospitalId?: StringFilter<"TreatmentPreference"> | string
+    preferenceType?: StringFilter<"TreatmentPreference"> | string
+    notes?: StringNullableFilter<"TreatmentPreference"> | string | null
+    createdAt?: DateTimeFilter<"TreatmentPreference"> | Date | string
+    updatedAt?: DateTimeFilter<"TreatmentPreference"> | Date | string
+  }
+
   export type HospitalCreateWithoutBookingsInput = {
     id?: string
     name: string
@@ -12870,9 +18677,16 @@ export namespace Prisma {
     reviews?: number
     verified?: boolean
     walletAddress: string
+    totalRequests?: number
+    totalDonors?: number
+    totalCustomers?: number
+    totalTreatments?: number
     createdAt?: Date | string
     updatedAt?: Date | string
     owner: UserCreateNestedOneWithoutRegisteredHospitalInput
+    requests?: HospitalRequestCreateNestedManyWithoutHospitalInput
+    preferredUsers?: UserPreferenceCreateNestedManyWithoutHospitalInput
+    preferredTreatments?: TreatmentPreferenceCreateNestedManyWithoutHospitalInput
   }
 
   export type HospitalUncheckedCreateWithoutBookingsInput = {
@@ -12887,8 +18701,15 @@ export namespace Prisma {
     verified?: boolean
     walletAddress: string
     ownerId: string
+    totalRequests?: number
+    totalDonors?: number
+    totalCustomers?: number
+    totalTreatments?: number
     createdAt?: Date | string
     updatedAt?: Date | string
+    requests?: HospitalRequestUncheckedCreateNestedManyWithoutHospitalInput
+    preferredUsers?: UserPreferenceUncheckedCreateNestedManyWithoutHospitalInput
+    preferredTreatments?: TreatmentPreferenceUncheckedCreateNestedManyWithoutHospitalInput
   }
 
   export type HospitalCreateOrConnectWithoutBookingsInput = {
@@ -12900,37 +18721,84 @@ export namespace Prisma {
     id?: string
     fullname: string
     email: string
-    password: string
+    password?: string | null
     witnesshash: string
     phone: string
     address: string
     about?: string | null
     userType?: $Enums.UserType
+    authProvider?: $Enums.AuthProvider
+    providerId?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
     hospital?: HospitalInformationCreateNestedOneWithoutUsersInput
     registeredHospital?: HospitalCreateNestedOneWithoutOwnerInput
+    requests?: HospitalRequestCreateNestedManyWithoutUserInput
+    preferredHospitals?: UserPreferenceCreateNestedManyWithoutUserInput
   }
 
   export type UserUncheckedCreateWithoutBookingsInput = {
     id?: string
     fullname: string
     email: string
-    password: string
+    password?: string | null
     witnesshash: string
     phone: string
     address: string
     about?: string | null
     userType?: $Enums.UserType
+    authProvider?: $Enums.AuthProvider
+    providerId?: string | null
     hospitalId?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
     registeredHospital?: HospitalUncheckedCreateNestedOneWithoutOwnerInput
+    requests?: HospitalRequestUncheckedCreateNestedManyWithoutUserInput
+    preferredHospitals?: UserPreferenceUncheckedCreateNestedManyWithoutUserInput
   }
 
   export type UserCreateOrConnectWithoutBookingsInput = {
     where: UserWhereUniqueInput
     create: XOR<UserCreateWithoutBookingsInput, UserUncheckedCreateWithoutBookingsInput>
+  }
+
+  export type HospitalRequestCreateWithoutBookingInput = {
+    id?: string
+    requestType: $Enums.RequestType
+    status?: $Enums.RequestStatus
+    title: string
+    description?: string | null
+    treatmentId?: string | null
+    priority?: string
+    requestedDate?: Date | string | null
+    completedDate?: Date | string | null
+    notes?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    hospital: HospitalCreateNestedOneWithoutRequestsInput
+    user: UserCreateNestedOneWithoutRequestsInput
+  }
+
+  export type HospitalRequestUncheckedCreateWithoutBookingInput = {
+    id?: string
+    hospitalId: string
+    userId: string
+    requestType: $Enums.RequestType
+    status?: $Enums.RequestStatus
+    title: string
+    description?: string | null
+    treatmentId?: string | null
+    priority?: string
+    requestedDate?: Date | string | null
+    completedDate?: Date | string | null
+    notes?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type HospitalRequestCreateOrConnectWithoutBookingInput = {
+    where: HospitalRequestWhereUniqueInput
+    create: XOR<HospitalRequestCreateWithoutBookingInput, HospitalRequestUncheckedCreateWithoutBookingInput>
   }
 
   export type HospitalUpsertWithoutBookingsInput = {
@@ -12955,9 +18823,16 @@ export namespace Prisma {
     reviews?: IntFieldUpdateOperationsInput | number
     verified?: BoolFieldUpdateOperationsInput | boolean
     walletAddress?: StringFieldUpdateOperationsInput | string
+    totalRequests?: IntFieldUpdateOperationsInput | number
+    totalDonors?: IntFieldUpdateOperationsInput | number
+    totalCustomers?: IntFieldUpdateOperationsInput | number
+    totalTreatments?: IntFieldUpdateOperationsInput | number
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     owner?: UserUpdateOneRequiredWithoutRegisteredHospitalNestedInput
+    requests?: HospitalRequestUpdateManyWithoutHospitalNestedInput
+    preferredUsers?: UserPreferenceUpdateManyWithoutHospitalNestedInput
+    preferredTreatments?: TreatmentPreferenceUpdateManyWithoutHospitalNestedInput
   }
 
   export type HospitalUncheckedUpdateWithoutBookingsInput = {
@@ -12972,8 +18847,15 @@ export namespace Prisma {
     verified?: BoolFieldUpdateOperationsInput | boolean
     walletAddress?: StringFieldUpdateOperationsInput | string
     ownerId?: StringFieldUpdateOperationsInput | string
+    totalRequests?: IntFieldUpdateOperationsInput | number
+    totalDonors?: IntFieldUpdateOperationsInput | number
+    totalCustomers?: IntFieldUpdateOperationsInput | number
+    totalTreatments?: IntFieldUpdateOperationsInput | number
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    requests?: HospitalRequestUncheckedUpdateManyWithoutHospitalNestedInput
+    preferredUsers?: UserPreferenceUncheckedUpdateManyWithoutHospitalNestedInput
+    preferredTreatments?: TreatmentPreferenceUncheckedUpdateManyWithoutHospitalNestedInput
   }
 
   export type UserUpsertWithoutBookingsInput = {
@@ -12991,44 +18873,683 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     fullname?: StringFieldUpdateOperationsInput | string
     email?: StringFieldUpdateOperationsInput | string
-    password?: StringFieldUpdateOperationsInput | string
+    password?: NullableStringFieldUpdateOperationsInput | string | null
     witnesshash?: StringFieldUpdateOperationsInput | string
     phone?: StringFieldUpdateOperationsInput | string
     address?: StringFieldUpdateOperationsInput | string
     about?: NullableStringFieldUpdateOperationsInput | string | null
     userType?: EnumUserTypeFieldUpdateOperationsInput | $Enums.UserType
+    authProvider?: EnumAuthProviderFieldUpdateOperationsInput | $Enums.AuthProvider
+    providerId?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     hospital?: HospitalInformationUpdateOneWithoutUsersNestedInput
     registeredHospital?: HospitalUpdateOneWithoutOwnerNestedInput
+    requests?: HospitalRequestUpdateManyWithoutUserNestedInput
+    preferredHospitals?: UserPreferenceUpdateManyWithoutUserNestedInput
   }
 
   export type UserUncheckedUpdateWithoutBookingsInput = {
     id?: StringFieldUpdateOperationsInput | string
     fullname?: StringFieldUpdateOperationsInput | string
     email?: StringFieldUpdateOperationsInput | string
-    password?: StringFieldUpdateOperationsInput | string
+    password?: NullableStringFieldUpdateOperationsInput | string | null
     witnesshash?: StringFieldUpdateOperationsInput | string
     phone?: StringFieldUpdateOperationsInput | string
     address?: StringFieldUpdateOperationsInput | string
     about?: NullableStringFieldUpdateOperationsInput | string | null
     userType?: EnumUserTypeFieldUpdateOperationsInput | $Enums.UserType
+    authProvider?: EnumAuthProviderFieldUpdateOperationsInput | $Enums.AuthProvider
+    providerId?: NullableStringFieldUpdateOperationsInput | string | null
     hospitalId?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     registeredHospital?: HospitalUncheckedUpdateOneWithoutOwnerNestedInput
+    requests?: HospitalRequestUncheckedUpdateManyWithoutUserNestedInput
+    preferredHospitals?: UserPreferenceUncheckedUpdateManyWithoutUserNestedInput
+  }
+
+  export type HospitalRequestUpsertWithoutBookingInput = {
+    update: XOR<HospitalRequestUpdateWithoutBookingInput, HospitalRequestUncheckedUpdateWithoutBookingInput>
+    create: XOR<HospitalRequestCreateWithoutBookingInput, HospitalRequestUncheckedCreateWithoutBookingInput>
+    where?: HospitalRequestWhereInput
+  }
+
+  export type HospitalRequestUpdateToOneWithWhereWithoutBookingInput = {
+    where?: HospitalRequestWhereInput
+    data: XOR<HospitalRequestUpdateWithoutBookingInput, HospitalRequestUncheckedUpdateWithoutBookingInput>
+  }
+
+  export type HospitalRequestUpdateWithoutBookingInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    requestType?: EnumRequestTypeFieldUpdateOperationsInput | $Enums.RequestType
+    status?: EnumRequestStatusFieldUpdateOperationsInput | $Enums.RequestStatus
+    title?: StringFieldUpdateOperationsInput | string
+    description?: NullableStringFieldUpdateOperationsInput | string | null
+    treatmentId?: NullableStringFieldUpdateOperationsInput | string | null
+    priority?: StringFieldUpdateOperationsInput | string
+    requestedDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    completedDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    hospital?: HospitalUpdateOneRequiredWithoutRequestsNestedInput
+    user?: UserUpdateOneRequiredWithoutRequestsNestedInput
+  }
+
+  export type HospitalRequestUncheckedUpdateWithoutBookingInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    hospitalId?: StringFieldUpdateOperationsInput | string
+    userId?: StringFieldUpdateOperationsInput | string
+    requestType?: EnumRequestTypeFieldUpdateOperationsInput | $Enums.RequestType
+    status?: EnumRequestStatusFieldUpdateOperationsInput | $Enums.RequestStatus
+    title?: StringFieldUpdateOperationsInput | string
+    description?: NullableStringFieldUpdateOperationsInput | string | null
+    treatmentId?: NullableStringFieldUpdateOperationsInput | string | null
+    priority?: StringFieldUpdateOperationsInput | string
+    requestedDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    completedDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type HospitalCreateWithoutRequestsInput = {
+    id?: string
+    name: string
+    location: string
+    rating?: number
+    specialties?: HospitalCreatespecialtiesInput | string[]
+    imageUrl?: string | null
+    isFavorite?: boolean
+    reviews?: number
+    verified?: boolean
+    walletAddress: string
+    totalRequests?: number
+    totalDonors?: number
+    totalCustomers?: number
+    totalTreatments?: number
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    owner: UserCreateNestedOneWithoutRegisteredHospitalInput
+    bookings?: BookingCreateNestedManyWithoutHospitalInput
+    preferredUsers?: UserPreferenceCreateNestedManyWithoutHospitalInput
+    preferredTreatments?: TreatmentPreferenceCreateNestedManyWithoutHospitalInput
+  }
+
+  export type HospitalUncheckedCreateWithoutRequestsInput = {
+    id?: string
+    name: string
+    location: string
+    rating?: number
+    specialties?: HospitalCreatespecialtiesInput | string[]
+    imageUrl?: string | null
+    isFavorite?: boolean
+    reviews?: number
+    verified?: boolean
+    walletAddress: string
+    ownerId: string
+    totalRequests?: number
+    totalDonors?: number
+    totalCustomers?: number
+    totalTreatments?: number
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    bookings?: BookingUncheckedCreateNestedManyWithoutHospitalInput
+    preferredUsers?: UserPreferenceUncheckedCreateNestedManyWithoutHospitalInput
+    preferredTreatments?: TreatmentPreferenceUncheckedCreateNestedManyWithoutHospitalInput
+  }
+
+  export type HospitalCreateOrConnectWithoutRequestsInput = {
+    where: HospitalWhereUniqueInput
+    create: XOR<HospitalCreateWithoutRequestsInput, HospitalUncheckedCreateWithoutRequestsInput>
+  }
+
+  export type UserCreateWithoutRequestsInput = {
+    id?: string
+    fullname: string
+    email: string
+    password?: string | null
+    witnesshash: string
+    phone: string
+    address: string
+    about?: string | null
+    userType?: $Enums.UserType
+    authProvider?: $Enums.AuthProvider
+    providerId?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    hospital?: HospitalInformationCreateNestedOneWithoutUsersInput
+    registeredHospital?: HospitalCreateNestedOneWithoutOwnerInput
+    bookings?: BookingCreateNestedManyWithoutUserInput
+    preferredHospitals?: UserPreferenceCreateNestedManyWithoutUserInput
+  }
+
+  export type UserUncheckedCreateWithoutRequestsInput = {
+    id?: string
+    fullname: string
+    email: string
+    password?: string | null
+    witnesshash: string
+    phone: string
+    address: string
+    about?: string | null
+    userType?: $Enums.UserType
+    authProvider?: $Enums.AuthProvider
+    providerId?: string | null
+    hospitalId?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    registeredHospital?: HospitalUncheckedCreateNestedOneWithoutOwnerInput
+    bookings?: BookingUncheckedCreateNestedManyWithoutUserInput
+    preferredHospitals?: UserPreferenceUncheckedCreateNestedManyWithoutUserInput
+  }
+
+  export type UserCreateOrConnectWithoutRequestsInput = {
+    where: UserWhereUniqueInput
+    create: XOR<UserCreateWithoutRequestsInput, UserUncheckedCreateWithoutRequestsInput>
+  }
+
+  export type BookingCreateWithoutRequestInput = {
+    id?: string
+    appointmentDate: Date | string
+    duration?: number
+    purpose: string
+    additionalNotes?: string | null
+    status?: string
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    hospital: HospitalCreateNestedOneWithoutBookingsInput
+    user: UserCreateNestedOneWithoutBookingsInput
+  }
+
+  export type BookingUncheckedCreateWithoutRequestInput = {
+    id?: string
+    hospitalId: string
+    userId: string
+    appointmentDate: Date | string
+    duration?: number
+    purpose: string
+    additionalNotes?: string | null
+    status?: string
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type BookingCreateOrConnectWithoutRequestInput = {
+    where: BookingWhereUniqueInput
+    create: XOR<BookingCreateWithoutRequestInput, BookingUncheckedCreateWithoutRequestInput>
+  }
+
+  export type HospitalUpsertWithoutRequestsInput = {
+    update: XOR<HospitalUpdateWithoutRequestsInput, HospitalUncheckedUpdateWithoutRequestsInput>
+    create: XOR<HospitalCreateWithoutRequestsInput, HospitalUncheckedCreateWithoutRequestsInput>
+    where?: HospitalWhereInput
+  }
+
+  export type HospitalUpdateToOneWithWhereWithoutRequestsInput = {
+    where?: HospitalWhereInput
+    data: XOR<HospitalUpdateWithoutRequestsInput, HospitalUncheckedUpdateWithoutRequestsInput>
+  }
+
+  export type HospitalUpdateWithoutRequestsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    location?: StringFieldUpdateOperationsInput | string
+    rating?: FloatFieldUpdateOperationsInput | number
+    specialties?: HospitalUpdatespecialtiesInput | string[]
+    imageUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    isFavorite?: BoolFieldUpdateOperationsInput | boolean
+    reviews?: IntFieldUpdateOperationsInput | number
+    verified?: BoolFieldUpdateOperationsInput | boolean
+    walletAddress?: StringFieldUpdateOperationsInput | string
+    totalRequests?: IntFieldUpdateOperationsInput | number
+    totalDonors?: IntFieldUpdateOperationsInput | number
+    totalCustomers?: IntFieldUpdateOperationsInput | number
+    totalTreatments?: IntFieldUpdateOperationsInput | number
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    owner?: UserUpdateOneRequiredWithoutRegisteredHospitalNestedInput
+    bookings?: BookingUpdateManyWithoutHospitalNestedInput
+    preferredUsers?: UserPreferenceUpdateManyWithoutHospitalNestedInput
+    preferredTreatments?: TreatmentPreferenceUpdateManyWithoutHospitalNestedInput
+  }
+
+  export type HospitalUncheckedUpdateWithoutRequestsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    location?: StringFieldUpdateOperationsInput | string
+    rating?: FloatFieldUpdateOperationsInput | number
+    specialties?: HospitalUpdatespecialtiesInput | string[]
+    imageUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    isFavorite?: BoolFieldUpdateOperationsInput | boolean
+    reviews?: IntFieldUpdateOperationsInput | number
+    verified?: BoolFieldUpdateOperationsInput | boolean
+    walletAddress?: StringFieldUpdateOperationsInput | string
+    ownerId?: StringFieldUpdateOperationsInput | string
+    totalRequests?: IntFieldUpdateOperationsInput | number
+    totalDonors?: IntFieldUpdateOperationsInput | number
+    totalCustomers?: IntFieldUpdateOperationsInput | number
+    totalTreatments?: IntFieldUpdateOperationsInput | number
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    bookings?: BookingUncheckedUpdateManyWithoutHospitalNestedInput
+    preferredUsers?: UserPreferenceUncheckedUpdateManyWithoutHospitalNestedInput
+    preferredTreatments?: TreatmentPreferenceUncheckedUpdateManyWithoutHospitalNestedInput
+  }
+
+  export type UserUpsertWithoutRequestsInput = {
+    update: XOR<UserUpdateWithoutRequestsInput, UserUncheckedUpdateWithoutRequestsInput>
+    create: XOR<UserCreateWithoutRequestsInput, UserUncheckedCreateWithoutRequestsInput>
+    where?: UserWhereInput
+  }
+
+  export type UserUpdateToOneWithWhereWithoutRequestsInput = {
+    where?: UserWhereInput
+    data: XOR<UserUpdateWithoutRequestsInput, UserUncheckedUpdateWithoutRequestsInput>
+  }
+
+  export type UserUpdateWithoutRequestsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    fullname?: StringFieldUpdateOperationsInput | string
+    email?: StringFieldUpdateOperationsInput | string
+    password?: NullableStringFieldUpdateOperationsInput | string | null
+    witnesshash?: StringFieldUpdateOperationsInput | string
+    phone?: StringFieldUpdateOperationsInput | string
+    address?: StringFieldUpdateOperationsInput | string
+    about?: NullableStringFieldUpdateOperationsInput | string | null
+    userType?: EnumUserTypeFieldUpdateOperationsInput | $Enums.UserType
+    authProvider?: EnumAuthProviderFieldUpdateOperationsInput | $Enums.AuthProvider
+    providerId?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    hospital?: HospitalInformationUpdateOneWithoutUsersNestedInput
+    registeredHospital?: HospitalUpdateOneWithoutOwnerNestedInput
+    bookings?: BookingUpdateManyWithoutUserNestedInput
+    preferredHospitals?: UserPreferenceUpdateManyWithoutUserNestedInput
+  }
+
+  export type UserUncheckedUpdateWithoutRequestsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    fullname?: StringFieldUpdateOperationsInput | string
+    email?: StringFieldUpdateOperationsInput | string
+    password?: NullableStringFieldUpdateOperationsInput | string | null
+    witnesshash?: StringFieldUpdateOperationsInput | string
+    phone?: StringFieldUpdateOperationsInput | string
+    address?: StringFieldUpdateOperationsInput | string
+    about?: NullableStringFieldUpdateOperationsInput | string | null
+    userType?: EnumUserTypeFieldUpdateOperationsInput | $Enums.UserType
+    authProvider?: EnumAuthProviderFieldUpdateOperationsInput | $Enums.AuthProvider
+    providerId?: NullableStringFieldUpdateOperationsInput | string | null
+    hospitalId?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    registeredHospital?: HospitalUncheckedUpdateOneWithoutOwnerNestedInput
+    bookings?: BookingUncheckedUpdateManyWithoutUserNestedInput
+    preferredHospitals?: UserPreferenceUncheckedUpdateManyWithoutUserNestedInput
+  }
+
+  export type BookingUpsertWithoutRequestInput = {
+    update: XOR<BookingUpdateWithoutRequestInput, BookingUncheckedUpdateWithoutRequestInput>
+    create: XOR<BookingCreateWithoutRequestInput, BookingUncheckedCreateWithoutRequestInput>
+    where?: BookingWhereInput
+  }
+
+  export type BookingUpdateToOneWithWhereWithoutRequestInput = {
+    where?: BookingWhereInput
+    data: XOR<BookingUpdateWithoutRequestInput, BookingUncheckedUpdateWithoutRequestInput>
+  }
+
+  export type BookingUpdateWithoutRequestInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    appointmentDate?: DateTimeFieldUpdateOperationsInput | Date | string
+    duration?: IntFieldUpdateOperationsInput | number
+    purpose?: StringFieldUpdateOperationsInput | string
+    additionalNotes?: NullableStringFieldUpdateOperationsInput | string | null
+    status?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    hospital?: HospitalUpdateOneRequiredWithoutBookingsNestedInput
+    user?: UserUpdateOneRequiredWithoutBookingsNestedInput
+  }
+
+  export type BookingUncheckedUpdateWithoutRequestInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    hospitalId?: StringFieldUpdateOperationsInput | string
+    userId?: StringFieldUpdateOperationsInput | string
+    appointmentDate?: DateTimeFieldUpdateOperationsInput | Date | string
+    duration?: IntFieldUpdateOperationsInput | number
+    purpose?: StringFieldUpdateOperationsInput | string
+    additionalNotes?: NullableStringFieldUpdateOperationsInput | string | null
+    status?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type UserCreateWithoutPreferredHospitalsInput = {
+    id?: string
+    fullname: string
+    email: string
+    password?: string | null
+    witnesshash: string
+    phone: string
+    address: string
+    about?: string | null
+    userType?: $Enums.UserType
+    authProvider?: $Enums.AuthProvider
+    providerId?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    hospital?: HospitalInformationCreateNestedOneWithoutUsersInput
+    registeredHospital?: HospitalCreateNestedOneWithoutOwnerInput
+    bookings?: BookingCreateNestedManyWithoutUserInput
+    requests?: HospitalRequestCreateNestedManyWithoutUserInput
+  }
+
+  export type UserUncheckedCreateWithoutPreferredHospitalsInput = {
+    id?: string
+    fullname: string
+    email: string
+    password?: string | null
+    witnesshash: string
+    phone: string
+    address: string
+    about?: string | null
+    userType?: $Enums.UserType
+    authProvider?: $Enums.AuthProvider
+    providerId?: string | null
+    hospitalId?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    registeredHospital?: HospitalUncheckedCreateNestedOneWithoutOwnerInput
+    bookings?: BookingUncheckedCreateNestedManyWithoutUserInput
+    requests?: HospitalRequestUncheckedCreateNestedManyWithoutUserInput
+  }
+
+  export type UserCreateOrConnectWithoutPreferredHospitalsInput = {
+    where: UserWhereUniqueInput
+    create: XOR<UserCreateWithoutPreferredHospitalsInput, UserUncheckedCreateWithoutPreferredHospitalsInput>
+  }
+
+  export type HospitalCreateWithoutPreferredUsersInput = {
+    id?: string
+    name: string
+    location: string
+    rating?: number
+    specialties?: HospitalCreatespecialtiesInput | string[]
+    imageUrl?: string | null
+    isFavorite?: boolean
+    reviews?: number
+    verified?: boolean
+    walletAddress: string
+    totalRequests?: number
+    totalDonors?: number
+    totalCustomers?: number
+    totalTreatments?: number
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    owner: UserCreateNestedOneWithoutRegisteredHospitalInput
+    bookings?: BookingCreateNestedManyWithoutHospitalInput
+    requests?: HospitalRequestCreateNestedManyWithoutHospitalInput
+    preferredTreatments?: TreatmentPreferenceCreateNestedManyWithoutHospitalInput
+  }
+
+  export type HospitalUncheckedCreateWithoutPreferredUsersInput = {
+    id?: string
+    name: string
+    location: string
+    rating?: number
+    specialties?: HospitalCreatespecialtiesInput | string[]
+    imageUrl?: string | null
+    isFavorite?: boolean
+    reviews?: number
+    verified?: boolean
+    walletAddress: string
+    ownerId: string
+    totalRequests?: number
+    totalDonors?: number
+    totalCustomers?: number
+    totalTreatments?: number
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    bookings?: BookingUncheckedCreateNestedManyWithoutHospitalInput
+    requests?: HospitalRequestUncheckedCreateNestedManyWithoutHospitalInput
+    preferredTreatments?: TreatmentPreferenceUncheckedCreateNestedManyWithoutHospitalInput
+  }
+
+  export type HospitalCreateOrConnectWithoutPreferredUsersInput = {
+    where: HospitalWhereUniqueInput
+    create: XOR<HospitalCreateWithoutPreferredUsersInput, HospitalUncheckedCreateWithoutPreferredUsersInput>
+  }
+
+  export type UserUpsertWithoutPreferredHospitalsInput = {
+    update: XOR<UserUpdateWithoutPreferredHospitalsInput, UserUncheckedUpdateWithoutPreferredHospitalsInput>
+    create: XOR<UserCreateWithoutPreferredHospitalsInput, UserUncheckedCreateWithoutPreferredHospitalsInput>
+    where?: UserWhereInput
+  }
+
+  export type UserUpdateToOneWithWhereWithoutPreferredHospitalsInput = {
+    where?: UserWhereInput
+    data: XOR<UserUpdateWithoutPreferredHospitalsInput, UserUncheckedUpdateWithoutPreferredHospitalsInput>
+  }
+
+  export type UserUpdateWithoutPreferredHospitalsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    fullname?: StringFieldUpdateOperationsInput | string
+    email?: StringFieldUpdateOperationsInput | string
+    password?: NullableStringFieldUpdateOperationsInput | string | null
+    witnesshash?: StringFieldUpdateOperationsInput | string
+    phone?: StringFieldUpdateOperationsInput | string
+    address?: StringFieldUpdateOperationsInput | string
+    about?: NullableStringFieldUpdateOperationsInput | string | null
+    userType?: EnumUserTypeFieldUpdateOperationsInput | $Enums.UserType
+    authProvider?: EnumAuthProviderFieldUpdateOperationsInput | $Enums.AuthProvider
+    providerId?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    hospital?: HospitalInformationUpdateOneWithoutUsersNestedInput
+    registeredHospital?: HospitalUpdateOneWithoutOwnerNestedInput
+    bookings?: BookingUpdateManyWithoutUserNestedInput
+    requests?: HospitalRequestUpdateManyWithoutUserNestedInput
+  }
+
+  export type UserUncheckedUpdateWithoutPreferredHospitalsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    fullname?: StringFieldUpdateOperationsInput | string
+    email?: StringFieldUpdateOperationsInput | string
+    password?: NullableStringFieldUpdateOperationsInput | string | null
+    witnesshash?: StringFieldUpdateOperationsInput | string
+    phone?: StringFieldUpdateOperationsInput | string
+    address?: StringFieldUpdateOperationsInput | string
+    about?: NullableStringFieldUpdateOperationsInput | string | null
+    userType?: EnumUserTypeFieldUpdateOperationsInput | $Enums.UserType
+    authProvider?: EnumAuthProviderFieldUpdateOperationsInput | $Enums.AuthProvider
+    providerId?: NullableStringFieldUpdateOperationsInput | string | null
+    hospitalId?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    registeredHospital?: HospitalUncheckedUpdateOneWithoutOwnerNestedInput
+    bookings?: BookingUncheckedUpdateManyWithoutUserNestedInput
+    requests?: HospitalRequestUncheckedUpdateManyWithoutUserNestedInput
+  }
+
+  export type HospitalUpsertWithoutPreferredUsersInput = {
+    update: XOR<HospitalUpdateWithoutPreferredUsersInput, HospitalUncheckedUpdateWithoutPreferredUsersInput>
+    create: XOR<HospitalCreateWithoutPreferredUsersInput, HospitalUncheckedCreateWithoutPreferredUsersInput>
+    where?: HospitalWhereInput
+  }
+
+  export type HospitalUpdateToOneWithWhereWithoutPreferredUsersInput = {
+    where?: HospitalWhereInput
+    data: XOR<HospitalUpdateWithoutPreferredUsersInput, HospitalUncheckedUpdateWithoutPreferredUsersInput>
+  }
+
+  export type HospitalUpdateWithoutPreferredUsersInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    location?: StringFieldUpdateOperationsInput | string
+    rating?: FloatFieldUpdateOperationsInput | number
+    specialties?: HospitalUpdatespecialtiesInput | string[]
+    imageUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    isFavorite?: BoolFieldUpdateOperationsInput | boolean
+    reviews?: IntFieldUpdateOperationsInput | number
+    verified?: BoolFieldUpdateOperationsInput | boolean
+    walletAddress?: StringFieldUpdateOperationsInput | string
+    totalRequests?: IntFieldUpdateOperationsInput | number
+    totalDonors?: IntFieldUpdateOperationsInput | number
+    totalCustomers?: IntFieldUpdateOperationsInput | number
+    totalTreatments?: IntFieldUpdateOperationsInput | number
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    owner?: UserUpdateOneRequiredWithoutRegisteredHospitalNestedInput
+    bookings?: BookingUpdateManyWithoutHospitalNestedInput
+    requests?: HospitalRequestUpdateManyWithoutHospitalNestedInput
+    preferredTreatments?: TreatmentPreferenceUpdateManyWithoutHospitalNestedInput
+  }
+
+  export type HospitalUncheckedUpdateWithoutPreferredUsersInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    location?: StringFieldUpdateOperationsInput | string
+    rating?: FloatFieldUpdateOperationsInput | number
+    specialties?: HospitalUpdatespecialtiesInput | string[]
+    imageUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    isFavorite?: BoolFieldUpdateOperationsInput | boolean
+    reviews?: IntFieldUpdateOperationsInput | number
+    verified?: BoolFieldUpdateOperationsInput | boolean
+    walletAddress?: StringFieldUpdateOperationsInput | string
+    ownerId?: StringFieldUpdateOperationsInput | string
+    totalRequests?: IntFieldUpdateOperationsInput | number
+    totalDonors?: IntFieldUpdateOperationsInput | number
+    totalCustomers?: IntFieldUpdateOperationsInput | number
+    totalTreatments?: IntFieldUpdateOperationsInput | number
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    bookings?: BookingUncheckedUpdateManyWithoutHospitalNestedInput
+    requests?: HospitalRequestUncheckedUpdateManyWithoutHospitalNestedInput
+    preferredTreatments?: TreatmentPreferenceUncheckedUpdateManyWithoutHospitalNestedInput
+  }
+
+  export type HospitalCreateWithoutPreferredTreatmentsInput = {
+    id?: string
+    name: string
+    location: string
+    rating?: number
+    specialties?: HospitalCreatespecialtiesInput | string[]
+    imageUrl?: string | null
+    isFavorite?: boolean
+    reviews?: number
+    verified?: boolean
+    walletAddress: string
+    totalRequests?: number
+    totalDonors?: number
+    totalCustomers?: number
+    totalTreatments?: number
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    owner: UserCreateNestedOneWithoutRegisteredHospitalInput
+    bookings?: BookingCreateNestedManyWithoutHospitalInput
+    requests?: HospitalRequestCreateNestedManyWithoutHospitalInput
+    preferredUsers?: UserPreferenceCreateNestedManyWithoutHospitalInput
+  }
+
+  export type HospitalUncheckedCreateWithoutPreferredTreatmentsInput = {
+    id?: string
+    name: string
+    location: string
+    rating?: number
+    specialties?: HospitalCreatespecialtiesInput | string[]
+    imageUrl?: string | null
+    isFavorite?: boolean
+    reviews?: number
+    verified?: boolean
+    walletAddress: string
+    ownerId: string
+    totalRequests?: number
+    totalDonors?: number
+    totalCustomers?: number
+    totalTreatments?: number
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    bookings?: BookingUncheckedCreateNestedManyWithoutHospitalInput
+    requests?: HospitalRequestUncheckedCreateNestedManyWithoutHospitalInput
+    preferredUsers?: UserPreferenceUncheckedCreateNestedManyWithoutHospitalInput
+  }
+
+  export type HospitalCreateOrConnectWithoutPreferredTreatmentsInput = {
+    where: HospitalWhereUniqueInput
+    create: XOR<HospitalCreateWithoutPreferredTreatmentsInput, HospitalUncheckedCreateWithoutPreferredTreatmentsInput>
+  }
+
+  export type HospitalUpsertWithoutPreferredTreatmentsInput = {
+    update: XOR<HospitalUpdateWithoutPreferredTreatmentsInput, HospitalUncheckedUpdateWithoutPreferredTreatmentsInput>
+    create: XOR<HospitalCreateWithoutPreferredTreatmentsInput, HospitalUncheckedCreateWithoutPreferredTreatmentsInput>
+    where?: HospitalWhereInput
+  }
+
+  export type HospitalUpdateToOneWithWhereWithoutPreferredTreatmentsInput = {
+    where?: HospitalWhereInput
+    data: XOR<HospitalUpdateWithoutPreferredTreatmentsInput, HospitalUncheckedUpdateWithoutPreferredTreatmentsInput>
+  }
+
+  export type HospitalUpdateWithoutPreferredTreatmentsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    location?: StringFieldUpdateOperationsInput | string
+    rating?: FloatFieldUpdateOperationsInput | number
+    specialties?: HospitalUpdatespecialtiesInput | string[]
+    imageUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    isFavorite?: BoolFieldUpdateOperationsInput | boolean
+    reviews?: IntFieldUpdateOperationsInput | number
+    verified?: BoolFieldUpdateOperationsInput | boolean
+    walletAddress?: StringFieldUpdateOperationsInput | string
+    totalRequests?: IntFieldUpdateOperationsInput | number
+    totalDonors?: IntFieldUpdateOperationsInput | number
+    totalCustomers?: IntFieldUpdateOperationsInput | number
+    totalTreatments?: IntFieldUpdateOperationsInput | number
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    owner?: UserUpdateOneRequiredWithoutRegisteredHospitalNestedInput
+    bookings?: BookingUpdateManyWithoutHospitalNestedInput
+    requests?: HospitalRequestUpdateManyWithoutHospitalNestedInput
+    preferredUsers?: UserPreferenceUpdateManyWithoutHospitalNestedInput
+  }
+
+  export type HospitalUncheckedUpdateWithoutPreferredTreatmentsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    location?: StringFieldUpdateOperationsInput | string
+    rating?: FloatFieldUpdateOperationsInput | number
+    specialties?: HospitalUpdatespecialtiesInput | string[]
+    imageUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    isFavorite?: BoolFieldUpdateOperationsInput | boolean
+    reviews?: IntFieldUpdateOperationsInput | number
+    verified?: BoolFieldUpdateOperationsInput | boolean
+    walletAddress?: StringFieldUpdateOperationsInput | string
+    ownerId?: StringFieldUpdateOperationsInput | string
+    totalRequests?: IntFieldUpdateOperationsInput | number
+    totalDonors?: IntFieldUpdateOperationsInput | number
+    totalCustomers?: IntFieldUpdateOperationsInput | number
+    totalTreatments?: IntFieldUpdateOperationsInput | number
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    bookings?: BookingUncheckedUpdateManyWithoutHospitalNestedInput
+    requests?: HospitalRequestUncheckedUpdateManyWithoutHospitalNestedInput
+    preferredUsers?: UserPreferenceUncheckedUpdateManyWithoutHospitalNestedInput
   }
 
   export type UserCreateManyHospitalInput = {
     id?: string
     fullname: string
     email: string
-    password: string
+    password?: string | null
     witnesshash: string
     phone: string
     address: string
     about?: string | null
     userType?: $Enums.UserType
+    authProvider?: $Enums.AuthProvider
+    providerId?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
   }
@@ -13037,44 +19558,54 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     fullname?: StringFieldUpdateOperationsInput | string
     email?: StringFieldUpdateOperationsInput | string
-    password?: StringFieldUpdateOperationsInput | string
+    password?: NullableStringFieldUpdateOperationsInput | string | null
     witnesshash?: StringFieldUpdateOperationsInput | string
     phone?: StringFieldUpdateOperationsInput | string
     address?: StringFieldUpdateOperationsInput | string
     about?: NullableStringFieldUpdateOperationsInput | string | null
     userType?: EnumUserTypeFieldUpdateOperationsInput | $Enums.UserType
+    authProvider?: EnumAuthProviderFieldUpdateOperationsInput | $Enums.AuthProvider
+    providerId?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     registeredHospital?: HospitalUpdateOneWithoutOwnerNestedInput
     bookings?: BookingUpdateManyWithoutUserNestedInput
+    requests?: HospitalRequestUpdateManyWithoutUserNestedInput
+    preferredHospitals?: UserPreferenceUpdateManyWithoutUserNestedInput
   }
 
   export type UserUncheckedUpdateWithoutHospitalInput = {
     id?: StringFieldUpdateOperationsInput | string
     fullname?: StringFieldUpdateOperationsInput | string
     email?: StringFieldUpdateOperationsInput | string
-    password?: StringFieldUpdateOperationsInput | string
+    password?: NullableStringFieldUpdateOperationsInput | string | null
     witnesshash?: StringFieldUpdateOperationsInput | string
     phone?: StringFieldUpdateOperationsInput | string
     address?: StringFieldUpdateOperationsInput | string
     about?: NullableStringFieldUpdateOperationsInput | string | null
     userType?: EnumUserTypeFieldUpdateOperationsInput | $Enums.UserType
+    authProvider?: EnumAuthProviderFieldUpdateOperationsInput | $Enums.AuthProvider
+    providerId?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     registeredHospital?: HospitalUncheckedUpdateOneWithoutOwnerNestedInput
     bookings?: BookingUncheckedUpdateManyWithoutUserNestedInput
+    requests?: HospitalRequestUncheckedUpdateManyWithoutUserNestedInput
+    preferredHospitals?: UserPreferenceUncheckedUpdateManyWithoutUserNestedInput
   }
 
   export type UserUncheckedUpdateManyWithoutHospitalInput = {
     id?: StringFieldUpdateOperationsInput | string
     fullname?: StringFieldUpdateOperationsInput | string
     email?: StringFieldUpdateOperationsInput | string
-    password?: StringFieldUpdateOperationsInput | string
+    password?: NullableStringFieldUpdateOperationsInput | string | null
     witnesshash?: StringFieldUpdateOperationsInput | string
     phone?: StringFieldUpdateOperationsInput | string
     address?: StringFieldUpdateOperationsInput | string
     about?: NullableStringFieldUpdateOperationsInput | string | null
     userType?: EnumUserTypeFieldUpdateOperationsInput | $Enums.UserType
+    authProvider?: EnumAuthProviderFieldUpdateOperationsInput | $Enums.AuthProvider
+    providerId?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -13091,6 +19622,32 @@ export namespace Prisma {
     updatedAt?: Date | string
   }
 
+  export type HospitalRequestCreateManyUserInput = {
+    id?: string
+    hospitalId: string
+    requestType: $Enums.RequestType
+    status?: $Enums.RequestStatus
+    title: string
+    description?: string | null
+    bookingId?: string | null
+    treatmentId?: string | null
+    priority?: string
+    requestedDate?: Date | string | null
+    completedDate?: Date | string | null
+    notes?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type UserPreferenceCreateManyUserInput = {
+    id?: string
+    hospitalId: string
+    preferenceType?: string
+    notes?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
   export type BookingUpdateWithoutUserInput = {
     id?: StringFieldUpdateOperationsInput | string
     appointmentDate?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -13101,6 +19658,7 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     hospital?: HospitalUpdateOneRequiredWithoutBookingsNestedInput
+    request?: HospitalRequestUpdateOneWithoutBookingNestedInput
   }
 
   export type BookingUncheckedUpdateWithoutUserInput = {
@@ -13113,6 +19671,7 @@ export namespace Prisma {
     status?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    request?: HospitalRequestUncheckedUpdateOneWithoutBookingNestedInput
   }
 
   export type BookingUncheckedUpdateManyWithoutUserInput = {
@@ -13123,6 +19682,84 @@ export namespace Prisma {
     purpose?: StringFieldUpdateOperationsInput | string
     additionalNotes?: NullableStringFieldUpdateOperationsInput | string | null
     status?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type HospitalRequestUpdateWithoutUserInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    requestType?: EnumRequestTypeFieldUpdateOperationsInput | $Enums.RequestType
+    status?: EnumRequestStatusFieldUpdateOperationsInput | $Enums.RequestStatus
+    title?: StringFieldUpdateOperationsInput | string
+    description?: NullableStringFieldUpdateOperationsInput | string | null
+    treatmentId?: NullableStringFieldUpdateOperationsInput | string | null
+    priority?: StringFieldUpdateOperationsInput | string
+    requestedDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    completedDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    hospital?: HospitalUpdateOneRequiredWithoutRequestsNestedInput
+    booking?: BookingUpdateOneWithoutRequestNestedInput
+  }
+
+  export type HospitalRequestUncheckedUpdateWithoutUserInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    hospitalId?: StringFieldUpdateOperationsInput | string
+    requestType?: EnumRequestTypeFieldUpdateOperationsInput | $Enums.RequestType
+    status?: EnumRequestStatusFieldUpdateOperationsInput | $Enums.RequestStatus
+    title?: StringFieldUpdateOperationsInput | string
+    description?: NullableStringFieldUpdateOperationsInput | string | null
+    bookingId?: NullableStringFieldUpdateOperationsInput | string | null
+    treatmentId?: NullableStringFieldUpdateOperationsInput | string | null
+    priority?: StringFieldUpdateOperationsInput | string
+    requestedDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    completedDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type HospitalRequestUncheckedUpdateManyWithoutUserInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    hospitalId?: StringFieldUpdateOperationsInput | string
+    requestType?: EnumRequestTypeFieldUpdateOperationsInput | $Enums.RequestType
+    status?: EnumRequestStatusFieldUpdateOperationsInput | $Enums.RequestStatus
+    title?: StringFieldUpdateOperationsInput | string
+    description?: NullableStringFieldUpdateOperationsInput | string | null
+    bookingId?: NullableStringFieldUpdateOperationsInput | string | null
+    treatmentId?: NullableStringFieldUpdateOperationsInput | string | null
+    priority?: StringFieldUpdateOperationsInput | string
+    requestedDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    completedDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type UserPreferenceUpdateWithoutUserInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    preferenceType?: StringFieldUpdateOperationsInput | string
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    hospital?: HospitalUpdateOneRequiredWithoutPreferredUsersNestedInput
+  }
+
+  export type UserPreferenceUncheckedUpdateWithoutUserInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    hospitalId?: StringFieldUpdateOperationsInput | string
+    preferenceType?: StringFieldUpdateOperationsInput | string
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type UserPreferenceUncheckedUpdateManyWithoutUserInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    hospitalId?: StringFieldUpdateOperationsInput | string
+    preferenceType?: StringFieldUpdateOperationsInput | string
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -13139,6 +19776,42 @@ export namespace Prisma {
     updatedAt?: Date | string
   }
 
+  export type HospitalRequestCreateManyHospitalInput = {
+    id?: string
+    userId: string
+    requestType: $Enums.RequestType
+    status?: $Enums.RequestStatus
+    title: string
+    description?: string | null
+    bookingId?: string | null
+    treatmentId?: string | null
+    priority?: string
+    requestedDate?: Date | string | null
+    completedDate?: Date | string | null
+    notes?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type UserPreferenceCreateManyHospitalInput = {
+    id?: string
+    userId: string
+    preferenceType?: string
+    notes?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type TreatmentPreferenceCreateManyHospitalInput = {
+    id?: string
+    treatmentId: string
+    treatmentName: string
+    preferenceType?: string
+    notes?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
   export type BookingUpdateWithoutHospitalInput = {
     id?: StringFieldUpdateOperationsInput | string
     appointmentDate?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -13149,6 +19822,7 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     user?: UserUpdateOneRequiredWithoutBookingsNestedInput
+    request?: HospitalRequestUpdateOneWithoutBookingNestedInput
   }
 
   export type BookingUncheckedUpdateWithoutHospitalInput = {
@@ -13161,6 +19835,7 @@ export namespace Prisma {
     status?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    request?: HospitalRequestUncheckedUpdateOneWithoutBookingNestedInput
   }
 
   export type BookingUncheckedUpdateManyWithoutHospitalInput = {
@@ -13171,6 +19846,114 @@ export namespace Prisma {
     purpose?: StringFieldUpdateOperationsInput | string
     additionalNotes?: NullableStringFieldUpdateOperationsInput | string | null
     status?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type HospitalRequestUpdateWithoutHospitalInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    requestType?: EnumRequestTypeFieldUpdateOperationsInput | $Enums.RequestType
+    status?: EnumRequestStatusFieldUpdateOperationsInput | $Enums.RequestStatus
+    title?: StringFieldUpdateOperationsInput | string
+    description?: NullableStringFieldUpdateOperationsInput | string | null
+    treatmentId?: NullableStringFieldUpdateOperationsInput | string | null
+    priority?: StringFieldUpdateOperationsInput | string
+    requestedDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    completedDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    user?: UserUpdateOneRequiredWithoutRequestsNestedInput
+    booking?: BookingUpdateOneWithoutRequestNestedInput
+  }
+
+  export type HospitalRequestUncheckedUpdateWithoutHospitalInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    userId?: StringFieldUpdateOperationsInput | string
+    requestType?: EnumRequestTypeFieldUpdateOperationsInput | $Enums.RequestType
+    status?: EnumRequestStatusFieldUpdateOperationsInput | $Enums.RequestStatus
+    title?: StringFieldUpdateOperationsInput | string
+    description?: NullableStringFieldUpdateOperationsInput | string | null
+    bookingId?: NullableStringFieldUpdateOperationsInput | string | null
+    treatmentId?: NullableStringFieldUpdateOperationsInput | string | null
+    priority?: StringFieldUpdateOperationsInput | string
+    requestedDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    completedDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type HospitalRequestUncheckedUpdateManyWithoutHospitalInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    userId?: StringFieldUpdateOperationsInput | string
+    requestType?: EnumRequestTypeFieldUpdateOperationsInput | $Enums.RequestType
+    status?: EnumRequestStatusFieldUpdateOperationsInput | $Enums.RequestStatus
+    title?: StringFieldUpdateOperationsInput | string
+    description?: NullableStringFieldUpdateOperationsInput | string | null
+    bookingId?: NullableStringFieldUpdateOperationsInput | string | null
+    treatmentId?: NullableStringFieldUpdateOperationsInput | string | null
+    priority?: StringFieldUpdateOperationsInput | string
+    requestedDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    completedDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type UserPreferenceUpdateWithoutHospitalInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    preferenceType?: StringFieldUpdateOperationsInput | string
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    user?: UserUpdateOneRequiredWithoutPreferredHospitalsNestedInput
+  }
+
+  export type UserPreferenceUncheckedUpdateWithoutHospitalInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    userId?: StringFieldUpdateOperationsInput | string
+    preferenceType?: StringFieldUpdateOperationsInput | string
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type UserPreferenceUncheckedUpdateManyWithoutHospitalInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    userId?: StringFieldUpdateOperationsInput | string
+    preferenceType?: StringFieldUpdateOperationsInput | string
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type TreatmentPreferenceUpdateWithoutHospitalInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    treatmentId?: StringFieldUpdateOperationsInput | string
+    treatmentName?: StringFieldUpdateOperationsInput | string
+    preferenceType?: StringFieldUpdateOperationsInput | string
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type TreatmentPreferenceUncheckedUpdateWithoutHospitalInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    treatmentId?: StringFieldUpdateOperationsInput | string
+    treatmentName?: StringFieldUpdateOperationsInput | string
+    preferenceType?: StringFieldUpdateOperationsInput | string
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type TreatmentPreferenceUncheckedUpdateManyWithoutHospitalInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    treatmentId?: StringFieldUpdateOperationsInput | string
+    treatmentName?: StringFieldUpdateOperationsInput | string
+    preferenceType?: StringFieldUpdateOperationsInput | string
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }

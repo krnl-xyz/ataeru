@@ -9,7 +9,7 @@ function generateWitnessHash(): string {
 }
 
 // Get all users
-export const getUsers = async (req: Request, res: Response, next: NextFunction) => {
+export const getUsers = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   try {
     const users = await prisma.user.findMany({
       select: {
@@ -53,7 +53,7 @@ export const getUsers = async (req: Request, res: Response, next: NextFunction) 
 };
 
 // Get user by ID
-export const getUserById = async (req: Request, res: Response, next: NextFunction) => {
+export const getUserById = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   try {
     const { id } = req.params;
     const user = await prisma.user.findUnique({
@@ -91,7 +91,8 @@ export const getUserById = async (req: Request, res: Response, next: NextFunctio
     });
 
     if (!user) {
-      return res.status(404).json({ message: "User not found" });
+      res.status(404).json({ message: "User not found" });
+      return;
     }
 
     res.status(200).json(user);
@@ -101,7 +102,7 @@ export const getUserById = async (req: Request, res: Response, next: NextFunctio
 };
 
 // Get user by email
-export const getUserByEmail = async (req: Request, res: Response, next: NextFunction) => {
+export const getUserByEmail = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   try {
     const { email } = req.params;
     const user = await prisma.user.findUnique({
@@ -139,7 +140,8 @@ export const getUserByEmail = async (req: Request, res: Response, next: NextFunc
     });
 
     if (!user) {
-      return res.status(404).json({ message: "User not found" });
+      res.status(404).json({ message: "User not found" });
+      return;
     }
 
     res.status(200).json(user);
@@ -149,22 +151,24 @@ export const getUserByEmail = async (req: Request, res: Response, next: NextFunc
 };
 
 // Create a new user (Admin/internal use - use /api/auth/signup for regular user registration)
-export const createUser = async (req: Request, res: Response, next: NextFunction) => {
+export const createUser = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   try {
     const { fullname, email, password, phone, address, about, hospitalId, userType } = req.body;
 
     // Validate required fields
     if (!fullname || !email || !password || !phone || !address || !hospitalId) {
-      return res.status(400).json({
+      res.status(400).json({
         message: "Missing required fields: fullname, email, password, phone, address, and hospitalId are required",
       });
+      return;
     }
 
     // Validate password strength
     if (password.length < 6) {
-      return res.status(400).json({
+      res.status(400).json({
         message: "Password must be at least 6 characters long",
       });
+      return;
     }
 
     // Verify that the hospital exists
@@ -173,7 +177,8 @@ export const createUser = async (req: Request, res: Response, next: NextFunction
     });
 
     if (!hospital) {
-      return res.status(404).json({ message: "Hospital not found" });
+      res.status(404).json({ message: "Hospital not found" });
+      return;
     }
 
     // Hash password
@@ -238,11 +243,13 @@ export const createUser = async (req: Request, res: Response, next: NextFunction
     // Handle unique constraint violations
     if (error.code === 'P2002') {
       if (error.meta?.target?.includes('email')) {
-        return res.status(409).json({ message: "Email already exists" });
+        res.status(409).json({ message: "Email already exists" });
+        return;
       }
       if (error.meta?.target?.includes('witnesshash')) {
         // Regenerate if collision (extremely rare)
-        return res.status(500).json({ message: "Error generating witness hash. Please try again." });
+        res.status(500).json({ message: "Error generating witness hash. Please try again." });
+        return;
       }
     }
     next(error);
@@ -250,7 +257,7 @@ export const createUser = async (req: Request, res: Response, next: NextFunction
 };
 
 // Update user
-export const updateUser = async (req: Request, res: Response, next: NextFunction) => {
+export const updateUser = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   try {
     const { id } = req.params;
     const { fullname, email, phone, address, about, hospitalId, userType } = req.body;
@@ -261,7 +268,8 @@ export const updateUser = async (req: Request, res: Response, next: NextFunction
     });
 
     if (!existingUser) {
-      return res.status(404).json({ message: "User not found" });
+      res.status(404).json({ message: "User not found" });
+      return;
     }
 
     // If hospitalId is being updated, verify it exists
@@ -271,7 +279,8 @@ export const updateUser = async (req: Request, res: Response, next: NextFunction
       });
 
       if (!hospital) {
-        return res.status(404).json({ message: "Hospital not found" });
+        res.status(404).json({ message: "Hospital not found" });
+        return;
       }
     }
 
@@ -329,7 +338,8 @@ export const updateUser = async (req: Request, res: Response, next: NextFunction
   } catch (error: any) {
     if (error.code === 'P2002') {
       if (error.meta?.target?.includes('email')) {
-        return res.status(409).json({ message: "Email already exists" });
+        res.status(409).json({ message: "Email already exists" });
+        return;
       }
     }
     next(error);
@@ -337,7 +347,7 @@ export const updateUser = async (req: Request, res: Response, next: NextFunction
 };
 
 // Delete user
-export const deleteUser = async (req: Request, res: Response, next: NextFunction) => {
+export const deleteUser = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   try {
     const { id } = req.params;
 
@@ -346,7 +356,8 @@ export const deleteUser = async (req: Request, res: Response, next: NextFunction
     });
 
     if (!user) {
-      return res.status(404).json({ message: "User not found" });
+      res.status(404).json({ message: "User not found" });
+      return;
     }
 
     await prisma.user.delete({
@@ -360,7 +371,7 @@ export const deleteUser = async (req: Request, res: Response, next: NextFunction
 };
 
 // Get users by hospital
-export const getUsersByHospital = async (req: Request, res: Response, next: NextFunction) => {
+export const getUsersByHospital = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   try {
     const { hospitalId } = req.params;
 
@@ -370,7 +381,8 @@ export const getUsersByHospital = async (req: Request, res: Response, next: Next
     });
 
     if (!hospital) {
-      return res.status(404).json({ message: "Hospital not found" });
+      res.status(404).json({ message: "Hospital not found" });
+      return;
     }
 
     const users = await prisma.user.findMany({
@@ -417,16 +429,17 @@ export const getUsersByHospital = async (req: Request, res: Response, next: Next
 };
 
 // Get users by type
-export const getUsersByType = async (req: Request, res: Response, next: NextFunction) => {
+export const getUsersByType = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   try {
     const { userType } = req.params;
 
     // Validate userType
     const validUserTypes = ['USER', 'MEDICAL_FACILITY'];
     if (!validUserTypes.includes(userType.toUpperCase())) {
-      return res.status(400).json({
+      res.status(400).json({
         message: "Invalid user type. Must be USER or MEDICAL_FACILITY",
       });
+      return;
     }
 
     const users = await prisma.user.findMany({

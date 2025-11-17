@@ -13,15 +13,16 @@ declare global {
 }
 
 // Authentication middleware to verify JWT token
-export const authenticate = (req: Request, res: Response, next: NextFunction) => {
+export const authenticate = (req: Request, res: Response, next: NextFunction): void => {
   try {
     // Get token from Authorization header
     const authHeader = req.headers.authorization;
 
     if (!authHeader) {
-      return res.status(401).json({
+      res.status(401).json({
         message: "Authentication required. Please provide a token.",
       });
+      return;
     }
 
     // Extract token from "Bearer <token>"
@@ -30,9 +31,10 @@ export const authenticate = (req: Request, res: Response, next: NextFunction) =>
       : authHeader;
 
     if (!token) {
-      return res.status(401).json({
+      res.status(401).json({
         message: "Authentication required. Please provide a token.",
       });
+      return;
     }
 
     // Verify token
@@ -49,14 +51,16 @@ export const authenticate = (req: Request, res: Response, next: NextFunction) =>
       next();
     } catch (error) {
       if (error instanceof jwt.TokenExpiredError) {
-        return res.status(401).json({
+        res.status(401).json({
           message: "Token has expired. Please login again.",
         });
+        return;
       }
       if (error instanceof jwt.JsonWebTokenError) {
-        return res.status(401).json({
+        res.status(401).json({
           message: "Invalid token. Please login again.",
         });
+        return;
       }
       throw error;
     }
@@ -66,7 +70,7 @@ export const authenticate = (req: Request, res: Response, next: NextFunction) =>
 };
 
 // Optional authentication middleware (doesn't fail if no token)
-export const optionalAuthenticate = (req: Request, res: Response, next: NextFunction) => {
+export const optionalAuthenticate = (req: Request, res: Response, next: NextFunction): void => {
   try {
     const authHeader = req.headers.authorization;
 

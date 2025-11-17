@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Search, Settings, HelpCircle, Plus, MessageSquare, Sparkles, FileText, LayoutDashboard, Users, Building2, Calendar, Image as ImageIcon, Upload, Link as LinkIcon, X, ChevronDown, ChevronLeft, ChevronRight, Menu, User, Bell, Shield, Globe, Loader, CheckCircle, ShieldCheck, MapPin, Star, Loader2 } from 'lucide-react';
+import { Search, Settings, HelpCircle, Plus, MessageSquare, Sparkles, FileText, LayoutDashboard, Users, Building2, Calendar, Image as ImageIcon, Upload, Link as LinkIcon, X, ChevronDown, ChevronLeft, ChevronRight, Menu, User, Bell, Shield, Globe, Loader, CheckCircle, ShieldCheck, MapPin, Star, Loader2, CreditCard, Crown, Trash2, Check } from 'lucide-react';
 import { format } from 'date-fns';
 import { useAuth } from '@/app/contexts/use-auth';
 import { useAccount, useReadContract } from 'wagmi';
@@ -14,9 +14,15 @@ import RegistrationModal from '@/components/RegistrationModal';
 import { entryPointABI, entryPointAddress, hospitalRequestABI } from '@/contract/web3';
 import { hospitalService, RegisteredHospital } from '@/lib/services/hospital';
 import { bookingService, Booking } from '@/lib/services/booking';
+import { pricingService, Plan, Subscription, PaymentMethod } from '@/lib/services/pricing';
+import { requestsService, Request } from '@/lib/services/requests';
 import SidebarUserDropdown from '@/components/app/SidebarUserDropdown';
 import AppTabsNavigation from '@/components/app/AppTabsNavigation';
 import ConsultationManager from '@/components/consultations/ConsultationManager';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 export default function AppPage() {
   const { user, isLoading: authLoading, isAuthenticated, updateProfile, changePassword, openLoginModal } = useAuth();
@@ -32,7 +38,7 @@ export default function AppPage() {
   const [showBanner, setShowBanner] = useState(true);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false); // Auto-collapsed by default
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
-  const [dashboardTab, setDashboardTab] = useState<'profile' | 'settings'>('profile');
+  const [dashboardTab, setDashboardTab] = useState<'profile' | 'settings' | 'pricing'>('profile');
 
   // Hospital Manager state
   const [hospitalManagerTab, setHospitalManagerTab] = useState('dashboard');
@@ -44,8 +50,20 @@ export default function AppPage() {
   const [isEditingHospital, setIsEditingHospital] = useState(false);
   const [editFormData, setEditFormData] = useState<Partial<RegisteredHospital>>({});
   const [isSavingHospital, setIsSavingHospital] = useState(false);
-  const [hospitalBookings, setHospitalBookings] = useState<any[]>([]);
+  const [hospitalBookings, setHospitalBookings] = useState<Booking[]>([]);
   const [isLoadingBookings, setIsLoadingBookings] = useState(false);
+  const [hospitalRequests, setHospitalRequests] = useState<Request[]>([]);
+  const [isLoadingRequests, setIsLoadingRequests] = useState(false);
+  const [hospitalStats, setHospitalStats] = useState({
+    totalDonors: 0,
+    activeDonors: 0,
+    pendingDonors: 0,
+    newDonors: 0,
+    totalCustomers: 0,
+    activeCustomers: 0,
+    newCustomers: 0,
+  });
+  const [isLoadingStats, setIsLoadingStats] = useState(false);
 
   // Profile state
   const [profile, setProfile] = useState({
@@ -98,6 +116,15 @@ export default function AppPage() {
   const [settingsTab, setSettingsTab] = useState<'notifications' | 'privacy' | 'security' | 'preferences'>('notifications');
   const [isSavingSettings, setIsSavingSettings] = useState(false);
   const [showSavedMessage, setShowSavedMessage] = useState(false);
+
+  // Pricing state
+  const [plans, setPlans] = useState<Plan[]>([]);
+  const [subscription, setSubscription] = useState<Subscription | null>(null);
+  const [paymentMethods, setPaymentMethods] = useState<PaymentMethod[]>([]);
+  const [isLoadingPricing, setIsLoadingPricing] = useState(false);
+  const [pricingTab, setPricingTab] = useState<'plans' | 'subscription' | 'payment'>('plans');
+  const [isProcessingPricing, setIsProcessingPricing] = useState(false);
+  const [selectedPlan, setSelectedPlan] = useState<string | null>(null);
 
   // Mock agents/apps list
   const agents = [
@@ -194,6 +221,15 @@ export default function AppPage() {
     }
   }, [activeView, user]);
 
+  // Load requests and stats when hospital is loaded
+  useEffect(() => {
+    if (hospital?.id && activeView === 'hospital-manager') {
+      loadHospitalRequests();
+      loadHospitalStats();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [hospital?.id, activeView]);
+
   // Load hospital bookings
   const loadHospitalBookings = async () => {
     setIsLoadingBookings(true);
@@ -206,6 +242,240 @@ export default function AppPage() {
       setHospitalBookings([]);
     } finally {
       setIsLoadingBookings(false);
+    }
+  };
+
+  // Load hospital requests
+  const loadHospitalRequests = async () => {
+    if (!hospital?.id) return;
+    setIsLoadingRequests(true);
+    try {
+      const requests = await requestsService.getHospitalRequests(hospital.id);
+      setHospitalRequests(requests);
+    } catch (error: any) {
+      console.error('Error loading hospital requests:', error);
+      setHospitalRequests([]);
+    } finally {
+      setIsLoadingRequests(false);
+    }
+  };
+
+  // Load hospital statistics
+  const loadHospitalStats = async () => {
+    if (!hospital?.id) return;
+    setIsLoadingStats(true);
+    try {
+      // Load bookings and requests in parallel
+      const [bookings, requests] = await Promise.all([
+        bookingService.getMyHospitalBookings().catch(() => []),
+        requestsService.getHospitalRequests(hospital.id).catch(() => []),
+      ]);
+
+      // Calculate donor stats from requests
+      const donorRequests = requests.filter(r => r.requestType === 'DONOR_REQUEST');
+      const now = new Date();
+      const oneWeekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+      const oneMonthAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+
+      const totalDonors = donorRequests.length;
+      const activeDonors = donorRequests.filter(r => r.status === 'ACTIVE').length;
+      const pendingDonors = donorRequests.filter(r => r.status === 'PENDING').length;
+      const newDonors = donorRequests.filter(r => {
+        const createdDate = new Date(r.createdAt);
+        return createdDate >= oneWeekAgo;
+      }).length;
+
+      // Calculate customer stats from bookings
+      const uniqueCustomers = new Set(bookings.map(b => b.userId));
+      const totalCustomers = uniqueCustomers.size;
+
+      // Active customers are those with bookings in the last 30 days
+      const activeCustomerIds = new Set(
+        bookings
+          .filter(b => {
+            const bookingDate = new Date(b.appointmentDate);
+            return bookingDate >= oneMonthAgo;
+          })
+          .map(b => b.userId)
+      );
+      const activeCustomers = activeCustomerIds.size;
+
+      // New customers are those with first booking in the last month
+      const customerFirstBooking = new Map<string, Date>();
+      bookings.forEach(b => {
+        const existing = customerFirstBooking.get(b.userId);
+        const bookingDate = new Date(b.appointmentDate);
+        if (!existing || bookingDate < existing) {
+          customerFirstBooking.set(b.userId, bookingDate);
+        }
+      });
+      const newCustomers = Array.from(customerFirstBooking.values()).filter(
+        date => date >= oneMonthAgo
+      ).length;
+
+      setHospitalStats({
+        totalDonors,
+        activeDonors,
+        pendingDonors,
+        newDonors,
+        totalCustomers,
+        activeCustomers,
+        newCustomers,
+      });
+    } catch (error: any) {
+      console.error('Error loading hospital stats:', error);
+    } finally {
+      setIsLoadingStats(false);
+    }
+  };
+
+  // Load pricing data
+  const loadPricingData = async () => {
+    setIsLoadingPricing(true);
+    try {
+      let plansData: Plan[] = [];
+      let subscriptionData: Subscription | null = null;
+      let paymentMethodsData: PaymentMethod[] = [];
+
+      try {
+        [plansData, subscriptionData, paymentMethodsData] = await Promise.all([
+          pricingService.getPlans(),
+          pricingService.getSubscription().catch(() => null),
+          pricingService.getPaymentMethods().catch(() => []),
+        ]);
+      } catch (apiError) {
+        console.log('API not available, using default plans');
+        plansData = [
+          {
+            id: 'free',
+            name: 'Free',
+            description: 'Perfect for getting started',
+            price: 0,
+            currency: 'USD',
+            interval: 'month',
+            features: [
+              'Basic AI consultations',
+              '5 credits per month',
+              'Access to hospital directory',
+              'Basic booking features',
+            ],
+            credits: 5,
+          },
+          {
+            id: 'pro',
+            name: 'Pro',
+            description: 'For power users and professionals',
+            price: 29.99,
+            currency: 'USD',
+            interval: 'month',
+            features: [
+              'Unlimited AI consultations',
+              '100 credits per month',
+              'Priority booking',
+              'Advanced analytics',
+              '24/7 support',
+              'Early access to new features',
+            ],
+            credits: 100,
+            isPopular: true,
+          },
+          {
+            id: 'enterprise',
+            name: 'Enterprise',
+            description: 'For hospitals and large organizations',
+            price: 99.99,
+            currency: 'USD',
+            interval: 'month',
+            features: [
+              'Everything in Pro',
+              'Unlimited credits',
+              'Custom integrations',
+              'Dedicated account manager',
+              'SLA guarantee',
+              'Custom training',
+            ],
+            credits: -1,
+          },
+        ];
+      }
+
+      setPlans(plansData);
+      setSubscription(subscriptionData);
+      setPaymentMethods(paymentMethodsData);
+    } catch (error: any) {
+      console.error('Error loading pricing data:', error);
+      toast.error('Failed to load pricing information', {
+        description: error.message || 'Please try again later.',
+      });
+    } finally {
+      setIsLoadingPricing(false);
+    }
+  };
+
+  const handleSubscribe = async (planId: string) => {
+    if (!isAuthenticated) {
+      toast.error('Authentication Required', {
+        description: 'Please log in to subscribe',
+      });
+      return;
+    }
+
+    setIsProcessingPricing(true);
+    setSelectedPlan(planId);
+
+    try {
+      if (paymentMethods.length === 0) {
+        toast.info('Payment Method Required', {
+          description: 'Please add a payment method first',
+        });
+        setPricingTab('payment');
+        return;
+      }
+
+      const defaultPaymentMethod = paymentMethods.find(pm => pm.isDefault) || paymentMethods[0];
+
+      const newSubscription = await pricingService.createSubscription({
+        planId,
+        paymentMethodId: defaultPaymentMethod.id,
+      });
+
+      setSubscription(newSubscription);
+      toast.success('Subscription activated!', {
+        description: 'Your plan has been successfully activated.',
+      });
+
+      await loadPricingData();
+    } catch (error: any) {
+      console.error('Error subscribing:', error);
+      toast.error('Subscription failed', {
+        description: error.message || 'Please try again later.',
+      });
+    } finally {
+      setIsProcessingPricing(false);
+      setSelectedPlan(null);
+    }
+  };
+
+  const handleCancelSubscription = async () => {
+    if (!confirm('Are you sure you want to cancel your subscription? You will continue to have access until the end of your billing period.')) {
+      return;
+    }
+
+    setIsProcessingPricing(true);
+    try {
+      const updatedSubscription = await pricingService.cancelSubscription();
+      setSubscription(updatedSubscription);
+      toast.success('Subscription cancelled', {
+        description: 'Your subscription will remain active until the end of your billing period.',
+      });
+      await loadPricingData();
+    } catch (error: any) {
+      console.error('Error cancelling subscription:', error);
+      toast.error('Failed to cancel subscription', {
+        description: error.message || 'Please try again later.',
+      });
+    } finally {
+      setIsProcessingPricing(false);
     }
   };
 
@@ -268,32 +538,28 @@ export default function AppPage() {
     }
   };
 
-  const donorStats = {
-    total: 125,
-    active: 87,
-    pending: 12,
-    new: 8
-  };
+  // Calculate recent donations from requests
+  const recentDonations = hospitalRequests
+    .filter(r => r.requestType === 'DONOR_REQUEST')
+    .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+    .slice(0, 5)
+    .map(request => ({
+      id: request.id,
+      donor: request.user?.fullname || 'Anonymous',
+      date: format(new Date(request.createdAt), 'MMMM d, yyyy'),
+      status: request.status === 'FULFILLED' ? 'Completed' : request.status === 'ACTIVE' ? 'Processing' : 'Pending',
+    }));
 
-  const customerStats = {
-    total: 310,
-    active: 178,
-    new: 24
-  };
-
-  const recentDonations = [
-    { id: 'DON-2025-042', donor: 'John D.', date: 'April 24, 2025', status: 'Completed' },
-    { id: 'DON-2025-041', donor: 'Michael R.', date: 'April 22, 2025', status: 'Processing' },
-    { id: 'DON-2025-039', donor: 'Robert K.', date: 'April 20, 2025', status: 'Completed' },
-    { id: 'DON-2025-038', donor: 'David S.', date: 'April 19, 2025', status: 'Completed' },
-  ];
-
-  const recentCustomers = [
-    { id: 'CUS-2025-088', name: 'Sarah & James M.', date: 'April 23, 2025', treatment: 'IVF' },
-    { id: 'CUS-2025-087', name: 'Lisa T.', date: 'April 22, 2025', treatment: 'Donor Sperm' },
-    { id: 'CUS-2025-086', name: 'Rachel & Emma P.', date: 'April 21, 2025', treatment: 'Surrogacy' },
-    { id: 'CUS-2025-084', name: 'Thomas B.', date: 'April 20, 2025', treatment: 'Donor Sperm' },
-  ];
+  // Calculate recent customers from bookings
+  const recentCustomers = hospitalBookings
+    .sort((a, b) => new Date(b.appointmentDate).getTime() - new Date(a.appointmentDate).getTime())
+    .slice(0, 5)
+    .map(booking => ({
+      id: booking.id,
+      name: booking.user?.fullname || 'Anonymous',
+      date: format(new Date(booking.appointmentDate), 'MMMM d, yyyy'),
+      treatment: booking.purpose || 'Consultation',
+    }));
 
   const filteredAgents = agents.filter(agent =>
     agent.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -991,40 +1257,58 @@ export default function AppPage() {
                   {hospitalManagerTab === 'dashboard' && (
                     <div>
                       {/* Stats Grid */}
-                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-                        <div className="bg-gray-900/50 border border-gray-800 rounded-lg p-6">
-                          <h3 className="text-sm font-medium text-gray-400 mb-1">Total Donors</h3>
-                          <p className="text-2xl font-bold text-white">{donorStats.total}</p>
-                          <div className="mt-2 flex items-center text-sm">
-                            <span className="text-green-400 font-medium">+{donorStats.new} new</span>
-                            <span className="text-gray-500 ml-2">this week</span>
+                      {isLoadingStats ? (
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                          {[1, 2, 3, 4].map(i => (
+                            <div key={i} className="bg-gray-900/50 border border-gray-800 rounded-lg p-6">
+                              <div className="animate-pulse">
+                                <div className="h-4 bg-gray-700 rounded w-24 mb-2"></div>
+                                <div className="h-8 bg-gray-700 rounded w-16 mb-2"></div>
+                                <div className="h-4 bg-gray-700 rounded w-32"></div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                          <div className="bg-gray-900/50 border border-gray-800 rounded-lg p-6">
+                            <h3 className="text-sm font-medium text-gray-400 mb-1">Total Donors</h3>
+                            <p className="text-2xl font-bold text-white">{hospitalStats.totalDonors}</p>
+                            <div className="mt-2 flex items-center text-sm">
+                              <span className="text-green-400 font-medium">+{hospitalStats.newDonors} new</span>
+                              <span className="text-gray-500 ml-2">this week</span>
+                            </div>
+                          </div>
+                          <div className="bg-gray-900/50 border border-gray-800 rounded-lg p-6">
+                            <h3 className="text-sm font-medium text-gray-400 mb-1">Active Donors</h3>
+                            <p className="text-2xl font-bold text-white">{hospitalStats.activeDonors}</p>
+                            <div className="mt-2 flex items-center text-sm">
+                              <span className="text-yellow-400 font-medium">{hospitalStats.pendingDonors} pending</span>
+                              <span className="text-gray-500 ml-2">verification</span>
+                            </div>
+                          </div>
+                          <div className="bg-gray-900/50 border border-gray-800 rounded-lg p-6">
+                            <h3 className="text-sm font-medium text-gray-400 mb-1">Total Customers</h3>
+                            <p className="text-2xl font-bold text-white">{hospitalStats.totalCustomers}</p>
+                            <div className="mt-2 flex items-center text-sm">
+                              <span className="text-green-400 font-medium">+{hospitalStats.newCustomers} new</span>
+                              <span className="text-gray-500 ml-2">this month</span>
+                            </div>
+                          </div>
+                          <div className="bg-gray-900/50 border border-gray-800 rounded-lg p-6">
+                            <h3 className="text-sm font-medium text-gray-400 mb-1">Active Customers</h3>
+                            <p className="text-2xl font-bold text-white">{hospitalStats.activeCustomers}</p>
+                            <div className="mt-2 flex items-center text-sm">
+                              <span className="text-blue-400 font-medium">
+                                {hospitalStats.totalCustomers > 0
+                                  ? Math.round((hospitalStats.activeCustomers / hospitalStats.totalCustomers) * 100)
+                                  : 0}%
+                              </span>
+                              <span className="text-gray-500 ml-2">activity rate</span>
+                            </div>
                           </div>
                         </div>
-                        <div className="bg-gray-900/50 border border-gray-800 rounded-lg p-6">
-                          <h3 className="text-sm font-medium text-gray-400 mb-1">Active Donors</h3>
-                          <p className="text-2xl font-bold text-white">{donorStats.active}</p>
-                          <div className="mt-2 flex items-center text-sm">
-                            <span className="text-yellow-400 font-medium">{donorStats.pending} pending</span>
-                            <span className="text-gray-500 ml-2">verification</span>
-                          </div>
-                        </div>
-                        <div className="bg-gray-900/50 border border-gray-800 rounded-lg p-6">
-                          <h3 className="text-sm font-medium text-gray-400 mb-1">Total Customers</h3>
-                          <p className="text-2xl font-bold text-white">{customerStats.total}</p>
-                          <div className="mt-2 flex items-center text-sm">
-                            <span className="text-green-400 font-medium">+{customerStats.new} new</span>
-                            <span className="text-gray-500 ml-2">this month</span>
-                          </div>
-                        </div>
-                        <div className="bg-gray-900/50 border border-gray-800 rounded-lg p-6">
-                          <h3 className="text-sm font-medium text-gray-400 mb-1">Active Customers</h3>
-                          <p className="text-2xl font-bold text-white">{customerStats.active}</p>
-                          <div className="mt-2 flex items-center text-sm">
-                            <span className="text-blue-400 font-medium">{Math.round(customerStats.active / customerStats.total * 100)}%</span>
-                            <span className="text-gray-500 ml-2">activity rate</span>
-                          </div>
-                        </div>
-                      </div>
+                      )}
 
                       {/* Recent Activity */}
                       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
@@ -1035,20 +1319,33 @@ export default function AppPage() {
                             <button className="text-blue-400 text-sm font-medium hover:text-blue-300">View All</button>
                           </div>
                           <div className="divide-y divide-gray-800">
-                            {recentDonations.map(donation => (
-                              <div key={donation.id} className="px-6 py-4 flex justify-between items-center">
-                                <div>
-                                  <p className="font-medium text-white">{donation.donor}</p>
-                                  <p className="text-sm text-gray-400">{donation.date}</p>
-                                </div>
-                                <span className={`text-xs px-2 py-1 rounded-full ${donation.status === 'Completed'
-                                  ? 'bg-green-500/20 text-green-400 border border-green-500/50'
-                                  : 'bg-yellow-500/20 text-yellow-400 border border-yellow-500/50'
-                                  }`}>
-                                  {donation.status}
-                                </span>
+                            {isLoadingRequests ? (
+                              <div className="px-6 py-4 text-center text-gray-400">
+                                <Loader2 className="h-5 w-5 animate-spin mx-auto mb-2" />
+                                <p className="text-sm">Loading donations...</p>
                               </div>
-                            ))}
+                            ) : recentDonations.length === 0 ? (
+                              <div className="px-6 py-8 text-center text-gray-400">
+                                <p className="text-sm">No donations yet</p>
+                              </div>
+                            ) : (
+                              recentDonations.map(donation => (
+                                <div key={donation.id} className="px-6 py-4 flex justify-between items-center">
+                                  <div>
+                                    <p className="font-medium text-white">{donation.donor}</p>
+                                    <p className="text-sm text-gray-400">{donation.date}</p>
+                                  </div>
+                                  <span className={`text-xs px-2 py-1 rounded-full ${donation.status === 'Completed'
+                                    ? 'bg-green-500/20 text-green-400 border border-green-500/50'
+                                    : donation.status === 'Processing'
+                                      ? 'bg-blue-500/20 text-blue-400 border border-blue-500/50'
+                                      : 'bg-yellow-500/20 text-yellow-400 border border-yellow-500/50'
+                                    }`}>
+                                    {donation.status}
+                                  </span>
+                                </div>
+                              ))
+                            )}
                           </div>
                           <div className="bg-gray-900/50 px-6 py-3 border-t border-gray-800">
                             <button
@@ -1068,17 +1365,28 @@ export default function AppPage() {
                             <button className="text-blue-400 text-sm font-medium hover:text-blue-300">View All</button>
                           </div>
                           <div className="divide-y divide-gray-800">
-                            {recentCustomers.map(customer => (
-                              <div key={customer.id} className="px-6 py-4 flex justify-between items-center">
-                                <div>
-                                  <p className="font-medium text-white">{customer.name}</p>
-                                  <p className="text-sm text-gray-400">{customer.date}</p>
-                                </div>
-                                <span className="text-xs px-2 py-1 rounded-full bg-blue-500/20 text-blue-400 border border-blue-500/50">
-                                  {customer.treatment}
-                                </span>
+                            {isLoadingBookings ? (
+                              <div className="px-6 py-4 text-center text-gray-400">
+                                <Loader2 className="h-5 w-5 animate-spin mx-auto mb-2" />
+                                <p className="text-sm">Loading customers...</p>
                               </div>
-                            ))}
+                            ) : recentCustomers.length === 0 ? (
+                              <div className="px-6 py-8 text-center text-gray-400">
+                                <p className="text-sm">No customers yet</p>
+                              </div>
+                            ) : (
+                              recentCustomers.map(customer => (
+                                <div key={customer.id} className="px-6 py-4 flex justify-between items-center">
+                                  <div>
+                                    <p className="font-medium text-white">{customer.name}</p>
+                                    <p className="text-sm text-gray-400">{customer.date}</p>
+                                  </div>
+                                  <span className="text-xs px-2 py-1 rounded-full bg-blue-500/20 text-blue-400 border border-blue-500/50">
+                                    {customer.treatment}
+                                  </span>
+                                </div>
+                              ))
+                            )}
                           </div>
                           <div className="bg-gray-900/50 px-6 py-3 border-t border-gray-800">
                             <button className="w-full bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 flex items-center justify-center gap-2">
@@ -1601,6 +1909,21 @@ export default function AppPage() {
                     >
                       <Settings className="w-4 h-4" />
                       Settings
+                    </button>
+                    <button
+                      onClick={() => {
+                        setDashboardTab('pricing');
+                        if (plans.length === 0) {
+                          loadPricingData();
+                        }
+                      }}
+                      className={`${dashboardTab === 'pricing'
+                        ? 'border-blue-500 text-white'
+                        : 'border-transparent text-gray-400 hover:text-gray-300 hover:border-gray-700'
+                        } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm flex items-center gap-2`}
+                    >
+                      <CreditCard className="w-4 h-4" />
+                      Pricing
                     </button>
                   </nav>
                 </div>
@@ -2160,6 +2483,353 @@ export default function AppPage() {
                           </div>
                         </div>
                       )}
+                    </div>
+                  </div>
+                )}
+
+                {dashboardTab === 'pricing' && (
+                  <div className="bg-[#0b0b0d] border border-gray-800 rounded-lg overflow-hidden">
+                    <div className="border-b border-gray-800 px-6 py-4">
+                      <h2 className="text-xl font-semibold text-white">Pricing & Plans</h2>
+                      <p className="text-sm text-gray-400 mt-1">Choose the plan that works best for you</p>
+                    </div>
+
+                    <div className="p-6">
+                      <Tabs value={pricingTab} onValueChange={(value) => setPricingTab(value as 'plans' | 'subscription' | 'payment')}>
+                        <TabsList className="mb-6 bg-[#0a0a0a] border border-gray-800">
+                          <TabsTrigger value="plans" className="data-[state=active]:bg-blue-600 data-[state=active]:text-white">Plans</TabsTrigger>
+                          <TabsTrigger value="subscription" className="data-[state=active]:bg-blue-600 data-[state=active]:text-white">My Subscription</TabsTrigger>
+                          <TabsTrigger value="payment" className="data-[state=active]:bg-blue-600 data-[state=active]:text-white">Payment Methods</TabsTrigger>
+                        </TabsList>
+
+                        <TabsContent value="plans">
+                          {isLoadingPricing ? (
+                            <div className="flex items-center justify-center py-12">
+                              <Loader2 className="w-6 h-6 animate-spin text-blue-500" />
+                              <span className="ml-3 text-gray-400">Loading plans...</span>
+                            </div>
+                          ) : (
+                            <div className="grid md:grid-cols-3 gap-6">
+                              {plans.map((plan) => {
+                                const isCurrentPlan = subscription?.planId === plan.id;
+                                const isPopular = plan.isPopular;
+
+                                return (
+                                  <div
+                                    key={plan.id}
+                                    className={`relative bg-[#0a0a0a] border rounded-lg p-6 ${isPopular ? 'border-blue-500 border-2' : 'border-gray-800'} ${isCurrentPlan ? 'bg-blue-500/10' : ''}`}
+                                  >
+                                    {isPopular && (
+                                      <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
+                                        <Badge className="bg-blue-600 text-white">Most Popular</Badge>
+                                      </div>
+                                    )}
+                                    <div className="mb-4">
+                                      <div className="flex items-center justify-between mb-2">
+                                        <h3 className="text-2xl font-bold text-white">{plan.name}</h3>
+                                        {isCurrentPlan && (
+                                          <Badge variant="outline" className="bg-green-500/20 text-green-400 border-green-500/50">
+                                            Current Plan
+                                          </Badge>
+                                        )}
+                                      </div>
+                                      <p className="text-gray-400 text-sm mb-4">{plan.description}</p>
+                                      <div className="mb-4">
+                                        <span className="text-4xl font-bold text-white">${plan.price}</span>
+                                        <span className="text-gray-400">/{plan.interval}</span>
+                                      </div>
+                                    </div>
+                                    <div className="space-y-2 mb-6">
+                                      {plan.features.map((feature, index) => (
+                                        <div key={index} className="flex items-start gap-2">
+                                          <Check className="h-5 w-5 text-green-500 flex-shrink-0 mt-0.5" />
+                                          <span className="text-sm text-gray-300">{feature}</span>
+                                        </div>
+                                      ))}
+                                    </div>
+                                    <div className="pt-4 border-t border-gray-800">
+                                      <div className="flex items-center gap-2 text-sm text-gray-400 mb-4">
+                                        <Sparkles className="h-4 w-4" />
+                                        <span>
+                                          {plan.credits === -1
+                                            ? 'Unlimited credits/month'
+                                            : `${plan.credits} credits/month included`}
+                                        </span>
+                                      </div>
+                                      {isCurrentPlan ? (
+                                        <button
+                                          className="w-full px-4 py-2 border border-gray-700 text-gray-400 rounded-lg text-sm font-medium cursor-not-allowed"
+                                          disabled
+                                        >
+                                          Current Plan
+                                        </button>
+                                      ) : (
+                                        <button
+                                          className="w-full px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium disabled:opacity-50 transition-colors"
+                                          onClick={() => handleSubscribe(plan.id)}
+                                          disabled={isProcessingPricing && selectedPlan === plan.id}
+                                        >
+                                          {isProcessingPricing && selectedPlan === plan.id ? (
+                                            <span className="flex items-center justify-center gap-2">
+                                              <Loader2 className="h-4 w-4 animate-spin" />
+                                              Processing...
+                                            </span>
+                                          ) : (
+                                            'Subscribe'
+                                          )}
+                                        </button>
+                                      )}
+                                    </div>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          )}
+                        </TabsContent>
+
+                        <TabsContent value="subscription">
+                          {subscription ? (
+                            <div className="space-y-6">
+                              <div className="bg-[#0a0a0a] border border-gray-800 rounded-lg p-6">
+                                <div className="flex items-center justify-between mb-4">
+                                  <div>
+                                    <h3 className="text-2xl font-bold text-white">{subscription.planName}</h3>
+                                    <p className="text-gray-400 text-sm">Your current subscription plan</p>
+                                  </div>
+                                  <Badge
+                                    className={
+                                      subscription.status === 'active'
+                                        ? 'bg-green-500/20 text-green-400 border-green-500/50'
+                                        : subscription.status === 'cancelled'
+                                          ? 'bg-red-500/20 text-red-400 border-red-500/50'
+                                          : 'bg-yellow-500/20 text-yellow-400 border-yellow-500/50'
+                                    }
+                                  >
+                                    {subscription.status.toUpperCase()}
+                                  </Badge>
+                                </div>
+                                <div className="bg-gradient-to-r from-blue-500/10 to-purple-500/10 rounded-lg p-6 border border-blue-500/20 mb-6">
+                                  <div className="flex items-center justify-between mb-4">
+                                    <div>
+                                      <h4 className="text-lg font-semibold text-white flex items-center gap-2">
+                                        <Sparkles className="h-5 w-5 text-blue-400" />
+                                        Available Credits
+                                      </h4>
+                                      <p className="text-sm text-gray-400 mt-1">Credits remaining this period</p>
+                                    </div>
+                                    <div className="text-right">
+                                      <div className="text-3xl font-bold text-blue-400">
+                                        {subscription.credits === -1 ? '∞' : subscription.creditsRemaining}
+                                      </div>
+                                      <div className="text-sm text-gray-400">
+                                        {subscription.credits === -1
+                                          ? 'Unlimited'
+                                          : `of ${subscription.credits} total`}
+                                      </div>
+                                    </div>
+                                  </div>
+                                  {subscription.credits !== -1 && (
+                                    <>
+                                      <div className="w-full bg-gray-800 rounded-full h-2">
+                                        <div
+                                          className="bg-blue-600 h-2 rounded-full transition-all"
+                                          style={{
+                                            width: `${Math.min((subscription.creditsRemaining / subscription.credits) * 100, 100)}%`,
+                                          }}
+                                        />
+                                      </div>
+                                      <div className="flex justify-between text-xs text-gray-500 mt-2">
+                                        <span>{subscription.creditsUsed} used</span>
+                                        <span>{subscription.creditsRemaining} remaining</span>
+                                      </div>
+                                    </>
+                                  )}
+                                </div>
+                                <div className="grid md:grid-cols-2 gap-4 mb-6">
+                                  <div>
+                                    <h4 className="text-sm font-medium text-gray-400 mb-1">Billing Period</h4>
+                                    <p className="text-white">
+                                      {format(new Date(subscription.currentPeriodStart), 'MMM d, yyyy')} -{' '}
+                                      {format(new Date(subscription.currentPeriodEnd), 'MMM d, yyyy')}
+                                    </p>
+                                  </div>
+                                  <div>
+                                    <h4 className="text-sm font-medium text-gray-400 mb-1">Next Billing Date</h4>
+                                    <p className="text-white">
+                                      {format(new Date(subscription.currentPeriodEnd), 'MMM d, yyyy')}
+                                    </p>
+                                  </div>
+                                </div>
+                                <div className="flex gap-3 pt-4 border-t border-gray-800">
+                                  {subscription.cancelAtPeriodEnd ? (
+                                    <button
+                                      className="px-4 py-2 border border-gray-700 text-gray-300 rounded-lg text-sm font-medium hover:bg-gray-800 transition-colors"
+                                      onClick={async () => {
+                                        try {
+                                          await pricingService.updateSubscription({ cancelAtPeriodEnd: false });
+                                          toast.success('Subscription reactivated');
+                                          await loadPricingData();
+                                        } catch (error: any) {
+                                          toast.error('Failed to reactivate subscription', {
+                                            description: error.message || 'Please try again.',
+                                          });
+                                        }
+                                      }}
+                                    >
+                                      Reactivate Subscription
+                                    </button>
+                                  ) : (
+                                    <button
+                                      className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg text-sm font-medium disabled:opacity-50 transition-colors"
+                                      onClick={handleCancelSubscription}
+                                      disabled={isProcessingPricing}
+                                    >
+                                      Cancel Subscription
+                                    </button>
+                                  )}
+                                  <button
+                                    className="px-4 py-2 border border-gray-700 text-gray-300 rounded-lg text-sm font-medium hover:bg-gray-800 transition-colors"
+                                    onClick={() => setPricingTab('plans')}
+                                  >
+                                    Change Plan
+                                  </button>
+                                </div>
+                              </div>
+                            </div>
+                          ) : (
+                            <div className="bg-[#0a0a0a] border border-gray-800 rounded-lg p-12 text-center">
+                              <Crown className="h-12 w-12 text-gray-600 mx-auto mb-4" />
+                              <h3 className="text-lg font-medium text-white mb-2">No Active Subscription</h3>
+                              <p className="text-gray-400 mb-6">
+                                Subscribe to a plan to unlock premium features and credits
+                              </p>
+                              <button
+                                className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium"
+                                onClick={() => setPricingTab('plans')}
+                              >
+                                View Plans
+                              </button>
+                            </div>
+                          )}
+                        </TabsContent>
+
+                        <TabsContent value="payment">
+                          <div className="space-y-6">
+                            <div className="flex justify-between items-center">
+                              <div>
+                                <h3 className="text-lg font-semibold text-white">Payment Methods</h3>
+                                <p className="text-sm text-gray-400 mt-1">Manage your payment methods</p>
+                              </div>
+                              <button
+                                className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium flex items-center gap-2"
+                                onClick={() => {
+                                  toast.info('Payment method integration', {
+                                    description: 'Payment method integration will be implemented with Stripe or similar service.',
+                                  });
+                                }}
+                              >
+                                <Plus className="h-4 w-4" />
+                                Add Payment Method
+                              </button>
+                            </div>
+
+                            {paymentMethods.length === 0 ? (
+                              <div className="bg-[#0a0a0a] border border-gray-800 rounded-lg p-12 text-center">
+                                <CreditCard className="h-12 w-12 text-gray-600 mx-auto mb-4" />
+                                <h3 className="text-lg font-medium text-white mb-2">No Payment Methods</h3>
+                                <p className="text-gray-400 mb-6">
+                                  Add a payment method to subscribe to a plan
+                                </p>
+                                <button
+                                  className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium flex items-center gap-2 mx-auto"
+                                  onClick={() => {
+                                    toast.info('Payment method integration', {
+                                      description: 'Payment method integration will be implemented with Stripe or similar service.',
+                                    });
+                                  }}
+                                >
+                                  <Plus className="h-4 w-4" />
+                                  Add Payment Method
+                                </button>
+                              </div>
+                            ) : (
+                              <div className="grid gap-4">
+                                {paymentMethods.map((method) => (
+                                  <div key={method.id} className="bg-[#0a0a0a] border border-gray-800 rounded-lg p-6">
+                                    <div className="flex items-center justify-between">
+                                      <div className="flex items-center gap-4">
+                                        <div className="w-12 h-12 rounded-lg bg-blue-500/20 flex items-center justify-center">
+                                          <CreditCard className="h-6 w-6 text-blue-400" />
+                                        </div>
+                                        <div>
+                                          <div className="flex items-center gap-2">
+                                            <h4 className="font-semibold text-white">
+                                              {method.type === 'card'
+                                                ? `${method.brand || 'Card'} •••• ${method.last4 || '****'}`
+                                                : method.type === 'crypto'
+                                                  ? `Crypto Wallet`
+                                                  : 'Bank Account'}
+                                            </h4>
+                                            {method.isDefault && (
+                                              <Badge variant="outline" className="bg-green-500/20 text-green-400 border-green-500/50">
+                                                Default
+                                              </Badge>
+                                            )}
+                                          </div>
+                                          {method.type === 'card' && method.expiryMonth && method.expiryYear && (
+                                            <p className="text-sm text-gray-400 mt-1">
+                                              Expires {method.expiryMonth}/{method.expiryYear}
+                                            </p>
+                                          )}
+                                        </div>
+                                      </div>
+                                      <div className="flex gap-2">
+                                        {!method.isDefault && (
+                                          <button
+                                            className="px-3 py-1.5 border border-gray-700 text-gray-300 rounded-lg text-sm font-medium hover:bg-gray-800 transition-colors"
+                                            onClick={async () => {
+                                              try {
+                                                await pricingService.setDefaultPaymentMethod(method.id);
+                                                toast.success('Default payment method updated');
+                                                await loadPricingData();
+                                              } catch (error: any) {
+                                                toast.error('Failed to update payment method', {
+                                                  description: error.message || 'Please try again.',
+                                                });
+                                              }
+                                            }}
+                                          >
+                                            Set as Default
+                                          </button>
+                                        )}
+                                        <button
+                                          className="px-3 py-1.5 border border-gray-700 text-gray-300 rounded-lg text-sm font-medium hover:bg-gray-800 transition-colors"
+                                          onClick={async () => {
+                                            if (!confirm('Are you sure you want to delete this payment method?')) {
+                                              return;
+                                            }
+                                            try {
+                                              await pricingService.deletePaymentMethod(method.id);
+                                              toast.success('Payment method deleted');
+                                              await loadPricingData();
+                                            } catch (error: any) {
+                                              toast.error('Failed to delete payment method', {
+                                                description: error.message || 'Please try again.',
+                                              });
+                                            }
+                                          }}
+                                        >
+                                          <Trash2 className="h-4 w-4" />
+                                        </button>
+                                      </div>
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                        </TabsContent>
+                      </Tabs>
                     </div>
                   </div>
                 )}

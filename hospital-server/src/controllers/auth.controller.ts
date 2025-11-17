@@ -4,6 +4,8 @@ import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import config from "../config/config";
 import crypto from "crypto";
+import { OAuth2Client } from "google-auth-library";
+import jwksClient from "jwks-rsa";
 // Import middleware to ensure type declarations are loaded
 import "../middlewares/auth.middleware";
 
@@ -22,7 +24,7 @@ function generateToken(userId: string, email: string): string {
 }
 
 // Signup - Register a new user
-export const signup = async (req: Request, res: Response, next: NextFunction) => {
+export const signup = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   try {
     const { fullname, email, password, phone, address, about, hospitalId, userType } = req.body;
 
@@ -35,31 +37,35 @@ export const signup = async (req: Request, res: Response, next: NextFunction) =>
     // Validate required fields
     // hospitalId is required for USER type, optional for MEDICAL_FACILITY
     if (!fullname || !email || !password || !phone || !address) {
-      return res.status(400).json({
+      res.status(400).json({
         message: "Missing required fields: fullname, email, password, phone, and address are required",
       });
+      return;
     }
 
     // hospitalId is required for regular USERs, optional for MEDICAL_FACILITY
     if (finalUserType === 'USER' && !hospitalId) {
-      return res.status(400).json({
+      res.status(400).json({
         message: "hospitalId is required for USER type",
       });
+      return;
     }
 
     // Validate password strength (minimum 6 characters)
     if (password.length < 6) {
-      return res.status(400).json({
+      res.status(400).json({
         message: "Password must be at least 6 characters long",
       });
+      return;
     }
 
     // Validate email format
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
-      return res.status(400).json({
+      res.status(400).json({
         message: "Invalid email format",
       });
+      return;
     }
 
     // Check if user already exists
@@ -68,9 +74,10 @@ export const signup = async (req: Request, res: Response, next: NextFunction) =>
     });
 
     if (existingUser) {
-      return res.status(409).json({
+      res.status(409).json({
         message: "User with this email already exists",
       });
+      return;
     }
 
     // Verify that the hospital exists (only if hospitalId is provided)
@@ -80,7 +87,8 @@ export const signup = async (req: Request, res: Response, next: NextFunction) =>
       });
 
       if (!hospital) {
-        return res.status(404).json({ message: "Hospital not found" });
+        res.status(404).json({ message: "Hospital not found" });
+        return;
       }
     }
 
@@ -163,11 +171,13 @@ export const signup = async (req: Request, res: Response, next: NextFunction) =>
     // Handle unique constraint violations
     if (error.code === 'P2002') {
       if (error.meta?.target?.includes('email')) {
-        return res.status(409).json({ message: "Email already exists" });
+        res.status(409).json({ message: "Email already exists" });
+        return;
       }
       if (error.meta?.target?.includes('witnesshash')) {
         // Regenerate if collision (extremely rare)
-        return res.status(500).json({ message: "Error generating witness hash. Please try again." });
+        res.status(500).json({ message: "Error generating witness hash. Please try again." });
+        return;
       }
     }
     next(error);
@@ -175,15 +185,16 @@ export const signup = async (req: Request, res: Response, next: NextFunction) =>
 };
 
 // Login - Authenticate user
-export const login = async (req: Request, res: Response, next: NextFunction) => {
+export const login = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   try {
     const { email, password } = req.body;
 
     // Validate required fields
     if (!email || !password) {
-      return res.status(400).json({
+      res.status(400).json({
         message: "Email and password are required",
       });
+      return;
     }
 
     // Find user by email (we need password for verification, so we'll fetch it separately)
@@ -192,18 +203,28 @@ export const login = async (req: Request, res: Response, next: NextFunction) => 
     });
 
     if (!user) {
-      return res.status(401).json({
+      res.status(401).json({
         message: "Invalid email or password",
       });
+      return;
+    }
+
+    // Check if user has a password (OAuth users don't have passwords)
+    if (!user.password) {
+      res.status(401).json({
+        message: `This account uses ${user.authProvider} authentication. Please sign in with ${user.authProvider}.`,
+      });
+      return;
     }
 
     // Verify password
-    const isPasswordValid = await bcrypt.compare(password, user.password);
+    const isPasswordValid = await bcrypt.compare(password, user.password!);
 
     if (!isPasswordValid) {
-      return res.status(401).json({
+      res.status(401).json({
         message: "Invalid email or password",
       });
+      return;
     }
 
     // Fetch user data without password for response
@@ -271,12 +292,13 @@ export const login = async (req: Request, res: Response, next: NextFunction) => 
 };
 
 // Get current user profile (requires authentication)
-export const getCurrentUser = async (req: Request, res: Response, next: NextFunction) => {
+export const getCurrentUser = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   try {
     // User ID is attached to request by auth middleware
     const userId = req.userId;
     if (!userId) {
-      return res.status(401).json({ message: "Authentication required" });
+      res.status(401).json({ message: "Authentication required" });
+      return;
     }
 
     const user = await prisma.user.findUnique({
@@ -330,7 +352,8 @@ export const getCurrentUser = async (req: Request, res: Response, next: NextFunc
     });
 
     if (!user) {
-      return res.status(404).json({ message: "User not found" });
+      res.status(404).json({ message: "User not found" });
+      return;
     }
 
     res.status(200).json(user);
@@ -340,11 +363,12 @@ export const getCurrentUser = async (req: Request, res: Response, next: NextFunc
 };
 
 // Update current user profile (requires authentication)
-export const updateProfile = async (req: Request, res: Response, next: NextFunction) => {
+export const updateProfile = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   try {
     const userId = req.userId;
     if (!userId) {
-      return res.status(401).json({ message: "Authentication required" });
+      res.status(401).json({ message: "Authentication required" });
+      return;
     }
     const { fullname, phone, address, about, hospitalId, userType } = req.body;
 
@@ -354,7 +378,8 @@ export const updateProfile = async (req: Request, res: Response, next: NextFunct
     });
 
     if (!existingUser) {
-      return res.status(404).json({ message: "User not found" });
+      res.status(404).json({ message: "User not found" });
+      return;
     }
 
     // If hospitalId is being updated, verify it exists
@@ -364,7 +389,8 @@ export const updateProfile = async (req: Request, res: Response, next: NextFunct
       });
 
       if (!hospital) {
-        return res.status(404).json({ message: "Hospital not found" });
+        res.status(404).json({ message: "Hospital not found" });
+        return;
       }
     }
 
@@ -443,26 +469,29 @@ export const updateProfile = async (req: Request, res: Response, next: NextFunct
 };
 
 // Change password (requires authentication)
-export const changePassword = async (req: Request, res: Response, next: NextFunction) => {
+export const changePassword = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   try {
     const userId = req.userId;
     if (!userId) {
-      return res.status(401).json({ message: "Authentication required" });
+      res.status(401).json({ message: "Authentication required" });
+      return;
     }
     const { currentPassword, newPassword } = req.body;
 
     // Validate required fields
     if (!currentPassword || !newPassword) {
-      return res.status(400).json({
+      res.status(400).json({
         message: "Current password and new password are required",
       });
+      return;
     }
 
     // Validate new password strength
     if (newPassword.length < 6) {
-      return res.status(400).json({
+      res.status(400).json({
         message: "New password must be at least 6 characters long",
       });
+      return;
     }
 
     // Get user with password
@@ -471,16 +500,24 @@ export const changePassword = async (req: Request, res: Response, next: NextFunc
     });
 
     if (!user) {
-      return res.status(404).json({ message: "User not found" });
+      res.status(404).json({ message: "User not found" });
+      return;
     }
 
     // Verify current password
+    if (!user.password) {
+      res.status(400).json({
+        message: "Password change is not available for OAuth users",
+      });
+      return;
+    }
     const isPasswordValid = await bcrypt.compare(currentPassword, user.password);
 
     if (!isPasswordValid) {
-      return res.status(401).json({
+      res.status(401).json({
         message: "Current password is incorrect",
       });
+      return;
     }
 
     // Hash new password
@@ -496,6 +533,642 @@ export const changePassword = async (req: Request, res: Response, next: NextFunc
       message: "Password changed successfully",
     });
   } catch (error) {
+    next(error);
+  }
+};
+
+// Google SSO - Sign in/Sign up with Google
+export const googleSSO = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  try {
+    const { idToken, userType, hospitalId, phone, address, about } = req.body;
+
+    // Validate required fields
+    if (!idToken) {
+      res.status(400).json({
+        message: "Google ID token is required",
+      });
+      return;
+    }
+
+    // Validate userType if provided
+    const validUserTypes = ['USER', 'MEDICAL_FACILITY'];
+    const finalUserType = userType && validUserTypes.includes(userType.toUpperCase())
+      ? userType.toUpperCase()
+      : 'USER';
+
+    // hospitalId is required for regular USERs, optional for MEDICAL_FACILITY
+    if (finalUserType === 'USER' && !hospitalId) {
+      res.status(400).json({
+        message: "hospitalId is required for USER type",
+      });
+      return;
+    }
+
+    // Verify Google ID token
+    const client = new OAuth2Client(config.googleClientId);
+
+    let ticket;
+    try {
+      ticket = await client.verifyIdToken({
+        idToken,
+        audience: config.googleClientId,
+      });
+    } catch (error) {
+      res.status(401).json({
+        message: "Invalid Google ID token",
+      });
+      return;
+    }
+
+    const payload = ticket.getPayload();
+    if (!payload) {
+      res.status(401).json({
+        message: "Failed to verify Google ID token",
+      });
+      return;
+    }
+
+    const { sub: providerId, email, name, picture } = payload;
+
+    if (!email) {
+      res.status(400).json({
+        message: "Email not provided by Google",
+      });
+      return;
+    }
+
+    // Check if user already exists
+    let user = await prisma.user.findUnique({
+      where: { email },
+    });
+    let wasJustCreated = false;
+
+    if (user) {
+      // User exists - check if they're using the same provider
+      if (user.authProvider !== 'GOOGLE') {
+        res.status(409).json({
+          message: `User already exists with ${user.authProvider} authentication. Please use your original sign-in method.`,
+        });
+        return;
+      }
+
+      // Update providerId if it has changed
+      if (user.providerId !== providerId) {
+        user = await prisma.user.update({
+          where: { id: user.id },
+          data: { providerId: providerId || null },
+          select: {
+            id: true,
+            fullname: true,
+            email: true,
+            witnesshash: true,
+            phone: true,
+            address: true,
+            about: true,
+            userType: true,
+            authProvider: true,
+            providerId: true,
+            password: true,
+            hospitalId: true,
+            createdAt: true,
+            updatedAt: true,
+            hospital: {
+              select: {
+                facilityId: true,
+                facilityName: true,
+                address: true,
+                city: true,
+                zip: true,
+                state: true,
+                country: true,
+                telephone: true,
+                hospitalType: true,
+                hospitalOwnership: true,
+                hospitalOverallRating: true,
+                hospitalOverallRatingFootnote: true,
+                emergencyServices: true,
+              },
+            },
+            registeredHospital: {
+              select: {
+                id: true,
+                name: true,
+                location: true,
+                rating: true,
+                specialties: true,
+                imageUrl: true,
+                isFavorite: true,
+                reviews: true,
+                verified: true,
+                walletAddress: true,
+                createdAt: true,
+                updatedAt: true,
+              },
+            },
+          },
+        });
+      } else {
+        // Fetch user data for response
+        user = await prisma.user.findUnique({
+          where: { id: user.id },
+          select: {
+            id: true,
+            fullname: true,
+            email: true,
+            witnesshash: true,
+            phone: true,
+            address: true,
+            about: true,
+            userType: true,
+            authProvider: true,
+            providerId: true,
+            password: true,
+            hospitalId: true,
+            createdAt: true,
+            updatedAt: true,
+            hospital: {
+              select: {
+                facilityId: true,
+                facilityName: true,
+                address: true,
+                city: true,
+                zip: true,
+                state: true,
+                country: true,
+                telephone: true,
+                hospitalType: true,
+                hospitalOwnership: true,
+                hospitalOverallRating: true,
+                hospitalOverallRatingFootnote: true,
+                emergencyServices: true,
+              },
+            },
+            registeredHospital: {
+              select: {
+                id: true,
+                name: true,
+                location: true,
+                rating: true,
+                specialties: true,
+                imageUrl: true,
+                isFavorite: true,
+                reviews: true,
+                verified: true,
+                walletAddress: true,
+                createdAt: true,
+                updatedAt: true,
+              },
+            },
+          },
+        });
+      }
+    } else {
+      // New user - create account
+      // Validate required fields for new users
+      if (!phone || !address) {
+        res.status(400).json({
+          message: "phone and address are required for new users",
+        });
+        return;
+      }
+
+      // Verify hospital exists if hospitalId is provided
+      if (hospitalId) {
+        const hospital = await prisma.hospitalInformation.findUnique({
+          where: { facilityId: hospitalId },
+        });
+
+        if (!hospital) {
+          res.status(404).json({ message: "Hospital not found" });
+          return;
+        }
+      }
+
+      // Generate witnesshash automatically
+      const witnesshash = generateWitnessHash();
+
+      // Create the user
+      wasJustCreated = true;
+      user = await prisma.user.create({
+        data: {
+          fullname: name || email.split('@')[0], // Use Google name or fallback to email prefix
+          email,
+          password: null, // No password for OAuth users
+          witnesshash,
+          phone,
+          address,
+          about: about || null,
+          userType: finalUserType as 'USER' | 'MEDICAL_FACILITY',
+          authProvider: 'GOOGLE',
+          providerId: providerId || null,
+          hospitalId: hospitalId || null,
+        },
+        select: {
+          id: true,
+          fullname: true,
+          email: true,
+          witnesshash: true,
+          phone: true,
+          address: true,
+          about: true,
+          userType: true,
+          authProvider: true,
+          providerId: true,
+          password: true,
+          hospitalId: true,
+          createdAt: true,
+          updatedAt: true,
+          hospital: {
+            select: {
+              facilityId: true,
+              facilityName: true,
+              address: true,
+              city: true,
+              zip: true,
+              state: true,
+              country: true,
+              telephone: true,
+              hospitalType: true,
+              hospitalOwnership: true,
+              hospitalOverallRating: true,
+              hospitalOverallRatingFootnote: true,
+              emergencyServices: true,
+            },
+          },
+          registeredHospital: {
+            select: {
+              id: true,
+              name: true,
+              location: true,
+              rating: true,
+              specialties: true,
+              imageUrl: true,
+              isFavorite: true,
+              reviews: true,
+              verified: true,
+              walletAddress: true,
+              createdAt: true,
+              updatedAt: true,
+            },
+          },
+        },
+      });
+    }
+
+    if (!user) {
+      res.status(500).json({
+        message: "Failed to process user",
+      });
+      return;
+    }
+
+    // Generate JWT token
+    const token = generateToken(user.id, user.email);
+
+    res.status(wasJustCreated ? 201 : 200).json({
+      message: wasJustCreated ? "User created successfully" : "Login successful",
+      user,
+      token,
+    });
+  } catch (error: any) {
+    // Handle unique constraint violations
+    if (error.code === 'P2002') {
+      if (error.meta?.target?.includes('email')) {
+        res.status(409).json({ message: "Email already exists" });
+        return;
+      }
+      if (error.meta?.target?.includes('witnesshash')) {
+        res.status(500).json({ message: "Error generating witness hash. Please try again." });
+        return;
+      }
+    }
+    next(error);
+  }
+};
+
+// Apple SSO - Sign in/Sign up with Apple
+export const appleSSO = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  try {
+    const { identityToken, userType, hospitalId, phone, address, about, fullname } = req.body;
+
+    // Validate required fields
+    if (!identityToken) {
+      res.status(400).json({
+        message: "Apple identity token is required",
+      });
+      return;
+    }
+
+    // Validate userType if provided
+    const validUserTypes = ['USER', 'MEDICAL_FACILITY'];
+    const finalUserType = userType && validUserTypes.includes(userType.toUpperCase())
+      ? userType.toUpperCase()
+      : 'USER';
+
+    // hospitalId is required for regular USERs, optional for MEDICAL_FACILITY
+    if (finalUserType === 'USER' && !hospitalId) {
+      res.status(400).json({
+        message: "hospitalId is required for USER type",
+      });
+      return;
+    }
+
+    // Verify Apple identity token
+    let decodedToken: any;
+    try {
+      // Decode without verification first to get the key ID
+      const decoded = jwt.decode(identityToken, { complete: true });
+      if (!decoded || typeof decoded === 'string') {
+        res.status(401).json({
+          message: "Invalid Apple identity token format",
+        });
+        return;
+      }
+
+      const kid = decoded.header.kid;
+      if (!kid) {
+        res.status(401).json({
+          message: "Missing key ID in Apple token",
+        });
+        return;
+      }
+
+      // Get Apple's public keys
+      const client = jwksClient({
+        jwksUri: 'https://appleid.apple.com/auth/keys',
+        cache: true,
+        cacheMaxAge: 86400000, // 24 hours
+      });
+
+      const key = await client.getSigningKey(kid);
+      const publicKey = key.getPublicKey();
+
+      // Verify the token
+      decodedToken = jwt.verify(identityToken, publicKey, {
+        audience: config.appleClientId,
+        issuer: 'https://appleid.apple.com',
+      }) as any;
+    } catch (error) {
+      res.status(401).json({
+        message: "Invalid or expired Apple identity token",
+      });
+      return;
+    }
+
+    const { sub: providerId, email } = decodedToken;
+
+    if (!email) {
+      res.status(400).json({
+        message: "Email not provided by Apple",
+      });
+      return;
+    }
+
+    // Check if user already exists
+    let user = await prisma.user.findUnique({
+      where: { email },
+    });
+    let wasJustCreated = false;
+
+    if (user) {
+      // User exists - check if they're using the same provider
+      if (user.authProvider !== 'APPLE') {
+        res.status(409).json({
+          message: `User already exists with ${user.authProvider} authentication. Please use your original sign-in method.`,
+        });
+        return;
+      }
+
+      // Update providerId if it has changed
+      if (user.providerId !== providerId) {
+        user = await prisma.user.update({
+          where: { id: user.id },
+          data: { providerId: providerId || null },
+          select: {
+            id: true,
+            fullname: true,
+            email: true,
+            witnesshash: true,
+            phone: true,
+            address: true,
+            about: true,
+            userType: true,
+            authProvider: true,
+            providerId: true,
+            password: true,
+            hospitalId: true,
+            createdAt: true,
+            updatedAt: true,
+            hospital: {
+              select: {
+                facilityId: true,
+                facilityName: true,
+                address: true,
+                city: true,
+                zip: true,
+                state: true,
+                country: true,
+                telephone: true,
+                hospitalType: true,
+                hospitalOwnership: true,
+                hospitalOverallRating: true,
+                hospitalOverallRatingFootnote: true,
+                emergencyServices: true,
+              },
+            },
+            registeredHospital: {
+              select: {
+                id: true,
+                name: true,
+                location: true,
+                rating: true,
+                specialties: true,
+                imageUrl: true,
+                isFavorite: true,
+                reviews: true,
+                verified: true,
+                walletAddress: true,
+                createdAt: true,
+                updatedAt: true,
+              },
+            },
+          },
+        });
+      } else {
+        // Fetch user data for response
+        user = await prisma.user.findUnique({
+          where: { id: user.id },
+          select: {
+            id: true,
+            fullname: true,
+            email: true,
+            witnesshash: true,
+            phone: true,
+            address: true,
+            about: true,
+            userType: true,
+            authProvider: true,
+            providerId: true,
+            password: true,
+            hospitalId: true,
+            createdAt: true,
+            updatedAt: true,
+            hospital: {
+              select: {
+                facilityId: true,
+                facilityName: true,
+                address: true,
+                city: true,
+                zip: true,
+                state: true,
+                country: true,
+                telephone: true,
+                hospitalType: true,
+                hospitalOwnership: true,
+                hospitalOverallRating: true,
+                hospitalOverallRatingFootnote: true,
+                emergencyServices: true,
+              },
+            },
+            registeredHospital: {
+              select: {
+                id: true,
+                name: true,
+                location: true,
+                rating: true,
+                specialties: true,
+                imageUrl: true,
+                isFavorite: true,
+                reviews: true,
+                verified: true,
+                walletAddress: true,
+                createdAt: true,
+                updatedAt: true,
+              },
+            },
+          },
+        });
+      }
+    } else {
+      // New user - create account
+      // Validate required fields for new users
+      if (!phone || !address) {
+        res.status(400).json({
+          message: "phone and address are required for new users",
+        });
+        return;
+      }
+
+      // Verify hospital exists if hospitalId is provided
+      if (hospitalId) {
+        const hospital = await prisma.hospitalInformation.findUnique({
+          where: { facilityId: hospitalId },
+        });
+
+        if (!hospital) {
+          res.status(404).json({ message: "Hospital not found" });
+          return;
+        }
+      }
+
+      // Generate witnesshash automatically
+      const witnesshash = generateWitnessHash();
+
+      // Create the user
+      wasJustCreated = true;
+      user = await prisma.user.create({
+        data: {
+          fullname: fullname || email.split('@')[0], // Use provided name or fallback to email prefix
+          email,
+          password: null, // No password for OAuth users
+          witnesshash,
+          phone,
+          address,
+          about: about || null,
+          userType: finalUserType as 'USER' | 'MEDICAL_FACILITY',
+          authProvider: 'APPLE',
+          providerId: providerId || null,
+          hospitalId: hospitalId || null,
+        },
+        select: {
+          id: true,
+          fullname: true,
+          email: true,
+          witnesshash: true,
+          phone: true,
+          address: true,
+          about: true,
+          userType: true,
+          authProvider: true,
+          providerId: true,
+          password: true,
+          hospitalId: true,
+          createdAt: true,
+          updatedAt: true,
+          hospital: {
+            select: {
+              facilityId: true,
+              facilityName: true,
+              address: true,
+              city: true,
+              zip: true,
+              state: true,
+              country: true,
+              telephone: true,
+              hospitalType: true,
+              hospitalOwnership: true,
+              hospitalOverallRating: true,
+              hospitalOverallRatingFootnote: true,
+              emergencyServices: true,
+            },
+          },
+          registeredHospital: {
+            select: {
+              id: true,
+              name: true,
+              location: true,
+              rating: true,
+              specialties: true,
+              imageUrl: true,
+              isFavorite: true,
+              reviews: true,
+              verified: true,
+              walletAddress: true,
+              createdAt: true,
+              updatedAt: true,
+            },
+          },
+        },
+      });
+    }
+
+    if (!user) {
+      res.status(500).json({
+        message: "Failed to process user",
+      });
+      return;
+    }
+
+    // Generate JWT token
+    const token = generateToken(user.id, user.email);
+
+    res.status(wasJustCreated ? 201 : 200).json({
+      message: wasJustCreated ? "User created successfully" : "Login successful",
+      user,
+      token,
+    });
+  } catch (error: any) {
+    // Handle unique constraint violations
+    if (error.code === 'P2002') {
+      if (error.meta?.target?.includes('email')) {
+        res.status(409).json({ message: "Email already exists" });
+        return;
+      }
+      if (error.meta?.target?.includes('witnesshash')) {
+        res.status(500).json({ message: "Error generating witness hash. Please try again." });
+        return;
+      }
+    }
     next(error);
   }
 };

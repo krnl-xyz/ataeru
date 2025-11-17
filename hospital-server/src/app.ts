@@ -4,6 +4,9 @@ import userRoutes from './routes/user.routes';
 import authRoutes from './routes/auth.routes';
 import hospitalRoutes from './routes/hospital.routes';
 import bookingRoutes from './routes/booking.routes';
+import requestRoutes from './routes/request.routes';
+import userPreferenceRoutes from './routes/user-preference.routes';
+import treatmentPreferenceRoutes from './routes/treatment-preference.routes';
 import { errorHandler } from './middlewares/errorHandler';
 import cors from 'cors';
 
@@ -69,6 +72,9 @@ app.use('/api/facilities', facilityRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/hospitals', hospitalRoutes);
 app.use('/api/bookings', bookingRoutes);
+app.use('/api/requests', requestRoutes);
+app.use('/api/preferences', userPreferenceRoutes);
+app.use('/api/treatment-preferences', treatmentPreferenceRoutes);
 
 // Global error handler (should be after routes)
 app.use(errorHandler);
