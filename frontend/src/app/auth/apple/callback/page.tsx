@@ -14,6 +14,7 @@ export default function AppleCallbackPage() {
 
   useEffect(() => {
     const handleCallback = async () => {
+      let result: any = null;
       try {
         const code = searchParams.get('code');
         const error = searchParams.get('error');
@@ -39,19 +40,39 @@ export default function AppleCallbackPage() {
 
         // Exchange code for token (or use id_token directly if available)
         const authCode = code || id_token || '';
-        const result = await authService.handleOAuthCallback('apple', authCode, state || undefined);
-        
-        // Refresh user data
-        await refreshUser();
-        
-        toast.success('Successfully signed in with Apple');
-        router.push('/');
+        result = await authService.handleOAuthCallback('apple', authCode, state || undefined);
+
+        // Check if user exists (has id)
+        if (result && result.id) {
+          // User exists, refresh and redirect
+          await refreshUser();
+          toast.success('Successfully signed in with Apple');
+          router.push('/');
+        } else {
+          // User doesn't exist, redirect to signup with SSO state
+          router.push(`/signup?sso=apple&email=${encodeURIComponent(result?.email || '')}&fullname=${encodeURIComponent(result?.fullname || '')}`);
+        }
       } catch (error: any) {
         console.error('Apple callback error:', error);
-        toast.error('Authentication failed', {
-          description: error.message || 'Failed to complete Apple authentication',
-        });
-        router.push('/');
+
+        // Check if error indicates missing required fields (phone, address, hospitalId, etc.)
+        if (authService.isMissingRequiredFieldsError(error)) {
+          const email = error.email || result?.email || '';
+          const fullname = error.fullname || result?.fullname || '';
+          router.push(`/signup?sso=apple&email=${encodeURIComponent(email)}&fullname=${encodeURIComponent(fullname)}`);
+          return;
+        }
+
+        // Check if error indicates user doesn't exist
+        if (error.message?.includes('not found') || error.message?.includes('does not exist') || error.status === 404) {
+          const email = error.email || result?.email || '';
+          router.push(`/signup?sso=apple&email=${encodeURIComponent(email)}`);
+        } else {
+          toast.error('Authentication failed', {
+            description: error.message || 'Failed to complete Apple authentication',
+          });
+          router.push('/');
+        }
       } finally {
         setIsProcessing(false);
       }

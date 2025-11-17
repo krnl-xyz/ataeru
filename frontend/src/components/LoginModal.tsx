@@ -69,8 +69,13 @@ export default function LoginModal() {
       });
       setShowPassword(false);
       setEmailConfirmed(false);
-    } catch (error) {
-      // Error is already handled in the auth context
+    } catch (error: any) {
+      // Check if error indicates user doesn't exist
+      if (error.message?.includes('not found') || error.message?.includes('does not exist') || error.status === 404) {
+        closeLoginModal();
+        window.location.href = `/signup?email=${encodeURIComponent(formData.email)}`;
+      }
+      // Other errors are already handled in the auth context
     } finally {
       setIsSubmitting(false);
     }
@@ -94,18 +99,45 @@ export default function LoginModal() {
   };
 
   const handleGoogleLogin = async () => {
+    let result: any = null;
     try {
       setIsSubmitting(true);
-      await authService.loginWithGoogle();
-      // Refresh user data after successful login
-      await refreshUser();
-      closeLoginModal();
-      toast.success('Successfully signed in with Google');
+      result = await authService.loginWithGoogle();
+
+      // Check if user exists (has id)
+      if (result && result.id) {
+        // User exists, refresh and close
+        await refreshUser();
+        closeLoginModal();
+        toast.success('Successfully signed in with Google');
+      } else {
+        // User doesn't exist, redirect to signup with SSO state
+        closeLoginModal();
+        window.location.href = `/signup?sso=google&email=${encodeURIComponent(result?.email || '')}&fullname=${encodeURIComponent(result?.fullname || '')}`;
+      }
     } catch (error: any) {
       console.error('Google login error:', error);
-      toast.error('Google login failed', {
-        description: error.message || 'Please try again later.',
-      });
+
+      // Check if error indicates missing required fields (phone, address, hospitalId, etc.)
+      if (authService.isMissingRequiredFieldsError(error)) {
+        const email = error.email || result?.email || '';
+        const fullname = error.fullname || result?.fullname || '';
+        closeLoginModal();
+        window.location.href = `/signup?sso=google&email=${encodeURIComponent(email)}&fullname=${encodeURIComponent(fullname)}`;
+        return;
+      }
+
+      // Check if error indicates user doesn't exist
+      if (error.message?.includes('not found') || error.message?.includes('does not exist') || error.status === 404) {
+        // Extract email from error if available
+        const email = error.email || result?.email || '';
+        closeLoginModal();
+        window.location.href = `/signup?sso=google&email=${encodeURIComponent(email)}`;
+      } else {
+        toast.error('Google login failed', {
+          description: error.message || 'Please try again later.',
+        });
+      }
     } finally {
       setIsSubmitting(false);
     }
@@ -115,6 +147,7 @@ export default function LoginModal() {
     try {
       setIsSubmitting(true);
       await authService.loginWithApple();
+      // Note: Apple login redirects to callback, handled there
     } catch (error: any) {
       console.error('Apple login error:', error);
       toast.error('Apple login failed', {

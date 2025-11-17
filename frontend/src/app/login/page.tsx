@@ -26,7 +26,7 @@ export default function LoginPage() {
 
   const handleEmailSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!email) {
       return;
     }
@@ -45,7 +45,7 @@ export default function LoginPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!emailConfirmed) {
       handleEmailSubmit(e);
       return;
@@ -63,24 +63,52 @@ export default function LoginPage() {
       await login({ email, password });
       toast.success('Login successful!');
       router.push('/');
-    } catch (error) {
-      // Error is already handled in the auth context
+    } catch (error: any) {
+      // Check if error indicates user doesn't exist
+      if (error.message?.includes('not found') || error.message?.includes('does not exist') || error.status === 404) {
+        router.push(`/signup?email=${encodeURIComponent(email)}`);
+      }
+      // Other errors are already handled in the auth context
     } finally {
       setIsSubmitting(false);
     }
   };
 
   const handleGoogleLogin = async () => {
+    let result: any = null;
     try {
       setIsSubmitting(true);
-      await authService.loginWithGoogle();
-      toast.success('Login successful!');
-      router.push('/');
+      result = await authService.loginWithGoogle();
+
+      // Check if user exists (has id)
+      if (result && result.id) {
+        // User exists, refresh and redirect
+        toast.success('Login successful!');
+        router.push('/');
+      } else {
+        // User doesn't exist, redirect to signup with SSO state
+        router.push(`/signup?sso=google&email=${encodeURIComponent(result?.email || '')}&fullname=${encodeURIComponent(result?.fullname || '')}`);
+      }
     } catch (error: any) {
       console.error('Google login error:', error);
-      toast.error('Google login failed', {
-        description: error.message || 'Please try again later.',
-      });
+
+      // Check if error indicates missing required fields (phone, address, hospitalId, etc.)
+      if (authService.isMissingRequiredFieldsError(error)) {
+        const email = error.email || result?.email || '';
+        const fullname = error.fullname || result?.fullname || '';
+        router.push(`/signup?sso=google&email=${encodeURIComponent(email)}&fullname=${encodeURIComponent(fullname)}`);
+        return;
+      }
+
+      // Check if error indicates user doesn't exist
+      if (error.message?.includes('not found') || error.message?.includes('does not exist') || error.status === 404) {
+        const email = error.email || result?.email || '';
+        router.push(`/signup?sso=google&email=${encodeURIComponent(email)}`);
+      } else {
+        toast.error('Google login failed', {
+          description: error.message || 'Please try again later.',
+        });
+      }
     } finally {
       setIsSubmitting(false);
     }

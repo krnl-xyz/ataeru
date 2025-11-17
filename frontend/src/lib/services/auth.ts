@@ -1,11 +1,10 @@
 export interface SignupRequest {
-  fullname: string;
-  email: string;
-  password: string;
-  phone: string;
-  address: string;
-  about: string;
-  hospitalId: string;
+  fullname?: string;
+  email?: string;
+  password: string; // Required for regular signup, 'SSO_AUTH' for SSO
+  phone?: string;
+  address?: string;
+  about?: string;
   userType: 'USER' | 'MEDICAL_FACILITY';
 }
 
@@ -75,6 +74,24 @@ const removeAuthToken = (): void => {
   localStorage.removeItem('authToken');
 };
 
+// Store SSO idToken in sessionStorage (temporary, for signup flow)
+const setSSOIdToken = (provider: 'google' | 'apple', idToken: string): void => {
+  if (typeof window === 'undefined') return;
+  sessionStorage.setItem(`sso_${provider}_idToken`, idToken);
+};
+
+// Get SSO idToken from sessionStorage
+const getSSOIdToken = (provider: 'google' | 'apple'): string | null => {
+  if (typeof window === 'undefined') return null;
+  return sessionStorage.getItem(`sso_${provider}_idToken`);
+};
+
+// Remove SSO idToken from sessionStorage
+const removeSSOIdToken = (provider: 'google' | 'apple'): void => {
+  if (typeof window === 'undefined') return;
+  sessionStorage.removeItem(`sso_${provider}_idToken`);
+};
+
 // Type declarations for Google Identity Services
 declare global {
   interface Window {
@@ -126,7 +143,13 @@ export const apiRequest = async <T>(
 
     if (!response.ok) {
       const error = await response.json().catch(() => ({ message: 'An error occurred' }));
-      throw new Error(error.message || `HTTP error! status: ${response.status}`);
+      const errorObj: any = new Error(error.message || `HTTP error! status: ${response.status}`);
+      errorObj.status = response.status;
+      errorObj.statusCode = response.status;
+      // Preserve any additional error properties from the response
+      if (error.email) errorObj.email = error.email;
+      if (error.fullname) errorObj.fullname = error.fullname;
+      throw errorObj;
     }
 
     return response.json();
@@ -200,6 +223,77 @@ export const authService = {
         const errorMessage = USE_PROXY
           ? `Cannot connect to backend server. Please ensure the backend server is running at ${backendUrl}`
           : `Cannot connect to server at ${API_BASE_URL}${API_PREFIX}/auth/signup`;
+
+        console.error('Error in API request:', errorMessage);
+        throw new Error(errorMessage);
+      }
+      throw error;
+    }
+  },
+
+  /**
+   * Sign up a new user with SSO (uses stored idToken)
+   * This should be used when user has an active SSO session
+   */
+  async signupWithSSO(provider: 'google' | 'apple', data: Partial<SignupRequest>): Promise<AuthResponse> {
+    try {
+      // Get stored idToken from sessionStorage
+      const idToken = getSSOIdToken(provider);
+
+      if (!idToken) {
+        throw new Error(`No ${provider} ID token found. Please sign in with ${provider} again.`);
+      }
+
+      // Use the same endpoint as login, but with signup data + idToken
+      const requestBody: any = {
+        idToken,
+        ...data,
+      };
+
+      const response = await fetch(`${API_BASE_URL}${API_PREFIX}/auth/${provider}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(requestBody),
+        credentials: 'include', // Include cookies for SSO session
+      });
+
+      if (!response.ok) {
+        const error = await response.json().catch(() => ({ message: 'SSO signup failed' }));
+        const errorObj: any = new Error(error.message || `HTTP error! status: ${response.status}`);
+        errorObj.status = response.status;
+        errorObj.statusCode = response.status;
+        throw errorObj;
+      }
+
+      const result = await response.json();
+
+      // Store token if provided (for token-based auth)
+      if (result.token) {
+        setAuthToken(result.token);
+        // Clear SSO idToken after successful signup
+        removeSSOIdToken(provider);
+      }
+      // If no token, assume cookie-based auth (cookies are set automatically by the server)
+
+      return result;
+    } catch (error: any) {
+      console.error('SSO signup error details:', {
+        message: error.message,
+        name: error.name,
+        stack: error.stack,
+        url: `${API_BASE_URL}${API_PREFIX}/auth/${provider}`,
+      });
+
+      // Provide more helpful error messages
+      if (error.message === 'Failed to fetch' || error.name === 'TypeError') {
+        const backendUrl = USE_PROXY
+          ? (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001')
+          : API_BASE_URL;
+        const errorMessage = USE_PROXY
+          ? `Cannot connect to backend server. Please ensure the backend server is running at ${backendUrl}`
+          : `Cannot connect to server at ${API_BASE_URL}${API_PREFIX}/auth/${provider}`;
 
         console.error('Error in API request:', errorMessage);
         throw new Error(errorMessage);
@@ -305,7 +399,7 @@ export const authService = {
   },
 
   /**
-   * Check if user is authenticated
+   * Check if user is authenticaoted
    * For cookie-based auth, we can't check cookies directly (they're httpOnly)
    * So we'll rely on the auth context to check by attempting to fetch user data
    */
@@ -477,10 +571,51 @@ export const authService = {
   },
 
   /**
+   * Check if error indicates missing required fields for signup
+   */
+  isMissingRequiredFieldsError(error: any): boolean {
+    if (!error) return false;
+
+    const errorMessage = (error.message || '').toLowerCase();
+    const errorString = JSON.stringify(error).toLowerCase();
+
+    // Check for common required field errors
+    const requiredFieldPatterns = [
+      'phone',
+      'address',
+      'hospitalid',
+      'hospital id',
+    ];
+
+    // Check if error message contains any required field pattern
+    const hasRequiredField = requiredFieldPatterns.some(pattern =>
+      errorMessage.includes(pattern) || errorString.includes(pattern)
+    );
+
+    // Also check for 400 status code (bad request) which often indicates validation errors
+    const isBadRequest = error.status === 400 || error.statusCode === 400 || error.status === '400';
+
+    // If we have a required field mentioned and it's a bad request, it's likely a validation error
+    if (hasRequiredField && isBadRequest) {
+      return true;
+    }
+
+    // Also check if the error message explicitly mentions "required" along with field names
+    if (hasRequiredField && (errorMessage.includes('required') || errorString.includes('required'))) {
+      return true;
+    }
+
+    return false;
+  },
+
+  /**
    * Send Google idToken to backend for authentication
    */
   async sendGoogleIdToken(idToken: string): Promise<AuthResponse> {
     try {
+      // Store idToken in sessionStorage for potential signup flow
+      setSSOIdToken('google', idToken);
+
       const result = await apiRequest<AuthResponse>(`${API_PREFIX}/auth/google`, {
         method: 'POST',
         body: JSON.stringify({ idToken }),
@@ -488,11 +623,14 @@ export const authService = {
 
       if (result.token) {
         setAuthToken(result.token);
+        // Clear SSO idToken after successful authentication
+        removeSSOIdToken('google');
       }
 
       return result;
     } catch (error: any) {
       console.error('Google idToken authentication error:', error);
+      // Don't clear idToken on error - user might need it for signup
       throw error;
     }
   },
@@ -539,7 +677,13 @@ export const authService = {
 
       if (!response.ok) {
         const error = await response.json().catch(() => ({ message: 'OAuth authentication failed' }));
-        throw new Error(error.message || `HTTP error! status: ${response.status}`);
+        const errorObj: any = new Error(error.message || `HTTP error! status: ${response.status}`);
+        errorObj.status = response.status;
+        errorObj.statusCode = response.status;
+        // Preserve any additional error properties from the response
+        if (error.email) errorObj.email = error.email;
+        if (error.fullname) errorObj.fullname = error.fullname;
+        throw errorObj;
       }
 
       const result = await response.json();

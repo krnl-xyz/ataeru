@@ -14,6 +14,7 @@ export default function GoogleCallbackPage() {
 
   useEffect(() => {
     const handleCallback = async () => {
+      let result: any = null;
       try {
         const code = searchParams.get('code');
         const error = searchParams.get('error');
@@ -36,19 +37,39 @@ export default function GoogleCallbackPage() {
         }
 
         // Exchange code for token
-        const result = await authService.handleOAuthCallback('google', code, state || undefined);
-        
-        // Refresh user data
-        await refreshUser();
-        
-        toast.success('Successfully signed in with Google');
-        router.push('/');
+        result = await authService.handleOAuthCallback('google', code, state || undefined);
+
+        // Check if user exists (has id)
+        if (result && result.id) {
+          // User exists, refresh and redirect
+          await refreshUser();
+          toast.success('Successfully signed in with Google');
+          router.push('/');
+        } else {
+          // User doesn't exist, redirect to signup with SSO state
+          router.push(`/signup?sso=google&email=${encodeURIComponent(result?.email || '')}&fullname=${encodeURIComponent(result?.fullname || '')}`);
+        }
       } catch (error: any) {
         console.error('Google callback error:', error);
-        toast.error('Authentication failed', {
-          description: error.message || 'Failed to complete Google authentication',
-        });
-        router.push('/');
+
+        // Check if error indicates missing required fields (phone, address, hospitalId, etc.)
+        if (authService.isMissingRequiredFieldsError(error)) {
+          const email = error.email || result?.email || '';
+          const fullname = error.fullname || result?.fullname || '';
+          router.push(`/signup?sso=google&email=${encodeURIComponent(email)}&fullname=${encodeURIComponent(fullname)}`);
+          return;
+        }
+
+        // Check if error indicates user doesn't exist
+        if (error.message?.includes('not found') || error.message?.includes('does not exist') || error.status === 404) {
+          const email = error.email || result?.email || '';
+          router.push(`/signup?sso=google&email=${encodeURIComponent(email)}`);
+        } else {
+          toast.error('Authentication failed', {
+            description: error.message || 'Failed to complete Google authentication',
+          });
+          router.push('/');
+        }
       } finally {
         setIsProcessing(false);
       }
