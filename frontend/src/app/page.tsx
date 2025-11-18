@@ -1,7 +1,7 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { Search, Settings, HelpCircle, Plus, MessageSquare, Sparkles, FileText, LayoutDashboard, Users, Building2, Calendar, Image as ImageIcon, Upload, Link as LinkIcon, X, ChevronDown, ChevronLeft, ChevronRight, Menu, User, Bell, Shield, Globe, Loader, CheckCircle, ShieldCheck, MapPin, Star, Loader2, CreditCard, Crown, Trash2, Check } from 'lucide-react';
+import { useState, useEffect, useRef } from 'react';
+import { Search, Settings, HelpCircle, Plus, MessageSquare, Sparkles, FileText, LayoutDashboard, Users, Building2, Calendar, Image as ImageIcon, Upload, Link as LinkIcon, X, ChevronDown, ChevronLeft, ChevronRight, Menu, User, Bell, Shield, Globe, Loader, CheckCircle, ShieldCheck, MapPin, Star, Loader2, CreditCard, Crown, Trash2, Check, Bot, Send, Infinity } from 'lucide-react';
 import { format } from 'date-fns';
 import { useAuth } from '@/app/contexts/use-auth';
 import { useAccount, useReadContract } from 'wagmi';
@@ -39,6 +39,41 @@ export default function AppPage() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false); // Auto-collapsed by default
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [dashboardTab, setDashboardTab] = useState<'profile' | 'settings' | 'pricing'>('profile');
+
+  // Chat state
+  const [chatMessages, setChatMessages] = useState<Array<{ role: 'user' | 'assistant'; content: string }>>([]);
+  const [chatInput, setChatInput] = useState('');
+  const [isChatLoading, setIsChatLoading] = useState(false);
+  const [selectedModel, setSelectedModel] = useState<string>('auto');
+  const [bottomTab, setBottomTab] = useState<'agents' | 'settings' | 'mcp'>('agents');
+  const [isModelDropdownOpen, setIsModelDropdownOpen] = useState(false);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const modelDropdownRef = useRef<HTMLDivElement>(null);
+
+  // Available models
+  const availableModels = [
+    { value: 'auto', label: 'Auto', description: 'Automatically select the best model' },
+    { value: 'gpt-4-turbo-preview', label: 'GPT-4 Turbo', description: 'Most capable model' },
+    { value: 'gpt-4', label: 'GPT-4', description: 'High quality responses' },
+    { value: 'gpt-3.5-turbo', label: 'GPT-3.5 Turbo', description: 'Fast and efficient' },
+  ];
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (modelDropdownRef.current && !modelDropdownRef.current.contains(event.target as Node)) {
+        setIsModelDropdownOpen(false);
+      }
+    };
+
+    if (isModelDropdownOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isModelDropdownOpen]);
 
   // Hospital Manager state
   const [hospitalManagerTab, setHospitalManagerTab] = useState('dashboard');
@@ -127,13 +162,21 @@ export default function AppPage() {
   const [selectedPlan, setSelectedPlan] = useState<string | null>(null);
 
   // Mock agents/apps list
-  const agents = [
+  const allAgents = [
     { id: 'fertility-ai', name: 'AI Assistant', icon: Sparkles, description: 'AI-powered fertility guidance', color: 'bg-blue-500' },
-    { id: 'hospital-manager', name: 'Hospital Manager', icon: Building2, description: 'Manage hospital operations', color: 'bg-green-500' },
+    { id: 'hospital-manager', name: 'Hospital Manager', icon: Building2, description: 'Manage hospital operations', color: 'bg-green-500', requiresMedicalFacility: true },
     { id: 'consultations', name: 'Consultations', icon: Calendar, description: 'Book and manage consultations', color: 'bg-orange-500' },
     { id: 'patient-portal', name: 'Patient Portal', icon: Users, description: 'Patient management system', color: 'bg-purple-500' },
     { id: 'document-manager', name: 'Document Manager', icon: FileText, description: 'Medical records management', color: 'bg-pink-500' },
   ];
+
+  // Filter agents based on user type - only show hospital-manager to medical facilities
+  const agents = allAgents.filter(agent => {
+    if (agent.requiresMedicalFacility) {
+      return user?.userType === 'MEDICAL_FACILITY';
+    }
+    return true;
+  });
 
   // Hospital contract data - only fetch when hospital manager is active
   const shouldFetchHospitalData = activeView === 'hospital-manager' && !!address;
@@ -162,6 +205,14 @@ export default function AppPage() {
 
   // Handle app selection from sidebar
   const handleAppSelect = (appId: string) => {
+    // Check if user is trying to access hospital-manager without proper permissions
+    if (appId === 'hospital-manager' && user?.userType !== 'MEDICAL_FACILITY') {
+      toast.error('Access Denied', {
+        description: 'Hospital Dashboard is only available for medical facilities. Please contact support if you believe this is an error.',
+      });
+      return;
+    }
+
     setSelectedAgent(appId);
     if (appId === 'hospital-manager') {
       // Load hospital data when hospital manager is opened
@@ -566,6 +617,74 @@ export default function AppPage() {
     agent.description.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
+  const handleSendChatMessage = async () => {
+    if (!chatInput.trim() || isChatLoading) return;
+
+    const userMessage = chatInput.trim();
+    setChatMessages(prev => [...prev, { role: 'user', content: userMessage }]);
+    setChatInput('');
+    // Reset textarea height
+    if (textareaRef.current) {
+      textareaRef.current.style.height = '24px';
+    }
+    setIsChatLoading(true);
+
+    try {
+      const response = await fetch('/api/openai/chat', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          model: selectedModel,
+          input: userMessage,
+          messages: [
+            ...chatMessages.map(msg => ({ role: msg.role, content: msg.content })),
+            { role: 'user', content: userMessage },
+          ],
+        }),
+      });
+
+      if (!response.ok) {
+        let errorData;
+        try {
+          errorData = await response.json();
+        } catch {
+          const errorText = await response.text();
+          throw new Error(errorText || `HTTP error! status: ${response.status}`);
+        }
+        throw new Error(errorData.error || errorData.details || 'Failed to get response');
+      }
+
+      let data;
+      try {
+        data = await response.json();
+      } catch (parseError) {
+        const errorText = await response.text();
+        console.error('Failed to parse response as JSON:', errorText);
+        throw new Error('Invalid response from server');
+      }
+      setChatMessages(prev => [...prev, { role: 'assistant', content: data.output }]);
+
+      // Scroll to bottom after message is added
+      setTimeout(() => {
+        const chatMessagesElement = document.getElementById('chat-messages');
+        if (chatMessagesElement) {
+          chatMessagesElement.scrollTop = chatMessagesElement.scrollHeight;
+        }
+      }, 100);
+    } catch (error: any) {
+      console.error('Chat error:', error);
+      toast.error('Failed to send message', {
+        description: error.message || 'Please try again later.',
+      });
+      // Remove the user message if it failed
+      setChatMessages(prev => prev.slice(0, -1));
+    } finally {
+      setIsChatLoading(false);
+    }
+  };
+
   const handleSendMessage = () => {
     if (!ideaDescription.trim() && !inputValue.trim()) return;
     const message = ideaDescription.trim() || inputValue.trim();
@@ -909,7 +1028,7 @@ export default function AppPage() {
         )}
 
         {/* Main Panel */}
-        <div className="flex-1 flex flex-col overflow-y-auto relative" style={{
+        <div className="flex-1 flex flex-col overflow-y-auto relative pb-20" style={{
           backgroundImage: `linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px)`,
           backgroundSize: '40px 40px'
         }}>
@@ -955,13 +1074,143 @@ export default function AppPage() {
                   {/* Idea Description Input */}
                   <div className="mb-6">
                     <label className="block text-sm font-medium text-gray-400 mb-2">Describe your idea</label>
-                    <textarea
-                      value={ideaDescription}
-                      onChange={(e) => setIdeaDescription(e.target.value)}
-                      placeholder="Type your question or describe what you'd like to learn..."
-                      className="w-full bg-[#1a1a1a] border border-gray-800 rounded-lg px-4 py-4 text-gray-300 placeholder-gray-500 focus:outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500 min-h-[120px] resize-none"
-                    />
+                    <div className="flex flex-col items-center gap-2 w-full bg-[#1a1a1a] border border-gray-800 rounded-lg px-4 py-4 text-gray-300 placeholder-gray-500 focus-within:border-purple-500 focus-within:ring-1 focus-within:ring-purple-500 min-h-[120px] transition-colors">
+
+                      <div className='flex items-center justify-start w-full'>
+
+                        <textarea
+                          ref={textareaRef}
+                          value={chatInput}
+                          onChange={(e) => {
+                            setChatInput(e.target.value);
+                            // Auto-resize textarea
+                            if (textareaRef.current) {
+                              textareaRef.current.style.height = 'auto';
+                              textareaRef.current.style.height = `${Math.min(textareaRef.current.scrollHeight, 400)}px`;
+                            }
+                          }}
+                          onKeyDown={(e) => {
+                            // Enter sends message, Shift+Enter creates new line
+                            if (e.key === 'Enter' && !e.shiftKey) {
+                              e.preventDefault();
+                              if (chatInput.trim() && !isChatLoading) {
+                                handleSendChatMessage();
+                              }
+                            }
+                            // Shift+Enter will naturally create a new line
+                          }}
+                          onFocus={(e) => {
+                            // Explicitly remove any outline that might appear
+                            e.currentTarget.style.outline = 'none';
+                            e.currentTarget.style.border = 'none';
+                            e.currentTarget.style.boxShadow = 'none';
+                          }}
+                          placeholder="Type your question or describe what you'd like to learn..."
+                          className="w-full bg-transparent border-none py-2 text-gray-300 placeholder-gray-500 resize-none rounded-sm focus:outline-none focus:ring-0 focus:ring-offset-0 focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0"
+                          rows={1}
+                          style={{
+                            minHeight: '24px',
+                            maxHeight: '400px',
+                            overflowY: 'auto',
+                            outline: 'none',
+                            border: 'none',
+                            boxShadow: 'none',
+                            WebkitAppearance: 'none',
+                            MozAppearance: 'none'
+                          }}
+                        />
+                        <Button
+                          onClick={handleSendChatMessage}
+                          disabled={!chatInput.trim() || isChatLoading}
+                          className="disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          {isChatLoading ? (
+                            <Loader2 className="w-5 h-5 animate-spin" />
+                          ) : (
+                            <Send className="w-5 h-5" />
+                          )}
+                        </Button>
+                      </div>
+                      <div className='flex items-center justify-between w-full bg-red-00 px-0'>
+                        <div className="relative" ref={modelDropdownRef}>
+                          <Button
+                            variant="default"
+                            onClick={() => setIsModelDropdownOpen(!isModelDropdownOpen)}
+                            className='bg-transparent hover:bg-gray-800 cursor-pointer transition-colors'
+                          >
+                            <Infinity className="w-5 h-5" />
+                            <ChevronDown className={`w-5 h-5 transition-transform ${isModelDropdownOpen ? 'rotate-180' : ''}`} />
+                            {/* <span>Infinite</span> */}
+                          </Button>
+
+                          {/* Model Selection Dropdown */}
+                          {isModelDropdownOpen && (
+                            <div className="absolute bottom-full left-0 mb-2 w-64 bg-[#1a1a1a] border border-gray-800 rounded-lg shadow-xl z-50 overflow-hidden">
+                              <div className="py-1">
+                                {availableModels.map((model) => (
+                                  <button
+                                    key={model.value}
+                                    onClick={() => {
+                                      setSelectedModel(model.value);
+                                      setIsModelDropdownOpen(false);
+                                    }}
+                                    className={`w-full text-left px-4 py-3 hover:bg-gray-800 transition-colors flex items-start gap-3 ${selectedModel === model.value ? 'bg-blue-600/20 border-l-2 border-blue-500' : ''
+                                      }`}
+                                  >
+                                    <div className="flex-1 min-w-0">
+                                      <div className="flex items-center gap-2 mb-1">
+                                        <span className="text-sm font-medium text-white">
+                                          {model.label}
+                                        </span>
+                                        {selectedModel === model.value && (
+                                          <Check className="w-4 h-4 text-blue-500" />
+                                        )}
+                                      </div>
+                                      <p className="text-xs text-gray-400">{model.description}</p>
+                                    </div>
+                                  </button>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                        <div>
+
+                          <Button variant="default" className='bg-transparent hover:bg-transparent cursor-pointer bg-blend-darken'>
+                            <Settings className="w-5 h-5" />
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
                   </div>
+
+                  {/* Chat Messages Display */}
+                  {chatMessages.length > 0 && (
+                    <div id="chat-messages" className="mb-6 space-y-4 max-h-[500px] overflow-y-auto scroll-smooth">
+                      {chatMessages.map((msg, idx) => (
+                        <div
+                          key={idx}
+                          className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
+                        >
+                          <div
+                            className={`max-w-[85%] rounded-lg px-4 py-3 ${msg.role === 'user'
+                              ? 'bg-blue-600 text-white'
+                              : 'bg-gray-800 text-gray-100'
+                              }`}
+                          >
+                            <p className="text-sm whitespace-pre-wrap break-words">{msg.content}</p>
+                          </div>
+                        </div>
+                      ))}
+                      {isChatLoading && (
+                        <div className="flex justify-start">
+                          <div className="bg-gray-800 text-gray-100 rounded-lg px-4 py-3">
+                            <Loader2 className="w-4 h-4 animate-spin" />
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
 
                   {/* Action Bar */}
                   {/* <div className="flex items-center gap-3 mb-8 flex-wrap">
@@ -1197,1644 +1446,1668 @@ export default function AppPage() {
             ) : activeView === 'consultations' ? (
               <ConsultationManager />
             ) : activeView === 'hospital-manager' ? (
-              <div className="w-full max-w-7xl mx-auto">
-                {/* Hospital Manager Header */}
-                <div className="mb-6 flex justify-between items-center">
-                  <div>
-                    <h1 className="text-2xl font-bold text-white">Hospital Dashboard</h1>
-                    {hospital && (
-                      <p className="text-sm text-gray-400 mt-1">{hospital.name}</p>
-                    )}
-                  </div>
-                  <div className="flex items-center gap-2">
-                    {hospital?.isVerified ? (
-                      <span className="bg-green-500/20 text-green-400 text-xs px-3 py-1 rounded-full flex items-center gap-1 border border-green-500/50">
-                        <ShieldCheck className="h-3 w-3" />
-                        Verified
-                      </span>
-                    ) : (
-                      <span className="bg-gray-800 text-gray-400 text-xs px-3 py-1 rounded-full flex items-center gap-1 border border-gray-700">
-                        <Shield className="h-3 w-3" />
-                        Not Verified
-                      </span>
-                    )}
-                    {hospital?.imageUrl ? (
-                      <Image
-                        src={hospital.imageUrl}
-                        alt={hospital.name}
-                        width={40}
-                        height={40}
-                        className="rounded-full object-cover"
-                      />
-                    ) : (
-                      <div className="w-10 h-10 rounded-full bg-blue-600/20 flex items-center justify-center border border-blue-500/50">
-                        <Building2 className="h-5 w-5 text-blue-400" />
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-                {/* Hospital Manager Tabs */}
-                <div className="border-b border-gray-800 mb-6 ">
-                  <nav className="flex space-x-8">
-                    {['dashboard', 'bookings', 'donors', 'customers', 'treatments', 'settings'].map((tab) => (
-                      <button
-                        key={tab}
-                        onClick={() => setHospitalManagerTab(tab)}
-                        className={`px-4 py-2 font-medium text-sm capitalize transition-colors ${hospitalManagerTab === tab
-                          ? 'text-white border-b-2 border-blue-500'
-                          : 'text-gray-400 hover:text-gray-300'
-                          }`}
-                      >
-                        {tab}
-                      </button>
-                    ))}
-                  </nav>
-                </div>
-
-                {/* Hospital Manager Content */}
-                <div className='min-h-160'>
-                  {hospitalManagerTab === 'dashboard' && (
-                    <div>
-                      {/* Stats Grid */}
-                      {isLoadingStats ? (
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-                          {[1, 2, 3, 4].map(i => (
-                            <div key={i} className="bg-gray-900/50 border border-gray-800 rounded-lg p-6">
-                              <div className="animate-pulse">
-                                <div className="h-4 bg-gray-700 rounded w-24 mb-2"></div>
-                                <div className="h-8 bg-gray-700 rounded w-16 mb-2"></div>
-                                <div className="h-4 bg-gray-700 rounded w-32"></div>
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      ) : (
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-                          <div className="bg-gray-900/50 border border-gray-800 rounded-lg p-6">
-                            <h3 className="text-sm font-medium text-gray-400 mb-1">Total Donors</h3>
-                            <p className="text-2xl font-bold text-white">{hospitalStats.totalDonors}</p>
-                            <div className="mt-2 flex items-center text-sm">
-                              <span className="text-green-400 font-medium">+{hospitalStats.newDonors} new</span>
-                              <span className="text-gray-500 ml-2">this week</span>
-                            </div>
-                          </div>
-                          <div className="bg-gray-900/50 border border-gray-800 rounded-lg p-6">
-                            <h3 className="text-sm font-medium text-gray-400 mb-1">Active Donors</h3>
-                            <p className="text-2xl font-bold text-white">{hospitalStats.activeDonors}</p>
-                            <div className="mt-2 flex items-center text-sm">
-                              <span className="text-yellow-400 font-medium">{hospitalStats.pendingDonors} pending</span>
-                              <span className="text-gray-500 ml-2">verification</span>
-                            </div>
-                          </div>
-                          <div className="bg-gray-900/50 border border-gray-800 rounded-lg p-6">
-                            <h3 className="text-sm font-medium text-gray-400 mb-1">Total Customers</h3>
-                            <p className="text-2xl font-bold text-white">{hospitalStats.totalCustomers}</p>
-                            <div className="mt-2 flex items-center text-sm">
-                              <span className="text-green-400 font-medium">+{hospitalStats.newCustomers} new</span>
-                              <span className="text-gray-500 ml-2">this month</span>
-                            </div>
-                          </div>
-                          <div className="bg-gray-900/50 border border-gray-800 rounded-lg p-6">
-                            <h3 className="text-sm font-medium text-gray-400 mb-1">Active Customers</h3>
-                            <p className="text-2xl font-bold text-white">{hospitalStats.activeCustomers}</p>
-                            <div className="mt-2 flex items-center text-sm">
-                              <span className="text-blue-400 font-medium">
-                                {hospitalStats.totalCustomers > 0
-                                  ? Math.round((hospitalStats.activeCustomers / hospitalStats.totalCustomers) * 100)
-                                  : 0}%
-                              </span>
-                              <span className="text-gray-500 ml-2">activity rate</span>
-                            </div>
-                          </div>
-                        </div>
-                      )}
-
-                      {/* Recent Activity */}
-                      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                        {/* Recent Donations */}
-                        <div className="bg-[#0b0b0d] border border-gray-800 rounded-lg overflow-hidden">
-                          <div className="bg-gray-900/50 px-6 py-4 border-b border-gray-800 flex justify-between items-center">
-                            <h3 className="font-medium text-white">Recent Donations</h3>
-                            <button className="text-blue-400 text-sm font-medium hover:text-blue-300">View All</button>
-                          </div>
-                          <div className="divide-y divide-gray-800">
-                            {isLoadingRequests ? (
-                              <div className="px-6 py-4 text-center text-gray-400">
-                                <Loader2 className="h-5 w-5 animate-spin mx-auto mb-2" />
-                                <p className="text-sm">Loading donations...</p>
-                              </div>
-                            ) : recentDonations.length === 0 ? (
-                              <div className="px-6 py-8 text-center text-gray-400">
-                                <p className="text-sm">No donations yet</p>
-                              </div>
-                            ) : (
-                              recentDonations.map(donation => (
-                                <div key={donation.id} className="px-6 py-4 flex justify-between items-center">
-                                  <div>
-                                    <p className="font-medium text-white">{donation.donor}</p>
-                                    <p className="text-sm text-gray-400">{donation.date}</p>
-                                  </div>
-                                  <span className={`text-xs px-2 py-1 rounded-full ${donation.status === 'Completed'
-                                    ? 'bg-green-500/20 text-green-400 border border-green-500/50'
-                                    : donation.status === 'Processing'
-                                      ? 'bg-blue-500/20 text-blue-400 border border-blue-500/50'
-                                      : 'bg-yellow-500/20 text-yellow-400 border border-yellow-500/50'
-                                    }`}>
-                                    {donation.status}
-                                  </span>
-                                </div>
-                              ))
-                            )}
-                          </div>
-                          <div className="bg-gray-900/50 px-6 py-3 border-t border-gray-800">
-                            <button
-                              onClick={() => setIsDonorRequestModalOpen(true)}
-                              className="w-full bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 flex items-center justify-center gap-2"
-                            >
-                              <Plus className="w-4 h-4" />
-                              Add New Donor
-                            </button>
-                          </div>
-                        </div>
-
-                        {/* Recent Customers */}
-                        <div className="bg-[#0b0b0d] border border-gray-800 rounded-lg overflow-hidden">
-                          <div className="bg-gray-900/50 px-6 py-4 border-b border-gray-800 flex justify-between items-center">
-                            <h3 className="font-medium text-white">Recent Customers</h3>
-                            <button className="text-blue-400 text-sm font-medium hover:text-blue-300">View All</button>
-                          </div>
-                          <div className="divide-y divide-gray-800">
-                            {isLoadingBookings ? (
-                              <div className="px-6 py-4 text-center text-gray-400">
-                                <Loader2 className="h-5 w-5 animate-spin mx-auto mb-2" />
-                                <p className="text-sm">Loading customers...</p>
-                              </div>
-                            ) : recentCustomers.length === 0 ? (
-                              <div className="px-6 py-8 text-center text-gray-400">
-                                <p className="text-sm">No customers yet</p>
-                              </div>
-                            ) : (
-                              recentCustomers.map(customer => (
-                                <div key={customer.id} className="px-6 py-4 flex justify-between items-center">
-                                  <div>
-                                    <p className="font-medium text-white">{customer.name}</p>
-                                    <p className="text-sm text-gray-400">{customer.date}</p>
-                                  </div>
-                                  <span className="text-xs px-2 py-1 rounded-full bg-blue-500/20 text-blue-400 border border-blue-500/50">
-                                    {customer.treatment}
-                                  </span>
-                                </div>
-                              ))
-                            )}
-                          </div>
-                          <div className="bg-gray-900/50 px-6 py-3 border-t border-gray-800">
-                            <button className="w-full bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 flex items-center justify-center gap-2">
-                              <Plus className="w-4 h-4" />
-                              Add New Customer
-                            </button>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-
-                  {hospitalManagerTab === 'bookings' && (
-                    <div className="space-y-6">
-                      <div className="flex justify-between items-center">
-                        <h2 className="text-xl font-bold text-white">Hospital Bookings</h2>
-                        <button
-                          onClick={() => loadHospitalBookings()}
-                          className="text-blue-400 text-sm font-medium hover:text-blue-300"
-                        >
-                          Refresh
-                        </button>
-                      </div>
-
-                      {isLoadingBookings ? (
-                        <div className="flex justify-center items-center py-12">
-                          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white"></div>
-                        </div>
-                      ) : hospitalBookings.length === 0 ? (
-                        <div className="bg-[#0b0b0d] border border-gray-800 rounded-lg p-12 text-center">
-                          <Calendar className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                          <h3 className="text-lg font-medium text-white mb-2">No bookings found</h3>
-                          <p className="text-gray-400">
-                            You don&apos;t have any bookings for your hospitals yet.
-                          </p>
-                        </div>
-                      ) : (
-                        <div className="space-y-4">
-                          {hospitalBookings.map((booking: Booking) => {
-                            const appointmentDate = new Date(booking.appointmentDate);
-                            const endDate = new Date(appointmentDate.getTime() + booking.duration * 60000);
-
-                            const getStatusColor = (status: string) => {
-                              switch (status) {
-                                case 'CONFIRMED':
-                                  return 'bg-green-500/20 text-green-400 border-green-500/50';
-                                case 'PENDING':
-                                  return 'bg-yellow-500/20 text-yellow-400 border-yellow-500/50';
-                                case 'CANCELLED':
-                                  return 'bg-red-500/20 text-red-400 border-red-500/50';
-                                case 'COMPLETED':
-                                  return 'bg-blue-500/20 text-blue-400 border-blue-500/50';
-                                default:
-                                  return 'bg-gray-500/20 text-gray-400 border-gray-500/50';
-                              }
-                            };
-
-                            return (
-                              <div key={booking.id} className="bg-[#0b0b0d] border border-gray-800 rounded-lg p-6">
-                                <div className="flex justify-between items-start mb-4">
-                                  <div className="flex-1">
-                                    <div className="flex items-center gap-3 mb-2">
-                                      <h3 className="text-lg font-medium text-white">{booking.purpose}</h3>
-                                      <span className={`text-xs px-2 py-1 rounded-full border ${getStatusColor(booking.status)}`}>
-                                        {booking.status}
-                                      </span>
-                                    </div>
-                                    <p className="text-sm text-gray-400">Booking ID: {booking.id}</p>
-                                  </div>
-                                  <button
-                                    onClick={() => window.location.href = `/booking/confirmation/${booking.id}`}
-                                    className="text-blue-400 text-sm font-medium hover:text-blue-300"
-                                  >
-                                    View Details
-                                  </button>
-                                </div>
-
-                                <div className="grid md:grid-cols-2 gap-6">
-                                  {/* Patient Information */}
-                                  {booking.user && (
-                                    <div className="space-y-2">
-                                      <h4 className="text-sm font-medium text-gray-400 flex items-center gap-2">
-                                        <User className="h-4 w-4" />
-                                        Patient
-                                      </h4>
-                                      <div className="space-y-1">
-                                        <p className="text-white font-medium">{booking.user.fullname}</p>
-                                        <p className="text-sm text-gray-400">{booking.user.email}</p>
-                                        {booking.user.phone && (
-                                          <p className="text-sm text-gray-400">{booking.user.phone}</p>
-                                        )}
-                                      </div>
-                                    </div>
-                                  )}
-
-                                  {/* Appointment Details */}
-                                  <div className="space-y-2">
-                                    <h4 className="text-sm font-medium text-gray-400 flex items-center gap-2">
-                                      <Calendar className="h-4 w-4" />
-                                      Appointment
-                                    </h4>
-                                    <div className="space-y-1">
-                                      <p className="text-white">
-                                        {format(appointmentDate, 'EEEE, MMMM d, yyyy')}
-                                      </p>
-                                      <p className="text-sm text-gray-400">
-                                        {format(appointmentDate, 'h:mm a')} - {format(endDate, 'h:mm a')}
-                                      </p>
-                                      <p className="text-sm text-gray-400">
-                                        Duration: {booking.duration} minutes
-                                      </p>
-                                    </div>
-                                  </div>
-                                </div>
-
-                                {booking.additionalNotes && (
-                                  <div className="mt-4 pt-4 border-t border-gray-800">
-                                    <h4 className="text-sm font-medium text-gray-400 mb-1">Additional Notes</h4>
-                                    <p className="text-sm text-gray-300">{booking.additionalNotes}</p>
-                                  </div>
-                                )}
-
-                                {/* Action Buttons */}
-                                <div className="mt-4 flex gap-2">
-                                  {booking.status === 'PENDING' && (
-                                    <button
-                                      onClick={async () => {
-                                        try {
-                                          await bookingService.updateBooking(booking.id, { status: 'CONFIRMED' });
-                                          toast.success('Booking confirmed');
-                                          loadHospitalBookings();
-                                        } catch (error: any) {
-                                          toast.error(error.message || 'Failed to confirm booking');
-                                        }
-                                      }}
-                                      className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 text-sm"
-                                    >
-                                      Confirm
-                                    </button>
-                                  )}
-                                  {(booking.status === 'PENDING' || booking.status === 'CONFIRMED') && (
-                                    <button
-                                      onClick={async () => {
-                                        if (confirm('Are you sure you want to cancel this booking?')) {
-                                          try {
-                                            await bookingService.cancelBooking(booking.id);
-                                            toast.success('Booking cancelled');
-                                            loadHospitalBookings();
-                                          } catch (error: any) {
-                                            toast.error(error.message || 'Failed to cancel booking');
-                                          }
-                                        }
-                                      }}
-                                      className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 text-sm"
-                                    >
-                                      Cancel
-                                    </button>
-                                  )}
-                                </div>
-                              </div>
-                            );
-                          })}
-                        </div>
-                      )}
-                    </div>
-                  )}
-
-                  {hospitalManagerTab === 'donors' && (
-                    <div className="space-y-6">
-                      <div className="flex justify-between items-center">
-                        <h2 className="text-xl font-bold text-white">Donor Requests</h2>
-                        <button
-                          onClick={() => setIsDonorRequestModalOpen(true)}
-                          className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 flex items-center gap-2"
-                        >
-                          <Plus className="w-4 h-4" />
-                          New Request
-                        </button>
-                      </div>
-
-                      {/* Active Requests */}
-                      <div className="bg-[#1a1a1a] border border-gray-800 rounded-lg overflow-hidden">
-                        <div className="bg-gray-900/50 px-6 py-4 border-b border-gray-800">
-                          <h3 className="font-medium text-white">Active Requests</h3>
-                        </div>
-                        <div className="divide-y divide-gray-800">
-                          {donorRequests && donorRequests
-                            .filter(request => request?.isActive)
-                            .map((request, index) => (
-                              <div key={index} className="px-6 py-4">
-                                <div className="flex justify-between items-start">
-                                  <div>
-                                    <h4 className="font-medium text-white">{getDonorTypeLabel(request.donorType)}</h4>
-                                    <p className="text-sm text-gray-400 mt-1">{request.requestDescription}</p>
-                                    <div className="mt-2 flex flex-wrap gap-2">
-                                      <span className="text-xs px-2 py-1 rounded-full bg-blue-500/20 text-blue-400 border border-blue-500/50">
-                                        Max Donors: {request.maxDonors?.toString()}
-                                      </span>
-                                      <span className="text-xs px-2 py-1 rounded-full bg-green-500/20 text-green-400 border border-green-500/50">
-                                        Amount: {request.minAmontpayment?.toString()} - {request.maxAmountPayment?.toString()} ETH
-                                      </span>
-                                      <span className="text-xs px-2 py-1 rounded-full bg-purple-500/20 text-purple-400 border border-purple-500/50">
-                                        Date: {request.date ? formatDate(request.date) : 'N/A'}
-                                      </span>
-                                    </div>
-                                  </div>
-                                  <span className={`text-xs px-2 py-1 rounded-full ${request.status === 0 ? 'bg-yellow-500/20 text-yellow-400 border border-yellow-500/50' :
-                                    request.status === 1 ? 'bg-green-500/20 text-green-400 border border-green-500/50' :
-                                      request.status === 2 ? 'bg-red-500/20 text-red-400 border border-red-500/50' :
-                                        'bg-blue-500/20 text-blue-400 border border-blue-500/50'
-                                    }`}>
-                                    {getStatusLabel(request.status)}
-                                  </span>
-                                </div>
-                              </div>
-                            ))}
-                        </div>
-                      </div>
-                    </div>
-                  )}
-
-                  {hospitalManagerTab === 'settings' && (
-                    <div className="space-y-6">
-                      {isLoadingHospital ? (
-                        <div className="bg-[#0b0b0d] border border-gray-800 rounded-lg p-8 text-center">
-                          <Loader2 className="h-8 w-8 animate-spin text-blue-500 mx-auto mb-4" />
-                          <p className="text-gray-400">Loading hospital information...</p>
-                        </div>
-                      ) : !hospital ? (
-                        <div className="bg-[#0b0b0d] border border-gray-800 rounded-lg p-8 text-center">
-                          <Building2 className="h-12 w-12 text-gray-500 mx-auto mb-4" />
-                          <h3 className="text-lg font-medium text-white mb-2">No Hospital Registered</h3>
-                          <p className="text-gray-400 mb-6">
-                            Please register your hospital first to access settings.
-                          </p>
-                        </div>
-                      ) : (
-                        <div className="bg-gray-900/50 border border-gray-800 rounded-lg overflow-hidden">
-                          {/* Verification Status */}
-                          <div className="bg-gray-900/50 rounded-lg border border-gray-800 mx-4 mt-4 px-4 py-2">
-                            <div className="flex items-center justify-between">
-                              <div>
-                                <h3 className="font-medium text-white mb-1">Verification Status</h3>
-                                <p className="text-sm text-gray-400">
-                                  {hospital.isVerified
-                                    ? 'Your hospital has been verified and is trusted by patients.'
-                                    : 'Verify your hospital to build trust and credibility with patients.'}
-                                </p>
-                                {hospital.verificationDate && (
-                                  <p className="text-xs text-gray-500 mt-1">
-                                    Verified on {new Date(hospital.verificationDate).toLocaleDateString()}
-                                  </p>
-                                )}
-                              </div>
-                              {!hospital.isVerified && (
-                                <button
-                                  onClick={() => setIsVerificationModalOpen(true)}
-                                  className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 flex items-center gap-2"
-                                >
-                                  <Shield className="h-4 w-4" />
-                                  Verify Now
-                                </button>
-                              )}
-                            </div>
-                          </div>
-
-                          <div className="px-6 py-4 flex justify-between items-center">
-                            <div></div>
-                            {!isEditingHospital ? (
-                              <button
-                                onClick={() => setIsEditingHospital(true)}
-                                className="px-4 py-2 text-blue-400 underline rounded-lg text-sm hover:text-blue-300"
-                              >
-                                Edit Details
-                              </button>
-                            ) : (
-                              <div className="flex gap-2">
-                                <button
-                                  onClick={() => {
-                                    setIsEditingHospital(false);
-                                    setEditFormData({
-                                      name: hospital.name,
-                                      location: hospital.location,
-                                      rating: hospital.rating,
-                                      specialties: hospital.specialties,
-                                      imageUrl: hospital.imageUrl,
-                                    });
-                                  }}
-                                  className="px-4 py-2 border border-gray-700 text-gray-300 rounded-lg hover:bg-gray-800 text-sm"
-                                >
-                                  Cancel
-                                </button>
-                                <button
-                                  onClick={handleSaveHospitalChanges}
-                                  disabled={isSavingHospital}
-                                  className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 text-sm disabled:opacity-50"
-                                >
-                                  {isSavingHospital ? 'Saving...' : 'Save Changes'}
-                                </button>
-                              </div>
-                            )}
-                          </div>
-
-                          <div className="p-6 space-y-6">
-                            {hospital.imageUrl && (
-                              <div className="mb-2">
-                                <Image
-                                  src={hospital.imageUrl}
-                                  alt={hospital.name}
-                                  width={200}
-                                  height={200}
-                                  className="rounded-lg border border-gray-800 w-full max-w-xs h-48 object-cover"
-                                />
-                              </div>
-                            )}
-                            <div>
-                              <label className="block text-sm font-medium text-gray-300 mb-1">Image URL</label>
-                              {isEditingHospital ? (
-                                <input
-                                  type="url"
-                                  value={editFormData.imageUrl || ''}
-                                  onChange={(e) => setEditFormData({ ...editFormData, imageUrl: e.target.value })}
-                                  className="w-full px-3 py-2 bg-[#0a0a0a] border border-gray-700 rounded-lg text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                                  placeholder="https://..."
-                                />
-                              ) : (
-                                <div className="text-gray-300 text-sm break-all">{hospital.imageUrl || 'No image URL set'}</div>
-                              )}
-                            </div>
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                              <div>
-                                <label className="block text-sm font-medium text-gray-300 mb-1">Hospital Name</label>
-                                {isEditingHospital ? (
-                                  <input
-                                    type="text"
-                                    value={editFormData.name || ''}
-                                    onChange={(e) => setEditFormData({ ...editFormData, name: e.target.value })}
-                                    className="w-full px-3 py-2 bg-[#0a0a0a] border border-gray-700 rounded-lg text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                                  />
-                                ) : (
-                                  <div className="text-white font-medium">{hospital.name}</div>
-                                )}
-                              </div>
-                              <div>
-                                <label className="block text-sm font-medium text-gray-300 mb-1">Location</label>
-                                {isEditingHospital ? (
-                                  <input
-                                    type="text"
-                                    value={editFormData.location || ''}
-                                    onChange={(e) => setEditFormData({ ...editFormData, location: e.target.value })}
-                                    className="w-full px-3 py-2 bg-[#0a0a0a] border border-gray-700 rounded-lg text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                                    placeholder="e.g., Boston, MA"
-                                  />
-                                ) : (
-                                  <div className="text-white flex items-center gap-1">{hospital.location}</div>
-                                )}
-                              </div>
-                              <div>
-                                <label className="block text-sm font-medium text-gray-300 mb-1">Rating</label>
-                                {isEditingHospital ? (
-                                  <input
-                                    type="number"
-                                    min="0"
-                                    max="5"
-                                    step="0.1"
-                                    value={editFormData.rating || 0}
-                                    onChange={(e) => setEditFormData({ ...editFormData, rating: parseFloat(e.target.value) || 0 })}
-                                    className="w-full px-3 py-2 bg-[#0a0a0a] border border-gray-700 rounded-lg text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                                  />
-                                ) : (
-                                  <div className="text-white flex items-center gap-1">
-                                    <Star className="h-4 w-4 text-yellow-400 fill-current" />
-                                    {hospital.rating.toFixed(1)} / 5.0
-                                  </div>
-                                )}
-                              </div>
-                              <div>
-                                <label className="block text-sm font-medium text-gray-300 mb-1">Wallet Address</label>
-                                <div className="text-gray-300 font-mono text-sm">{hospital.walletAddress}</div>
-                              </div>
-                              <div className="md:col-span-2">
-                                <label className="block text-sm font-medium text-gray-300 mb-2">Specialties</label>
-                                {isEditingHospital ? (
-                                  <div className="space-y-2">
-                                    <div className="flex flex-wrap gap-2">
-                                      {editFormData.specialties?.map((specialty, index) => (
-                                        <span
-                                          key={index}
-                                          className="inline-flex items-center gap-1 px-3 py-1 bg-blue-500/20 text-blue-400 rounded-full text-sm border border-blue-500/50"
-                                        >
-                                          {specialty}
-                                          <button
-                                            onClick={() => {
-                                              const newSpecialties = editFormData.specialties?.filter((_, i) => i !== index) || [];
-                                              setEditFormData({ ...editFormData, specialties: newSpecialties });
-                                            }}
-                                            className="hover:text-blue-300"
-                                          >
-                                            <X className="h-3 w-3" />
-                                          </button>
-                                        </span>
-                                      ))}
-                                    </div>
-                                    <input
-                                      type="text"
-                                      placeholder="Add specialty and press Enter"
-                                      className="w-full px-3 py-2 bg-[#0a0a0a] border border-gray-700 rounded-lg text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                                      onKeyDown={(e) => {
-                                        if (e.key === 'Enter') {
-                                          e.preventDefault();
-                                          const value = e.currentTarget.value.trim();
-                                          if (value && !editFormData.specialties?.includes(value)) {
-                                            setEditFormData({
-                                              ...editFormData,
-                                              specialties: [...(editFormData.specialties || []), value],
-                                            });
-                                            e.currentTarget.value = '';
-                                          }
-                                        }
-                                      }}
-                                    />
-                                  </div>
-                                ) : (
-                                  <div className="flex flex-wrap gap-2">
-                                    {hospital.specialties.length > 0 ? (
-                                      hospital.specialties.map((specialty, index) => (
-                                        <span
-                                          key={index}
-                                          className="px-3 py-1 bg-blue-500/20 text-blue-400 rounded-full text-sm border border-blue-500/50"
-                                        >
-                                          {specialty}
-                                        </span>
-                                      ))
-                                    ) : (
-                                      <span className="text-gray-500 text-sm">No specialties listed</span>
-                                    )}
-                                  </div>
-                                )}
-                              </div>
-                              <div className="md:col-span-2 pt-4 border-t border-gray-800">
-                                <div className="grid grid-cols-2 gap-4 text-sm">
-                                  <div>
-                                    <span className="text-gray-500">Created:</span>
-                                    <span className="ml-2 text-gray-300">
-                                      {new Date(hospital.createdAt).toLocaleDateString()}
-                                    </span>
-                                  </div>
-                                  <div>
-                                    <span className="text-gray-500">Last Updated:</span>
-                                    <span className="ml-2 text-gray-300">
-                                      {new Date(hospital.updatedAt).toLocaleDateString()}
-                                    </span>
-                                  </div>
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  )}
-
-                  {(hospitalManagerTab === 'customers' || hospitalManagerTab === 'treatments') && (
-                    <div className="bg-[#1a1a1a] border border-gray-800 rounded-lg p-8 text-center">
-                      <h3 className="text-lg font-medium text-white mb-2">Coming Soon</h3>
-                      <p className="text-gray-400 mb-6">
-                        The {hospitalManagerTab} management section is currently under development.
-                      </p>
-                      <button
-                        onClick={() => setHospitalManagerTab('dashboard')}
-                        className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700"
-                      >
-                        Return to Dashboard
-                      </button>
-                    </div>
-                  )}
-
-                  {/* Modals */}
-                  <DonorRequestModal
-                    isOpen={isDonorRequestModalOpen}
-                    onClose={() => setIsDonorRequestModalOpen(false)}
-                  />
-                  {hospital && (
-                    <HospitalVerificationModal
-                      isOpen={isVerificationModalOpen}
-                      onClose={() => setIsVerificationModalOpen(false)}
-                      onSuccess={handleVerificationSuccess}
-                      hospitalId={hospital.id}
-                    />
-                  )}
-                </div>
-              </div>
-            ) : (
-              <div className="w-full max-w-6xl mx-auto">
-                {/* Dashboard Header */}
-                <div className="mb-6">
-                  <h1 className="text-3xl font-bold text-white mb-2">Dashboard</h1>
-                  <p className="text-gray-400">Manage your profile and settings</p>
-                </div>
-
-                {/* Horizontal Tabs */}
-                <div className="border-b border-gray-800 mb-6">
-                  <nav className="flex space-x-8" aria-label="Tabs">
-                    <button
-                      onClick={() => setDashboardTab('profile')}
-                      className={`${dashboardTab === 'profile'
-                        ? 'border-blue-500 text-white'
-                        : 'border-transparent text-gray-400 hover:text-gray-300 hover:border-gray-700'
-                        } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm flex items-center gap-2`}
-                    >
-                      <User className="w-4 h-4" />
-                      Profile
-                    </button>
-                    <button
-                      onClick={() => setDashboardTab('settings')}
-                      className={`${dashboardTab === 'settings'
-                        ? 'border-blue-500 text-white'
-                        : 'border-transparent text-gray-400 hover:text-gray-300 hover:border-gray-700'
-                        } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm flex items-center gap-2`}
-                    >
-                      <Settings className="w-4 h-4" />
-                      Settings
-                    </button>
+              // Access control: Only medical facilities can view hospital dashboard
+              user?.userType !== 'MEDICAL_FACILITY' ? (
+                <div className="w-full max-w-2xl mx-auto text-center py-20">
+                  <div className="bg-[#1a1a1a] border border-gray-800 rounded-lg p-12">
+                    <Shield className="w-16 h-16 text-gray-600 mx-auto mb-4" />
+                    <h2 className="text-2xl font-bold text-white mb-2">Access Denied</h2>
+                    <p className="text-gray-400 mb-6">
+                      The Hospital Dashboard is only available for medical facilities.
+                      Regular users cannot access this section.
+                    </p>
                     <button
                       onClick={() => {
-                        setDashboardTab('pricing');
-                        if (plans.length === 0) {
-                          loadPricingData();
-                        }
+                        setActiveView('agents');
+                        setSelectedAgent(null);
                       }}
-                      className={`${dashboardTab === 'pricing'
-                        ? 'border-blue-500 text-white'
-                        : 'border-transparent text-gray-400 hover:text-gray-300 hover:border-gray-700'
-                        } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm flex items-center gap-2`}
+                      className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors"
                     >
-                      <CreditCard className="w-4 h-4" />
-                      Pricing
+                      Go Back to Apps
                     </button>
-                  </nav>
+                  </div>
                 </div>
-
-                {/* Tab Content */}
-                {dashboardTab === 'profile' && (
-                  <div className="bg-[#0b0b0d] border border-gray-800 rounded-lg overflow-hidden">
-                    {/* Profile Header */}
-                    <div className="border-b border-gray-800 px-6 py-4 flex justify-between items-center">
-                      <div>
-                        <h2 className="text-xl font-semibold text-white">My Profile</h2>
-                        <p className="text-sm text-gray-400 mt-1">Manage your personal information</p>
-                      </div>
-                      {!isEditing ? (
-                        <button
-                          onClick={() => setIsEditing(true)}
-                          className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium transition-colors"
-                        >
-                          Edit Profile
-                        </button>
-                      ) : (
-                        <div className="flex gap-3">
-                          <button
-                            onClick={handleCancel}
-                            className="px-4 py-2 border border-gray-700 text-gray-300 rounded-lg text-sm font-medium hover:bg-gray-800 transition-colors"
-                          >
-                            Cancel
-                          </button>
-                          <button
-                            onClick={handleSaveProfile}
-                            disabled={isSaving}
-                            className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium disabled:opacity-50 transition-colors"
-                          >
-                            {isSaving ? 'Saving...' : 'Save Changes'}
-                          </button>
-                        </div>
+              ) : (
+                <div className="w-full max-w-7xl mx-auto">
+                  {/* Hospital Manager Header */}
+                  <div className="mb-6 flex justify-between items-center">
+                    <div>
+                      <h1 className="text-2xl font-bold text-white">Hospital Dashboard</h1>
+                      {hospital && (
+                        <p className="text-sm text-gray-400 mt-1">{hospital.name}</p>
                       )}
                     </div>
-
-                    {/* Profile Tabs */}
-                    <div className="border-b border-gray-800 bg-gray-900/50">
-                      <nav className="flex">
-                        <button
-                          onClick={() => setActiveSection('personal')}
-                          className={`px-6 py-3 text-sm font-medium ${activeSection === 'personal'
-                            ? 'text-blue-400 border-b-2 border-blue-500 bg-[#1a1a1a]'
-                            : 'text-gray-400 hover:text-gray-300'
-                            }`}
-                        >
-                          Personal Info
-                        </button>
-                        {user?.userType === 'MEDICAL_FACILITY' && (
-                          <button
-                            onClick={() => setActiveSection('hospital')}
-                            className={`px-6 py-3 text-sm font-medium ${activeSection === 'hospital'
-                              ? 'text-blue-400 border-b-2 border-blue-500 bg-[#1a1a1a]'
-                              : 'text-gray-400 hover:text-gray-300'
-                              }`}
-                          >
-                            Hospital Info
-                          </button>
-                        )}
-                        <button
-                          onClick={() => setActiveSection('password')}
-                          className={`px-6 py-3 text-sm font-medium ${activeSection === 'password'
-                            ? 'text-blue-400 border-b-2 border-blue-500 bg-[#1a1a1a]'
-                            : 'text-gray-400 hover:text-gray-300'
-                            }`}
-                        >
-                          Change Password
-                        </button>
-                      </nav>
-                    </div>
-
-                    {/* Profile Content */}
-                    <div className="p-6">
-                      {authLoading ? (
-                        <div className="flex items-center justify-center py-12">
-                          <Loader className="w-6 h-6 animate-spin text-blue-500" />
-                          <span className="ml-3 text-gray-400">Loading profile...</span>
+                    <div className="flex items-center gap-2">
+                      {hospital?.isVerified ? (
+                        <span className="bg-green-500/20 text-green-400 text-xs px-3 py-1 rounded-full flex items-center gap-1 border border-green-500/50">
+                          <ShieldCheck className="h-3 w-3" />
+                          Verified
+                        </span>
+                      ) : (
+                        <span className="bg-gray-800 text-gray-400 text-xs px-3 py-1 rounded-full flex items-center gap-1 border border-gray-700">
+                          <Shield className="h-3 w-3" />
+                          Not Verified
+                        </span>
+                      )}
+                      {hospital?.imageUrl ? (
+                        <Image
+                          src={hospital.imageUrl}
+                          alt={hospital.name}
+                          width={40}
+                          height={40}
+                          className="rounded-full object-cover"
+                        />
+                      ) : (
+                        <div className="w-10 h-10 rounded-full bg-blue-600/20 flex items-center justify-center border border-blue-500/50">
+                          <Building2 className="h-5 w-5 text-blue-400" />
                         </div>
-                      ) : !user ? (
-                        <div className="text-center py-12">
-                          <p className="text-gray-400">Please log in to view your profile</p>
-                        </div>
-                      ) : activeSection === 'personal' ? (
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                          <div>
-                            <label className="block text-sm font-medium text-gray-300 mb-2">Full Name</label>
-                            <input
-                              type="text"
-                              name="fullname"
-                              value={profile.fullname}
-                              onChange={handleInputChange}
-                              disabled={!isEditing}
-                              className={`w-full bg-transparent border rounded-lg px-4 py-2 text-white ${isEditing ? 'border-gray-700' : 'border-none'
-                                } focus:outline-none focus:ring-1 focus:ring-blue-500`}
-                            />
-                          </div>
-                          <div>
-                            <label className="block text-sm font-medium text-gray-300 mb-2">Email Address</label>
-                            <input
-                              type="email"
-                              name="email"
-                              value={profile.email}
-                              onChange={handleInputChange}
-                              disabled={!isEditing}
-                              className={`w-full bg-transparent border rounded-lg px-4 py-2 text-white ${isEditing ? 'border-gray-700' : 'border-none'
-                                } focus:outline-none focus:ring-1 focus:ring-blue-500`}
-                            />
-                          </div>
-                          <div>
-                            <label className="block text-sm font-medium text-gray-300 mb-2">Phone Number</label>
-                            <input
-                              type="tel"
-                              name="phone"
-                              value={profile.phone}
-                              onChange={handleInputChange}
-                              disabled={!isEditing}
-                              placeholder="+1234567890"
-                              className={`w-full bg-transparent border rounded-lg px-4 py-2 text-white ${isEditing ? 'border-gray-700' : 'border-none'
-                                } focus:outline-none focus:ring-1 focus:ring-blue-500`}
-                            />
-                          </div>
-                          <div>
-                            <label className="block text-sm font-medium text-gray-300 mb-2">Hospital ID</label>
-                            <input
-                              type="text"
-                              name="hospitalId"
-                              value={profile.hospitalId}
-                              onChange={handleInputChange}
-                              disabled={!isEditing}
-                              className={`w-full bg-transparent border rounded-lg px-4 py-2 text-white ${isEditing ? 'border-gray-700' : 'border-none'
-                                } focus:outline-none focus:ring-1 focus:ring-blue-500`}
-                            />
-                          </div>
-                          <div className="md:col-span-2">
-                            <label className="block text-sm font-medium text-gray-300 mb-2">Address</label>
-                            <textarea
-                              name="address"
-                              rows={3}
-                              value={profile.address}
-                              onChange={handleInputChange}
-                              disabled={!isEditing}
-                              className={`w-full bg-transparent border rounded-lg px-4 py-2 text-white ${isEditing ? 'border-gray-700' : 'border-none'
-                                } focus:outline-none focus:ring-1 focus:ring-blue-500`}
-                            />
-                          </div>
-                          <div className="md:col-span-2">
-                            <label className="block text-sm font-medium text-gray-300 mb-2">About</label>
-                            <textarea
-                              name="about"
-                              rows={4}
-                              value={profile.about}
-                              onChange={handleInputChange}
-                              disabled={!isEditing}
-                              placeholder="Tell us about yourself..."
-                              className={`w-full bg-transparent border rounded-lg px-4 py-2 text-white ${isEditing ? 'border-gray-700' : 'border-none'
-                                } focus:outline-none focus:ring-1 focus:ring-blue-500`}
-                            />
-                          </div>
-                          <div className="md:col-span-2 pt-4 border-t border-gray-800">
-                            <label className="block text-sm font-medium text-gray-300 mb-2">Connected Wallet</label>
-                            <div className="flex items-center gap-3">
-                              <div className="bg-blue-600/20 text-blue-400 px-4 py-2 rounded-lg font-mono text-sm">
-                                {address ? `${address.substring(0, 8)}...${address.substring(address.length - 6)}` : 'No wallet connected'}
-                              </div>
-                              {user.userType && (
-                                <span className="px-3 py-1 text-xs bg-gray-800 text-gray-300 rounded-full">
-                                  {user.userType === 'USER' ? 'User Account' : 'Medical Facility'}
-                                </span>
-                              )}
-                            </div>
-                          </div>
-                        </div>
-                      ) : activeSection === 'hospital' && user.userType === 'MEDICAL_FACILITY' && user.hospital ? (
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                          <div>
-                            <label className="block text-sm font-medium text-gray-300 mb-2">Facility Name</label>
-                            <div className="text-white">{user.hospital.facilityName}</div>
-                          </div>
-                          <div>
-                            <label className="block text-sm font-medium text-gray-300 mb-2">Facility ID</label>
-                            <div className="text-white">{user.hospital.facilityId}</div>
-                          </div>
-                          <div className="md:col-span-2">
-                            <label className="block text-sm font-medium text-gray-300 mb-2">Address</label>
-                            <div className="text-white">
-                              {user.hospital.address}, {user.hospital.city}, {user.hospital.state} {user.hospital.zip}
-                            </div>
-                          </div>
-                          <div>
-                            <label className="block text-sm font-medium text-gray-300 mb-2">Phone</label>
-                            <div className="text-white">{user.hospital.telephone}</div>
-                          </div>
-                          <div>
-                            <label className="block text-sm font-medium text-gray-300 mb-2">Hospital Type</label>
-                            <div className="text-white">{user.hospital.hospitalType}</div>
-                          </div>
-                        </div>
-                      ) : activeSection === 'password' ? (
-                        <div className="max-w-md">
-                          <div className="space-y-6">
-                            <div>
-                              <label className="block text-sm font-medium text-gray-300 mb-2">Current Password</label>
-                              <input
-                                type="password"
-                                name="currentPassword"
-                                value={passwordData.currentPassword}
-                                onChange={handlePasswordChange}
-                                className="w-full bg-[#0a0a0a] border border-gray-700 rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-1 focus:ring-blue-500"
-                                placeholder="Enter your current password"
-                              />
-                            </div>
-                            <div>
-                              <label className="block text-sm font-medium text-gray-300 mb-2">New Password</label>
-                              <input
-                                type="password"
-                                name="newPassword"
-                                value={passwordData.newPassword}
-                                onChange={handlePasswordChange}
-                                className="w-full bg-[#0a0a0a] border border-gray-700 rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-1 focus:ring-blue-500"
-                                placeholder="Enter your new password"
-                                minLength={6}
-                              />
-                              <p className="mt-1 text-xs text-gray-500">Password must be at least 6 characters long</p>
-                            </div>
-                            <div>
-                              <label className="block text-sm font-medium text-gray-300 mb-2">Confirm New Password</label>
-                              <input
-                                type="password"
-                                name="confirmPassword"
-                                value={passwordData.confirmPassword}
-                                onChange={handlePasswordChange}
-                                className="w-full bg-[#0a0a0a] border border-gray-700 rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-1 focus:ring-blue-500"
-                                placeholder="Confirm your new password"
-                                minLength={6}
-                              />
-                            </div>
-                            <div className="flex justify-end">
-                              <button
-                                onClick={handleChangePassword}
-                                disabled={isChangingPassword || !passwordData.currentPassword || !passwordData.newPassword || !passwordData.confirmPassword}
-                                className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                              >
-                                {isChangingPassword ? 'Changing Password...' : 'Change Password'}
-                              </button>
-                            </div>
-                          </div>
-                        </div>
-                      ) : null}
+                      )}
                     </div>
                   </div>
-                )}
 
-                {dashboardTab === 'settings' && (
-                  <div className="bg-[#0b0b0d] border border-gray-800 rounded-lg overflow-hidden">
-                    {/* Settings Header */}
-                    <div className="border-b border-gray-800 px-6 py-4 flex justify-between items-center">
+                  {/* Hospital Manager Tabs */}
+                  <div className="border-b border-gray-800 mb-6 ">
+                    <nav className="flex space-x-8">
+                      {['dashboard', 'bookings', 'donors', 'customers', 'treatments', 'settings'].map((tab) => (
+                        <button
+                          key={tab}
+                          onClick={() => setHospitalManagerTab(tab)}
+                          className={`px-4 py-2 font-medium text-sm capitalize transition-colors ${hospitalManagerTab === tab
+                            ? 'text-white border-b-2 border-blue-500'
+                            : 'text-gray-400 hover:text-gray-300'
+                            }`}
+                        >
+                          {tab}
+                        </button>
+                      ))}
+                    </nav>
+                  </div>
+
+                  {/* Hospital Manager Content */}
+                  <div className='min-h-160'>
+                    {hospitalManagerTab === 'dashboard' && (
                       <div>
-                        <h2 className="text-xl font-semibold text-white">Settings</h2>
-                        <p className="text-sm text-gray-400 mt-1">Manage your account preferences</p>
-                      </div>
-                      <button
-                        onClick={saveSettings}
-                        disabled={isSavingSettings}
-                        className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${isSavingSettings
-                          ? 'bg-gray-700 text-gray-400 cursor-not-allowed'
-                          : 'bg-blue-600 hover:bg-blue-700 text-white'
-                          }`}
-                      >
-                        {isSavingSettings ? (
-                          <span className="flex items-center gap-2">
-                            <Loader className="w-4 h-4 animate-spin" />
-                            Saving...
-                          </span>
-                        ) : 'Save Settings'}
-                      </button>
-                    </div>
-
-                    {/* Saved Message */}
-                    {showSavedMessage && (
-                      <div className="mx-6 mt-4 bg-green-500/20 border border-green-500/50 p-4 rounded-lg">
-                        <div className="flex items-center gap-2 text-green-400">
-                          <CheckCircle className="w-5 h-5" />
-                          <p className="text-sm font-medium">Settings saved successfully!</p>
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Settings Tabs */}
-                    <div className="border-b border-gray-800 bg-gray-900/50">
-                      <nav className="flex">
-                        <button
-                          onClick={() => setSettingsTab('notifications')}
-                          className={`px-6 py-3 text-sm font-medium flex items-center gap-2 ${settingsTab === 'notifications'
-                            ? 'text-blue-400 border-b-2 border-blue-500 bg-[#1a1a1a]'
-                            : 'text-gray-400 hover:text-gray-300'
-                            }`}
-                        >
-                          <Bell className="w-4 h-4" />
-                          Notifications
-                        </button>
-                        <button
-                          onClick={() => setSettingsTab('privacy')}
-                          className={`px-6 py-3 text-sm font-medium flex items-center gap-2 ${settingsTab === 'privacy'
-                            ? 'text-blue-400 border-b-2 border-blue-500 bg-[#1a1a1a]'
-                            : 'text-gray-400 hover:text-gray-300'
-                            }`}
-                        >
-                          <Shield className="w-4 h-4" />
-                          Privacy
-                        </button>
-                        <button
-                          onClick={() => setSettingsTab('security')}
-                          className={`px-6 py-3 text-sm font-medium flex items-center gap-2 ${settingsTab === 'security'
-                            ? 'text-blue-400 border-b-2 border-blue-500 bg-[#1a1a1a]'
-                            : 'text-gray-400 hover:text-gray-300'
-                            }`}
-                        >
-                          <Shield className="w-4 h-4" />
-                          Security
-                        </button>
-                        <button
-                          onClick={() => setSettingsTab('preferences')}
-                          className={`px-6 py-3 text-sm font-medium flex items-center gap-2 ${settingsTab === 'preferences'
-                            ? 'text-blue-400 border-b-2 border-blue-500 bg-[#1a1a1a]'
-                            : 'text-gray-400 hover:text-gray-300'
-                            }`}
-                        >
-                          <Globe className="w-4 h-4" />
-                          Preferences
-                        </button>
-                      </nav>
-                    </div>
-
-                    {/* Settings Content */}
-                    <div className="p-6">
-                      {settingsTab === 'notifications' && (
-                        <div className="space-y-6">
-                          <div>
-                            <h3 className="text-lg font-medium text-white mb-1">Notification Methods</h3>
-                            <p className="text-sm text-gray-400 mb-4">Choose how you want to receive notifications</p>
-                            <div className="space-y-4">
-                              {[
-                                { key: 'email' as const, label: 'Email notifications' },
-                                { key: 'sms' as const, label: 'SMS notifications' },
-                                { key: 'browser' as const, label: 'Browser notifications' },
-                              ].map(({ key, label }) => (
-                                <div key={key} className="flex items-center">
-                                  <input
-                                    type="checkbox"
-                                    checked={settings.notifications[key]}
-                                    onChange={() => handleNotificationChange(key)}
-                                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-700 rounded bg-[#0a0a0a]"
-                                  />
-                                  <label className="ml-3 text-sm text-gray-300">{label}</label>
-                                </div>
-                              ))}
-                            </div>
-                          </div>
-                          <div>
-                            <h3 className="text-lg font-medium text-white mb-1">Notification Types</h3>
-                            <div className="space-y-4 mt-4">
-                              {[
-                                { key: 'appointments' as const, label: 'Appointment reminders and updates' },
-                                { key: 'marketing' as const, label: 'Marketing and promotional messages' },
-                                { key: 'updates' as const, label: 'Platform updates and new features' },
-                              ].map(({ key, label }) => (
-                                <div key={key} className="flex items-center">
-                                  <input
-                                    type="checkbox"
-                                    checked={settings.notifications[key]}
-                                    onChange={() => handleNotificationChange(key)}
-                                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-700 rounded bg-[#0a0a0a]"
-                                  />
-                                  <label className="ml-3 text-sm text-gray-300">{label}</label>
-                                </div>
-                              ))}
-                            </div>
-                          </div>
-                        </div>
-                      )}
-
-                      {settingsTab === 'privacy' && (
-                        <div className="space-y-6">
-                          <div>
-                            <h3 className="text-lg font-medium text-white mb-1">Profile Visibility</h3>
-                            <div className="space-y-4 mt-4">
-                              {[
-                                { key: 'shareProfile' as const, label: 'Share profile with partner hospitals', desc: 'Allow partner hospitals to view your profile information' },
-                                { key: 'showDonationHistory' as const, label: 'Display donation history on profile', desc: 'Your donation history will be visible to other users' },
-                              ].map(({ key, label, desc }) => (
-                                <div key={key} className="flex items-start">
-                                  <input
-                                    type="checkbox"
-                                    checked={settings.privacy[key]}
-                                    onChange={() => handlePrivacyChange(key)}
-                                    className="h-4 w-4 mt-0.5 text-blue-600 focus:ring-blue-500 border-gray-700 rounded bg-[#0a0a0a]"
-                                  />
-                                  <div className="ml-3">
-                                    <label className="text-sm font-medium text-gray-300">{label}</label>
-                                    <p className="text-xs text-gray-500 mt-1">{desc}</p>
-                                  </div>
-                                </div>
-                              ))}
-                            </div>
-                          </div>
-                          <div>
-                            <h3 className="text-lg font-medium text-white mb-1">Data Usage</h3>
-                            <div className="space-y-4 mt-4">
-                              {[
-                                { key: 'anonymizeData' as const, label: 'Anonymize my data in the blockchain', desc: 'Your personal details will be hashed and anonymized' },
-                                { key: 'allowResearch' as const, label: 'Share anonymized data for research', desc: 'Allow your anonymized data to be used for fertility research' },
-                              ].map(({ key, label, desc }) => (
-                                <div key={key} className="flex items-start">
-                                  <input
-                                    type="checkbox"
-                                    checked={settings.privacy[key]}
-                                    onChange={() => handlePrivacyChange(key)}
-                                    className="h-4 w-4 mt-0.5 text-blue-600 focus:ring-blue-500 border-gray-700 rounded bg-[#0a0a0a]"
-                                  />
-                                  <div className="ml-3">
-                                    <label className="text-sm font-medium text-gray-300">{label}</label>
-                                    <p className="text-xs text-gray-500 mt-1">{desc}</p>
-                                    {key === 'allowResearch' && settings.privacy.allowResearch && (
-                                      <p className="text-xs text-green-400 mt-1 flex items-center gap-1">
-                                        <CheckCircle className="w-3 h-3" />
-                                        Earn 50 DATA tokens per month for participating
-                                      </p>
-                                    )}
-                                  </div>
-                                </div>
-                              ))}
-                            </div>
-                          </div>
-                        </div>
-                      )}
-
-                      {settingsTab === 'security' && (
-                        <div className="space-y-6">
-                          <div className="p-4 bg-[#0a0a0a] border border-gray-800 rounded-lg">
-                            <h4 className="text-sm font-medium text-white mb-2">Connected Wallet</h4>
-                            <div className="flex items-center gap-3">
-                              {address && (
-                                <>
-                                  <Image src="/images/ethereum.svg" alt="Ethereum" width={24} height={24} />
-                                  <span className="text-sm text-gray-300 font-mono">
-                                    {address.substring(0, 8)}...{address.substring(address.length - 6)}
-                                  </span>
-                                </>
-                              )}
-                            </div>
-                          </div>
-                          <div className="space-y-4">
-                            {[
-                              { key: 'twoFactorEnabled' as const, label: 'Enable two-factor authentication', desc: 'Add an extra layer of security to your account' },
-                              { key: 'loginNotifications' as const, label: 'Receive login notifications', desc: 'Get notified when someone logs into your account' },
-                              { key: 'allowMultipleDevices' as const, label: 'Allow multiple device logins', desc: 'Stay logged in on multiple devices at the same time' },
-                            ].map(({ key, label, desc }) => (
-                              <div key={key} className="flex items-start">
-                                <input
-                                  type="checkbox"
-                                  checked={settings.security[key] as boolean}
-                                  onChange={(e) => handleSecurityChange(key, e.target.checked)}
-                                  className="h-4 w-4 mt-0.5 text-blue-600 focus:ring-blue-500 border-gray-700 rounded bg-[#0a0a0a]"
-                                />
-                                <div className="ml-3">
-                                  <label className="text-sm font-medium text-gray-300">{label}</label>
-                                  <p className="text-xs text-gray-500 mt-1">{desc}</p>
+                        {/* Stats Grid */}
+                        {isLoadingStats ? (
+                          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                            {[1, 2, 3, 4].map(i => (
+                              <div key={i} className="bg-gray-900/50 border border-gray-800 rounded-lg p-6">
+                                <div className="animate-pulse">
+                                  <div className="h-4 bg-gray-700 rounded w-24 mb-2"></div>
+                                  <div className="h-8 bg-gray-700 rounded w-16 mb-2"></div>
+                                  <div className="h-4 bg-gray-700 rounded w-32"></div>
                                 </div>
                               </div>
                             ))}
                           </div>
-                          <div>
-                            <h4 className="text-sm font-medium text-white mb-2">Session Timeout</h4>
-                            <select
-                              value={settings.security.sessionTimeout}
-                              onChange={(e) => handleSecurityChange('sessionTimeout', e.target.value)}
-                              className="w-full bg-[#0a0a0a] border border-gray-700 rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-1 focus:ring-blue-500"
-                            >
-                              <option value="30m">30 minutes</option>
-                              <option value="1h">1 hour</option>
-                              <option value="4h">4 hours</option>
-                              <option value="1d">1 day</option>
-                              <option value="never">Never</option>
-                            </select>
+                        ) : (
+                          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                            <div className="bg-gray-900/50 border border-gray-800 rounded-lg p-6">
+                              <h3 className="text-sm font-medium text-gray-400 mb-1">Total Donors</h3>
+                              <p className="text-2xl font-bold text-white">{hospitalStats.totalDonors}</p>
+                              <div className="mt-2 flex items-center text-sm">
+                                <span className="text-green-400 font-medium">+{hospitalStats.newDonors} new</span>
+                                <span className="text-gray-500 ml-2">this week</span>
+                              </div>
+                            </div>
+                            <div className="bg-gray-900/50 border border-gray-800 rounded-lg p-6">
+                              <h3 className="text-sm font-medium text-gray-400 mb-1">Active Donors</h3>
+                              <p className="text-2xl font-bold text-white">{hospitalStats.activeDonors}</p>
+                              <div className="mt-2 flex items-center text-sm">
+                                <span className="text-yellow-400 font-medium">{hospitalStats.pendingDonors} pending</span>
+                                <span className="text-gray-500 ml-2">verification</span>
+                              </div>
+                            </div>
+                            <div className="bg-gray-900/50 border border-gray-800 rounded-lg p-6">
+                              <h3 className="text-sm font-medium text-gray-400 mb-1">Total Customers</h3>
+                              <p className="text-2xl font-bold text-white">{hospitalStats.totalCustomers}</p>
+                              <div className="mt-2 flex items-center text-sm">
+                                <span className="text-green-400 font-medium">+{hospitalStats.newCustomers} new</span>
+                                <span className="text-gray-500 ml-2">this month</span>
+                              </div>
+                            </div>
+                            <div className="bg-gray-900/50 border border-gray-800 rounded-lg p-6">
+                              <h3 className="text-sm font-medium text-gray-400 mb-1">Active Customers</h3>
+                              <p className="text-2xl font-bold text-white">{hospitalStats.activeCustomers}</p>
+                              <div className="mt-2 flex items-center text-sm">
+                                <span className="text-blue-400 font-medium">
+                                  {hospitalStats.totalCustomers > 0
+                                    ? Math.round((hospitalStats.activeCustomers / hospitalStats.totalCustomers) * 100)
+                                    : 0}%
+                                </span>
+                                <span className="text-gray-500 ml-2">activity rate</span>
+                              </div>
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Recent Activity */}
+                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                          {/* Recent Donations */}
+                          <div className="bg-[#0b0b0d] border border-gray-800 rounded-lg overflow-hidden">
+                            <div className="bg-gray-900/50 px-6 py-4 border-b border-gray-800 flex justify-between items-center">
+                              <h3 className="font-medium text-white">Recent Donations</h3>
+                              <button className="text-blue-400 text-sm font-medium hover:text-blue-300">View All</button>
+                            </div>
+                            <div className="divide-y divide-gray-800">
+                              {isLoadingRequests ? (
+                                <div className="px-6 py-4 text-center text-gray-400">
+                                  <Loader2 className="h-5 w-5 animate-spin mx-auto mb-2" />
+                                  <p className="text-sm">Loading donations...</p>
+                                </div>
+                              ) : recentDonations.length === 0 ? (
+                                <div className="px-6 py-8 text-center text-gray-400">
+                                  <p className="text-sm">No donations yet</p>
+                                </div>
+                              ) : (
+                                recentDonations.map(donation => (
+                                  <div key={donation.id} className="px-6 py-4 flex justify-between items-center">
+                                    <div>
+                                      <p className="font-medium text-white">{donation.donor}</p>
+                                      <p className="text-sm text-gray-400">{donation.date}</p>
+                                    </div>
+                                    <span className={`text-xs px-2 py-1 rounded-full ${donation.status === 'Completed'
+                                      ? 'bg-green-500/20 text-green-400 border border-green-500/50'
+                                      : donation.status === 'Processing'
+                                        ? 'bg-blue-500/20 text-blue-400 border border-blue-500/50'
+                                        : 'bg-yellow-500/20 text-yellow-400 border border-yellow-500/50'
+                                      }`}>
+                                      {donation.status}
+                                    </span>
+                                  </div>
+                                ))
+                              )}
+                            </div>
+                            <div className="bg-gray-900/50 px-6 py-3 border-t border-gray-800">
+                              <button
+                                onClick={() => setIsDonorRequestModalOpen(true)}
+                                className="w-full bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 flex items-center justify-center gap-2"
+                              >
+                                <Plus className="w-4 h-4" />
+                                Add New Donor
+                              </button>
+                            </div>
+                          </div>
+
+                          {/* Recent Customers */}
+                          <div className="bg-[#0b0b0d] border border-gray-800 rounded-lg overflow-hidden">
+                            <div className="bg-gray-900/50 px-6 py-4 border-b border-gray-800 flex justify-between items-center">
+                              <h3 className="font-medium text-white">Recent Customers</h3>
+                              <button className="text-blue-400 text-sm font-medium hover:text-blue-300">View All</button>
+                            </div>
+                            <div className="divide-y divide-gray-800">
+                              {isLoadingBookings ? (
+                                <div className="px-6 py-4 text-center text-gray-400">
+                                  <Loader2 className="h-5 w-5 animate-spin mx-auto mb-2" />
+                                  <p className="text-sm">Loading customers...</p>
+                                </div>
+                              ) : recentCustomers.length === 0 ? (
+                                <div className="px-6 py-8 text-center text-gray-400">
+                                  <p className="text-sm">No customers yet</p>
+                                </div>
+                              ) : (
+                                recentCustomers.map(customer => (
+                                  <div key={customer.id} className="px-6 py-4 flex justify-between items-center">
+                                    <div>
+                                      <p className="font-medium text-white">{customer.name}</p>
+                                      <p className="text-sm text-gray-400">{customer.date}</p>
+                                    </div>
+                                    <span className="text-xs px-2 py-1 rounded-full bg-blue-500/20 text-blue-400 border border-blue-500/50">
+                                      {customer.treatment}
+                                    </span>
+                                  </div>
+                                ))
+                              )}
+                            </div>
+                            <div className="bg-gray-900/50 px-6 py-3 border-t border-gray-800">
+                              <button className="w-full bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 flex items-center justify-center gap-2">
+                                <Plus className="w-4 h-4" />
+                                Add New Customer
+                              </button>
+                            </div>
                           </div>
                         </div>
-                      )}
+                      </div>
+                    )}
 
-                      {settingsTab === 'preferences' && (
-                        <div className="space-y-6">
-                          <div>
-                            <h4 className="text-sm font-medium text-white mb-3">Theme</h4>
-                            <div className="flex items-center space-x-4">
-                              {['light', 'dark', 'system'].map((theme) => (
-                                <div key={theme} className="flex items-center">
-                                  <input
-                                    type="radio"
-                                    name="theme"
-                                    checked={settings.preferences.theme === theme}
-                                    onChange={() => handlePreferenceChange('theme', theme)}
-                                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-700"
-                                  />
-                                  <label className="ml-2 text-sm text-gray-300 capitalize">{theme}</label>
-                                </div>
-                              ))}
-                            </div>
-                          </div>
-                          <div>
-                            <h4 className="text-sm font-medium text-white mb-2">Language</h4>
-                            <select
-                              value={settings.preferences.language}
-                              onChange={(e) => handlePreferenceChange('language', e.target.value)}
-                              className="w-full bg-[#0a0a0a] border border-gray-700 rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-1 focus:ring-blue-500"
-                            >
-                              <option value="en">English</option>
-                              <option value="es">Español</option>
-                              <option value="fr">Français</option>
-                              <option value="zh">中文</option>
-                            </select>
-                          </div>
-                          <div>
-                            <h4 className="text-sm font-medium text-white mb-3">Date Format</h4>
-                            <div className="flex items-center space-x-4">
-                              {['MM/DD/YYYY', 'DD/MM/YYYY', 'YYYY-MM-DD'].map((format) => (
-                                <div key={format} className="flex items-center">
-                                  <input
-                                    type="radio"
-                                    name="dateFormat"
-                                    checked={settings.preferences.dateFormat === format}
-                                    onChange={() => handlePreferenceChange('dateFormat', format)}
-                                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-700"
-                                  />
-                                  <label className="ml-2 text-sm text-gray-300">{format}</label>
-                                </div>
-                              ))}
-                            </div>
-                          </div>
-                          <div>
-                            <h4 className="text-sm font-medium text-white mb-2">Time Zone</h4>
-                            <select
-                              value={settings.preferences.timeZone}
-                              onChange={(e) => handlePreferenceChange('timeZone', e.target.value)}
-                              className="w-full bg-[#0a0a0a] border border-gray-700 rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-1 focus:ring-blue-500"
-                            >
-                              <option value="America/New_York">Eastern Time (US & Canada)</option>
-                              <option value="America/Chicago">Central Time (US & Canada)</option>
-                              <option value="America/Denver">Mountain Time (US & Canada)</option>
-                              <option value="America/Los_Angeles">Pacific Time (US & Canada)</option>
-                              <option value="Europe/London">London</option>
-                              <option value="Europe/Paris">Paris</option>
-                              <option value="Asia/Tokyo">Tokyo</option>
-                              <option value="Australia/Sydney">Sydney</option>
-                            </select>
-                          </div>
+                    {hospitalManagerTab === 'bookings' && (
+                      <div className="space-y-6">
+                        <div className="flex justify-between items-center">
+                          <h2 className="text-xl font-bold text-white">Hospital Bookings</h2>
+                          <button
+                            onClick={() => loadHospitalBookings()}
+                            className="text-blue-400 text-sm font-medium hover:text-blue-300"
+                          >
+                            Refresh
+                          </button>
                         </div>
-                      )}
-                    </div>
-                  </div>
-                )}
 
-                {dashboardTab === 'pricing' && (
-                  <div className="bg-[#0b0b0d] border border-gray-800 rounded-lg overflow-hidden">
-                    <div className="border-b border-gray-800 px-6 py-4">
-                      <h2 className="text-xl font-semibold text-white">Pricing & Plans</h2>
-                      <p className="text-sm text-gray-400 mt-1">Choose the plan that works best for you</p>
-                    </div>
+                        {isLoadingBookings ? (
+                          <div className="flex justify-center items-center py-12">
+                            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white"></div>
+                          </div>
+                        ) : hospitalBookings.length === 0 ? (
+                          <div className="bg-[#0b0b0d] border border-gray-800 rounded-lg p-12 text-center">
+                            <Calendar className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                            <h3 className="text-lg font-medium text-white mb-2">No bookings found</h3>
+                            <p className="text-gray-400">
+                              You don&apos;t have any bookings for your hospitals yet.
+                            </p>
+                          </div>
+                        ) : (
+                          <div className="space-y-4">
+                            {hospitalBookings.map((booking: Booking) => {
+                              const appointmentDate = new Date(booking.appointmentDate);
+                              const endDate = new Date(appointmentDate.getTime() + booking.duration * 60000);
 
-                    <div className="p-6">
-                      <Tabs value={pricingTab} onValueChange={(value) => setPricingTab(value as 'plans' | 'subscription' | 'payment')}>
-                        <TabsList className="mb-6 bg-[#0a0a0a] border border-gray-800">
-                          <TabsTrigger value="plans" className="data-[state=active]:bg-blue-600 data-[state=active]:text-white">Plans</TabsTrigger>
-                          <TabsTrigger value="subscription" className="data-[state=active]:bg-blue-600 data-[state=active]:text-white">My Subscription</TabsTrigger>
-                          <TabsTrigger value="payment" className="data-[state=active]:bg-blue-600 data-[state=active]:text-white">Payment Methods</TabsTrigger>
-                        </TabsList>
+                              const getStatusColor = (status: string) => {
+                                switch (status) {
+                                  case 'CONFIRMED':
+                                    return 'bg-green-500/20 text-green-400 border-green-500/50';
+                                  case 'PENDING':
+                                    return 'bg-yellow-500/20 text-yellow-400 border-yellow-500/50';
+                                  case 'CANCELLED':
+                                    return 'bg-red-500/20 text-red-400 border-red-500/50';
+                                  case 'COMPLETED':
+                                    return 'bg-blue-500/20 text-blue-400 border-blue-500/50';
+                                  default:
+                                    return 'bg-gray-500/20 text-gray-400 border-gray-500/50';
+                                }
+                              };
 
-                        <TabsContent value="plans">
-                          {isLoadingPricing ? (
-                            <div className="flex items-center justify-center py-12">
-                              <Loader2 className="w-6 h-6 animate-spin text-blue-500" />
-                              <span className="ml-3 text-gray-400">Loading plans...</span>
-                            </div>
-                          ) : (
-                            <div className="grid md:grid-cols-3 gap-6">
-                              {plans.map((plan) => {
-                                const isCurrentPlan = subscription?.planId === plan.id;
-                                const isPopular = plan.isPopular;
-
-                                return (
-                                  <div
-                                    key={plan.id}
-                                    className={`relative bg-[#0a0a0a] border rounded-lg p-6 ${isPopular ? 'border-blue-500 border-2' : 'border-gray-800'} ${isCurrentPlan ? 'bg-blue-500/10' : ''}`}
-                                  >
-                                    {isPopular && (
-                                      <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
-                                        <Badge className="bg-blue-600 text-white">Most Popular</Badge>
-                                      </div>
-                                    )}
-                                    <div className="mb-4">
-                                      <div className="flex items-center justify-between mb-2">
-                                        <h3 className="text-2xl font-bold text-white">{plan.name}</h3>
-                                        {isCurrentPlan && (
-                                          <Badge variant="outline" className="bg-green-500/20 text-green-400 border-green-500/50">
-                                            Current Plan
-                                          </Badge>
-                                        )}
-                                      </div>
-                                      <p className="text-gray-400 text-sm mb-4">{plan.description}</p>
-                                      <div className="mb-4">
-                                        <span className="text-4xl font-bold text-white">${plan.price}</span>
-                                        <span className="text-gray-400">/{plan.interval}</span>
-                                      </div>
-                                    </div>
-                                    <div className="space-y-2 mb-6">
-                                      {plan.features.map((feature, index) => (
-                                        <div key={index} className="flex items-start gap-2">
-                                          <Check className="h-5 w-5 text-green-500 flex-shrink-0 mt-0.5" />
-                                          <span className="text-sm text-gray-300">{feature}</span>
-                                        </div>
-                                      ))}
-                                    </div>
-                                    <div className="pt-4 border-t border-gray-800">
-                                      <div className="flex items-center gap-2 text-sm text-gray-400 mb-4">
-                                        <Sparkles className="h-4 w-4" />
-                                        <span>
-                                          {plan.credits === -1
-                                            ? 'Unlimited credits/month'
-                                            : `${plan.credits} credits/month included`}
+                              return (
+                                <div key={booking.id} className="bg-[#0b0b0d] border border-gray-800 rounded-lg p-6">
+                                  <div className="flex justify-between items-start mb-4">
+                                    <div className="flex-1">
+                                      <div className="flex items-center gap-3 mb-2">
+                                        <h3 className="text-lg font-medium text-white">{booking.purpose}</h3>
+                                        <span className={`text-xs px-2 py-1 rounded-full border ${getStatusColor(booking.status)}`}>
+                                          {booking.status}
                                         </span>
                                       </div>
-                                      {isCurrentPlan ? (
-                                        <button
-                                          className="w-full px-4 py-2 border border-gray-700 text-gray-400 rounded-lg text-sm font-medium cursor-not-allowed"
-                                          disabled
-                                        >
-                                          Current Plan
-                                        </button>
-                                      ) : (
-                                        <button
-                                          className="w-full px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium disabled:opacity-50 transition-colors"
-                                          onClick={() => handleSubscribe(plan.id)}
-                                          disabled={isProcessingPricing && selectedPlan === plan.id}
-                                        >
-                                          {isProcessingPricing && selectedPlan === plan.id ? (
-                                            <span className="flex items-center justify-center gap-2">
-                                              <Loader2 className="h-4 w-4 animate-spin" />
-                                              Processing...
-                                            </span>
-                                          ) : (
-                                            'Subscribe'
+                                      <p className="text-sm text-gray-400">Booking ID: {booking.id}</p>
+                                    </div>
+                                    <button
+                                      onClick={() => window.location.href = `/booking/confirmation/${booking.id}`}
+                                      className="text-blue-400 text-sm font-medium hover:text-blue-300"
+                                    >
+                                      View Details
+                                    </button>
+                                  </div>
+
+                                  <div className="grid md:grid-cols-2 gap-6">
+                                    {/* Patient Information */}
+                                    {booking.user && (
+                                      <div className="space-y-2">
+                                        <h4 className="text-sm font-medium text-gray-400 flex items-center gap-2">
+                                          <User className="h-4 w-4" />
+                                          Patient
+                                        </h4>
+                                        <div className="space-y-1">
+                                          <p className="text-white font-medium">{booking.user.fullname}</p>
+                                          <p className="text-sm text-gray-400">{booking.user.email}</p>
+                                          {booking.user.phone && (
+                                            <p className="text-sm text-gray-400">{booking.user.phone}</p>
                                           )}
-                                        </button>
+                                        </div>
+                                      </div>
+                                    )}
+
+                                    {/* Appointment Details */}
+                                    <div className="space-y-2">
+                                      <h4 className="text-sm font-medium text-gray-400 flex items-center gap-2">
+                                        <Calendar className="h-4 w-4" />
+                                        Appointment
+                                      </h4>
+                                      <div className="space-y-1">
+                                        <p className="text-white">
+                                          {format(appointmentDate, 'EEEE, MMMM d, yyyy')}
+                                        </p>
+                                        <p className="text-sm text-gray-400">
+                                          {format(appointmentDate, 'h:mm a')} - {format(endDate, 'h:mm a')}
+                                        </p>
+                                        <p className="text-sm text-gray-400">
+                                          Duration: {booking.duration} minutes
+                                        </p>
+                                      </div>
+                                    </div>
+                                  </div>
+
+                                  {booking.additionalNotes && (
+                                    <div className="mt-4 pt-4 border-t border-gray-800">
+                                      <h4 className="text-sm font-medium text-gray-400 mb-1">Additional Notes</h4>
+                                      <p className="text-sm text-gray-300">{booking.additionalNotes}</p>
+                                    </div>
+                                  )}
+
+                                  {/* Action Buttons */}
+                                  <div className="mt-4 flex gap-2">
+                                    {booking.status === 'PENDING' && (
+                                      <button
+                                        onClick={async () => {
+                                          try {
+                                            await bookingService.updateBooking(booking.id, { status: 'CONFIRMED' });
+                                            toast.success('Booking confirmed');
+                                            loadHospitalBookings();
+                                          } catch (error: any) {
+                                            toast.error(error.message || 'Failed to confirm booking');
+                                          }
+                                        }}
+                                        className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 text-sm"
+                                      >
+                                        Confirm
+                                      </button>
+                                    )}
+                                    {(booking.status === 'PENDING' || booking.status === 'CONFIRMED') && (
+                                      <button
+                                        onClick={async () => {
+                                          if (confirm('Are you sure you want to cancel this booking?')) {
+                                            try {
+                                              await bookingService.cancelBooking(booking.id);
+                                              toast.success('Booking cancelled');
+                                              loadHospitalBookings();
+                                            } catch (error: any) {
+                                              toast.error(error.message || 'Failed to cancel booking');
+                                            }
+                                          }
+                                        }}
+                                        className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 text-sm"
+                                      >
+                                        Cancel
+                                      </button>
+                                    )}
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                    {hospitalManagerTab === 'donors' && (
+                      <div className="space-y-6">
+                        <div className="flex justify-between items-center">
+                          <h2 className="text-xl font-bold text-white">Donor Requests</h2>
+                          <button
+                            onClick={() => setIsDonorRequestModalOpen(true)}
+                            className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 flex items-center gap-2"
+                          >
+                            <Plus className="w-4 h-4" />
+                            New Request
+                          </button>
+                        </div>
+
+                        {/* Active Requests */}
+                        <div className="bg-[#1a1a1a] border border-gray-800 rounded-lg overflow-hidden">
+                          <div className="bg-gray-900/50 px-6 py-4 border-b border-gray-800">
+                            <h3 className="font-medium text-white">Active Requests</h3>
+                          </div>
+                          <div className="divide-y divide-gray-800">
+                            {donorRequests && donorRequests
+                              .filter(request => request?.isActive)
+                              .map((request, index) => (
+                                <div key={index} className="px-6 py-4">
+                                  <div className="flex justify-between items-start">
+                                    <div>
+                                      <h4 className="font-medium text-white">{getDonorTypeLabel(request.donorType)}</h4>
+                                      <p className="text-sm text-gray-400 mt-1">{request.requestDescription}</p>
+                                      <div className="mt-2 flex flex-wrap gap-2">
+                                        <span className="text-xs px-2 py-1 rounded-full bg-blue-500/20 text-blue-400 border border-blue-500/50">
+                                          Max Donors: {request.maxDonors?.toString()}
+                                        </span>
+                                        <span className="text-xs px-2 py-1 rounded-full bg-green-500/20 text-green-400 border border-green-500/50">
+                                          Amount: {request.minAmontpayment?.toString()} - {request.maxAmountPayment?.toString()} ETH
+                                        </span>
+                                        <span className="text-xs px-2 py-1 rounded-full bg-purple-500/20 text-purple-400 border border-purple-500/50">
+                                          Date: {request.date ? formatDate(request.date) : 'N/A'}
+                                        </span>
+                                      </div>
+                                    </div>
+                                    <span className={`text-xs px-2 py-1 rounded-full ${request.status === 0 ? 'bg-yellow-500/20 text-yellow-400 border border-yellow-500/50' :
+                                      request.status === 1 ? 'bg-green-500/20 text-green-400 border border-green-500/50' :
+                                        request.status === 2 ? 'bg-red-500/20 text-red-400 border border-red-500/50' :
+                                          'bg-blue-500/20 text-blue-400 border border-blue-500/50'
+                                      }`}>
+                                      {getStatusLabel(request.status)}
+                                    </span>
+                                  </div>
+                                </div>
+                              ))}
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {hospitalManagerTab === 'settings' && (
+                      <div className="space-y-6">
+                        {isLoadingHospital ? (
+                          <div className="bg-[#0b0b0d] border border-gray-800 rounded-lg p-8 text-center">
+                            <Loader2 className="h-8 w-8 animate-spin text-blue-500 mx-auto mb-4" />
+                            <p className="text-gray-400">Loading hospital information...</p>
+                          </div>
+                        ) : !hospital ? (
+                          <div className="bg-[#0b0b0d] border border-gray-800 rounded-lg p-8 text-center">
+                            <Building2 className="h-12 w-12 text-gray-500 mx-auto mb-4" />
+                            <h3 className="text-lg font-medium text-white mb-2">No Hospital Registered</h3>
+                            <p className="text-gray-400 mb-6">
+                              Please register your hospital first to access settings.
+                            </p>
+                          </div>
+                        ) : (
+                          <div className="bg-gray-900/50 border border-gray-800 rounded-lg overflow-hidden">
+                            {/* Verification Status */}
+                            <div className="bg-gray-900/50 rounded-lg border border-gray-800 mx-4 mt-4 px-4 py-2">
+                              <div className="flex items-center justify-between">
+                                <div>
+                                  <h3 className="font-medium text-white mb-1">Verification Status</h3>
+                                  <p className="text-sm text-gray-400">
+                                    {hospital.isVerified
+                                      ? 'Your hospital has been verified and is trusted by patients.'
+                                      : 'Verify your hospital to build trust and credibility with patients.'}
+                                  </p>
+                                  {hospital.verificationDate && (
+                                    <p className="text-xs text-gray-500 mt-1">
+                                      Verified on {new Date(hospital.verificationDate).toLocaleDateString()}
+                                    </p>
+                                  )}
+                                </div>
+                                {!hospital.isVerified && (
+                                  <button
+                                    onClick={() => setIsVerificationModalOpen(true)}
+                                    className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 flex items-center gap-2"
+                                  >
+                                    <Shield className="h-4 w-4" />
+                                    Verify Now
+                                  </button>
+                                )}
+                              </div>
+                            </div>
+
+                            <div className="px-6 py-4 flex justify-between items-center">
+                              <div></div>
+                              {!isEditingHospital ? (
+                                <button
+                                  onClick={() => setIsEditingHospital(true)}
+                                  className="px-4 py-2 text-blue-400 underline rounded-lg text-sm hover:text-blue-300"
+                                >
+                                  Edit Details
+                                </button>
+                              ) : (
+                                <div className="flex gap-2">
+                                  <button
+                                    onClick={() => {
+                                      setIsEditingHospital(false);
+                                      setEditFormData({
+                                        name: hospital.name,
+                                        location: hospital.location,
+                                        rating: hospital.rating,
+                                        specialties: hospital.specialties,
+                                        imageUrl: hospital.imageUrl,
+                                      });
+                                    }}
+                                    className="px-4 py-2 border border-gray-700 text-gray-300 rounded-lg hover:bg-gray-800 text-sm"
+                                  >
+                                    Cancel
+                                  </button>
+                                  <button
+                                    onClick={handleSaveHospitalChanges}
+                                    disabled={isSavingHospital}
+                                    className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 text-sm disabled:opacity-50"
+                                  >
+                                    {isSavingHospital ? 'Saving...' : 'Save Changes'}
+                                  </button>
+                                </div>
+                              )}
+                            </div>
+
+                            <div className="p-6 space-y-6">
+                              {hospital.imageUrl && (
+                                <div className="mb-2">
+                                  <Image
+                                    src={hospital.imageUrl}
+                                    alt={hospital.name}
+                                    width={200}
+                                    height={200}
+                                    className="rounded-lg border border-gray-800 w-full max-w-xs h-48 object-cover"
+                                  />
+                                </div>
+                              )}
+                              <div>
+                                <label className="block text-sm font-medium text-gray-300 mb-1">Image URL</label>
+                                {isEditingHospital ? (
+                                  <input
+                                    type="url"
+                                    value={editFormData.imageUrl || ''}
+                                    onChange={(e) => setEditFormData({ ...editFormData, imageUrl: e.target.value })}
+                                    className="w-full px-3 py-2 bg-[#0a0a0a] border border-gray-700 rounded-lg text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                    placeholder="https://..."
+                                  />
+                                ) : (
+                                  <div className="text-gray-300 text-sm break-all">{hospital.imageUrl || 'No image URL set'}</div>
+                                )}
+                              </div>
+                              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div>
+                                  <label className="block text-sm font-medium text-gray-300 mb-1">Hospital Name</label>
+                                  {isEditingHospital ? (
+                                    <input
+                                      type="text"
+                                      value={editFormData.name || ''}
+                                      onChange={(e) => setEditFormData({ ...editFormData, name: e.target.value })}
+                                      className="w-full px-3 py-2 bg-[#0a0a0a] border border-gray-700 rounded-lg text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                    />
+                                  ) : (
+                                    <div className="text-white font-medium">{hospital.name}</div>
+                                  )}
+                                </div>
+                                <div>
+                                  <label className="block text-sm font-medium text-gray-300 mb-1">Location</label>
+                                  {isEditingHospital ? (
+                                    <input
+                                      type="text"
+                                      value={editFormData.location || ''}
+                                      onChange={(e) => setEditFormData({ ...editFormData, location: e.target.value })}
+                                      className="w-full px-3 py-2 bg-[#0a0a0a] border border-gray-700 rounded-lg text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                      placeholder="e.g., Boston, MA"
+                                    />
+                                  ) : (
+                                    <div className="text-white flex items-center gap-1">{hospital.location}</div>
+                                  )}
+                                </div>
+                                <div>
+                                  <label className="block text-sm font-medium text-gray-300 mb-1">Rating</label>
+                                  {isEditingHospital ? (
+                                    <input
+                                      type="number"
+                                      min="0"
+                                      max="5"
+                                      step="0.1"
+                                      value={editFormData.rating || 0}
+                                      onChange={(e) => setEditFormData({ ...editFormData, rating: parseFloat(e.target.value) || 0 })}
+                                      className="w-full px-3 py-2 bg-[#0a0a0a] border border-gray-700 rounded-lg text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                    />
+                                  ) : (
+                                    <div className="text-white flex items-center gap-1">
+                                      <Star className="h-4 w-4 text-yellow-400 fill-current" />
+                                      {hospital.rating.toFixed(1)} / 5.0
+                                    </div>
+                                  )}
+                                </div>
+                                <div>
+                                  <label className="block text-sm font-medium text-gray-300 mb-1">Wallet Address</label>
+                                  <div className="text-gray-300 font-mono text-sm">{hospital.walletAddress}</div>
+                                </div>
+                                <div className="md:col-span-2">
+                                  <label className="block text-sm font-medium text-gray-300 mb-2">Specialties</label>
+                                  {isEditingHospital ? (
+                                    <div className="space-y-2">
+                                      <div className="flex flex-wrap gap-2">
+                                        {editFormData.specialties?.map((specialty, index) => (
+                                          <span
+                                            key={index}
+                                            className="inline-flex items-center gap-1 px-3 py-1 bg-blue-500/20 text-blue-400 rounded-full text-sm border border-blue-500/50"
+                                          >
+                                            {specialty}
+                                            <button
+                                              onClick={() => {
+                                                const newSpecialties = editFormData.specialties?.filter((_, i) => i !== index) || [];
+                                                setEditFormData({ ...editFormData, specialties: newSpecialties });
+                                              }}
+                                              className="hover:text-blue-300"
+                                            >
+                                              <X className="h-3 w-3" />
+                                            </button>
+                                          </span>
+                                        ))}
+                                      </div>
+                                      <input
+                                        type="text"
+                                        placeholder="Add specialty and press Enter"
+                                        className="w-full px-3 py-2 bg-[#0a0a0a] border border-gray-700 rounded-lg text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                        onKeyDown={(e) => {
+                                          if (e.key === 'Enter') {
+                                            e.preventDefault();
+                                            const value = e.currentTarget.value.trim();
+                                            if (value && !editFormData.specialties?.includes(value)) {
+                                              setEditFormData({
+                                                ...editFormData,
+                                                specialties: [...(editFormData.specialties || []), value],
+                                              });
+                                              e.currentTarget.value = '';
+                                            }
+                                          }
+                                        }}
+                                      />
+                                    </div>
+                                  ) : (
+                                    <div className="flex flex-wrap gap-2">
+                                      {hospital.specialties.length > 0 ? (
+                                        hospital.specialties.map((specialty, index) => (
+                                          <span
+                                            key={index}
+                                            className="px-3 py-1 bg-blue-500/20 text-blue-400 rounded-full text-sm border border-blue-500/50"
+                                          >
+                                            {specialty}
+                                          </span>
+                                        ))
+                                      ) : (
+                                        <span className="text-gray-500 text-sm">No specialties listed</span>
                                       )}
                                     </div>
+                                  )}
+                                </div>
+                                <div className="md:col-span-2 pt-4 border-t border-gray-800">
+                                  <div className="grid grid-cols-2 gap-4 text-sm">
+                                    <div>
+                                      <span className="text-gray-500">Created:</span>
+                                      <span className="ml-2 text-gray-300">
+                                        {new Date(hospital.createdAt).toLocaleDateString()}
+                                      </span>
+                                    </div>
+                                    <div>
+                                      <span className="text-gray-500">Last Updated:</span>
+                                      <span className="ml-2 text-gray-300">
+                                        {new Date(hospital.updatedAt).toLocaleDateString()}
+                                      </span>
+                                    </div>
                                   </div>
-                                );
-                              })}
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                    {(hospitalManagerTab === 'customers' || hospitalManagerTab === 'treatments') && (
+                      <div className="bg-[#1a1a1a] border border-gray-800 rounded-lg p-8 text-center">
+                        <h3 className="text-lg font-medium text-white mb-2">Coming Soon</h3>
+                        <p className="text-gray-400 mb-6">
+                          The {hospitalManagerTab} management section is currently under development.
+                        </p>
+                        <button
+                          onClick={() => setHospitalManagerTab('dashboard')}
+                          className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700"
+                        >
+                          Return to Dashboard
+                        </button>
+                      </div>
+                    )}
+
+                    {/* Modals */}
+                    <DonorRequestModal
+                      isOpen={isDonorRequestModalOpen}
+                      onClose={() => setIsDonorRequestModalOpen(false)}
+                    />
+                    {hospital && (
+                      <HospitalVerificationModal
+                        isOpen={isVerificationModalOpen}
+                        onClose={() => setIsVerificationModalOpen(false)}
+                        onSuccess={handleVerificationSuccess}
+                        hospitalId={hospital.id}
+                      />
+                    )}
+                  </div>
+                  )
+                  ) : activeView === 'dashboard' ? (
+                  <div className="w-full max-w-6xl mx-auto">
+                    {/* Dashboard Header */}
+                    <div className="mb-6">
+                      <h1 className="text-3xl font-bold text-white mb-2">Dashboard</h1>
+                      <p className="text-gray-400">Manage your profile and settings</p>
+                    </div>
+
+                    {/* Horizontal Tabs */}
+                    <div className="border-b border-gray-800 mb-6">
+                      <nav className="flex space-x-8" aria-label="Tabs">
+                        <button
+                          onClick={() => setDashboardTab('profile')}
+                          className={`${dashboardTab === 'profile'
+                            ? 'border-blue-500 text-white'
+                            : 'border-transparent text-gray-400 hover:text-gray-300 hover:border-gray-700'
+                            } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm flex items-center gap-2`}
+                        >
+                          <User className="w-4 h-4" />
+                          Profile
+                        </button>
+                        <button
+                          onClick={() => setDashboardTab('settings')}
+                          className={`${dashboardTab === 'settings'
+                            ? 'border-blue-500 text-white'
+                            : 'border-transparent text-gray-400 hover:text-gray-300 hover:border-gray-700'
+                            } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm flex items-center gap-2`}
+                        >
+                          <Settings className="w-4 h-4" />
+                          Settings
+                        </button>
+                        <button
+                          onClick={() => {
+                            setDashboardTab('pricing');
+                            if (plans.length === 0) {
+                              loadPricingData();
+                            }
+                          }}
+                          className={`${dashboardTab === 'pricing'
+                            ? 'border-blue-500 text-white'
+                            : 'border-transparent text-gray-400 hover:text-gray-300 hover:border-gray-700'
+                            } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm flex items-center gap-2`}
+                        >
+                          <CreditCard className="w-4 h-4" />
+                          Pricing
+                        </button>
+                      </nav>
+                    </div>
+
+                    {/* Tab Content */}
+                    {dashboardTab === 'profile' && (
+                      <div className="bg-[#0b0b0d] border border-gray-800 rounded-lg overflow-hidden">
+                        {/* Profile Header */}
+                        <div className="border-b border-gray-800 px-6 py-4 flex justify-between items-center">
+                          <div>
+                            <h2 className="text-xl font-semibold text-white">My Profile</h2>
+                            <p className="text-sm text-gray-400 mt-1">Manage your personal information</p>
+                          </div>
+                          {!isEditing ? (
+                            <button
+                              onClick={() => setIsEditing(true)}
+                              className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium transition-colors"
+                            >
+                              Edit Profile
+                            </button>
+                          ) : (
+                            <div className="flex gap-3">
+                              <button
+                                onClick={handleCancel}
+                                className="px-4 py-2 border border-gray-700 text-gray-300 rounded-lg text-sm font-medium hover:bg-gray-800 transition-colors"
+                              >
+                                Cancel
+                              </button>
+                              <button
+                                onClick={handleSaveProfile}
+                                disabled={isSaving}
+                                className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium disabled:opacity-50 transition-colors"
+                              >
+                                {isSaving ? 'Saving...' : 'Save Changes'}
+                              </button>
                             </div>
                           )}
-                        </TabsContent>
+                        </div>
 
-                        <TabsContent value="subscription">
-                          {subscription ? (
-                            <div className="space-y-6">
-                              <div className="bg-[#0a0a0a] border border-gray-800 rounded-lg p-6">
-                                <div className="flex items-center justify-between mb-4">
-                                  <div>
-                                    <h3 className="text-2xl font-bold text-white">{subscription.planName}</h3>
-                                    <p className="text-gray-400 text-sm">Your current subscription plan</p>
+                        {/* Profile Tabs */}
+                        <div className="border-b border-gray-800 bg-gray-900/50">
+                          <nav className="flex">
+                            <button
+                              onClick={() => setActiveSection('personal')}
+                              className={`px-6 py-3 text-sm font-medium ${activeSection === 'personal'
+                                ? 'text-blue-400 border-b-2 border-blue-500 bg-[#1a1a1a]'
+                                : 'text-gray-400 hover:text-gray-300'
+                                }`}
+                            >
+                              Personal Info
+                            </button>
+                            {user?.userType === 'MEDICAL_FACILITY' && (
+                              <button
+                                onClick={() => setActiveSection('hospital')}
+                                className={`px-6 py-3 text-sm font-medium ${activeSection === 'hospital'
+                                  ? 'text-blue-400 border-b-2 border-blue-500 bg-[#1a1a1a]'
+                                  : 'text-gray-400 hover:text-gray-300'
+                                  }`}
+                              >
+                                Hospital Info
+                              </button>
+                            )}
+                            <button
+                              onClick={() => setActiveSection('password')}
+                              className={`px-6 py-3 text-sm font-medium ${activeSection === 'password'
+                                ? 'text-blue-400 border-b-2 border-blue-500 bg-[#1a1a1a]'
+                                : 'text-gray-400 hover:text-gray-300'
+                                }`}
+                            >
+                              Change Password
+                            </button>
+                          </nav>
+                        </div>
+
+                        {/* Profile Content */}
+                        <div className="p-6">
+                          {authLoading ? (
+                            <div className="flex items-center justify-center py-12">
+                              <Loader className="w-6 h-6 animate-spin text-blue-500" />
+                              <span className="ml-3 text-gray-400">Loading profile...</span>
+                            </div>
+                          ) : !user ? (
+                            <div className="text-center py-12">
+                              <p className="text-gray-400">Please log in to view your profile</p>
+                            </div>
+                          ) : activeSection === 'personal' ? (
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                              <div>
+                                <label className="block text-sm font-medium text-gray-300 mb-2">Full Name</label>
+                                <input
+                                  type="text"
+                                  name="fullname"
+                                  value={profile.fullname}
+                                  onChange={handleInputChange}
+                                  disabled={!isEditing}
+                                  className={`w-full bg-transparent border rounded-lg px-4 py-2 text-white ${isEditing ? 'border-gray-700' : 'border-none'
+                                    } focus:outline-none focus:ring-1 focus:ring-blue-500`}
+                                />
+                              </div>
+                              <div>
+                                <label className="block text-sm font-medium text-gray-300 mb-2">Email Address</label>
+                                <input
+                                  type="email"
+                                  name="email"
+                                  value={profile.email}
+                                  onChange={handleInputChange}
+                                  disabled={!isEditing}
+                                  className={`w-full bg-transparent border rounded-lg px-4 py-2 text-white ${isEditing ? 'border-gray-700' : 'border-none'
+                                    } focus:outline-none focus:ring-1 focus:ring-blue-500`}
+                                />
+                              </div>
+                              <div>
+                                <label className="block text-sm font-medium text-gray-300 mb-2">Phone Number</label>
+                                <input
+                                  type="tel"
+                                  name="phone"
+                                  value={profile.phone}
+                                  onChange={handleInputChange}
+                                  disabled={!isEditing}
+                                  placeholder="+1234567890"
+                                  className={`w-full bg-transparent border rounded-lg px-4 py-2 text-white ${isEditing ? 'border-gray-700' : 'border-none'
+                                    } focus:outline-none focus:ring-1 focus:ring-blue-500`}
+                                />
+                              </div>
+                              <div>
+                                <label className="block text-sm font-medium text-gray-300 mb-2">Hospital ID</label>
+                                <input
+                                  type="text"
+                                  name="hospitalId"
+                                  value={profile.hospitalId}
+                                  onChange={handleInputChange}
+                                  disabled={!isEditing}
+                                  className={`w-full bg-transparent border rounded-lg px-4 py-2 text-white ${isEditing ? 'border-gray-700' : 'border-none'
+                                    } focus:outline-none focus:ring-1 focus:ring-blue-500`}
+                                />
+                              </div>
+                              <div className="md:col-span-2">
+                                <label className="block text-sm font-medium text-gray-300 mb-2">Address</label>
+                                <textarea
+                                  name="address"
+                                  rows={3}
+                                  value={profile.address}
+                                  onChange={handleInputChange}
+                                  disabled={!isEditing}
+                                  className={`w-full bg-transparent border rounded-lg px-4 py-2 text-white ${isEditing ? 'border-gray-700' : 'border-none'
+                                    } focus:outline-none focus:ring-1 focus:ring-blue-500`}
+                                />
+                              </div>
+                              <div className="md:col-span-2">
+                                <label className="block text-sm font-medium text-gray-300 mb-2">About</label>
+                                <textarea
+                                  name="about"
+                                  rows={4}
+                                  value={profile.about}
+                                  onChange={handleInputChange}
+                                  disabled={!isEditing}
+                                  placeholder="Tell us about yourself..."
+                                  className={`w-full bg-transparent border rounded-lg px-4 py-2 text-white ${isEditing ? 'border-gray-700' : 'border-none'
+                                    } focus:outline-none focus:ring-1 focus:ring-blue-500`}
+                                />
+                              </div>
+                              <div className="md:col-span-2 pt-4 border-t border-gray-800">
+                                <label className="block text-sm font-medium text-gray-300 mb-2">Connected Wallet</label>
+                                <div className="flex items-center gap-3">
+                                  <div className="bg-blue-600/20 text-blue-400 px-4 py-2 rounded-lg font-mono text-sm">
+                                    {address ? `${address.substring(0, 8)}...${address.substring(address.length - 6)}` : 'No wallet connected'}
                                   </div>
-                                  <Badge
-                                    className={
-                                      subscription.status === 'active'
-                                        ? 'bg-green-500/20 text-green-400 border-green-500/50'
-                                        : subscription.status === 'cancelled'
-                                          ? 'bg-red-500/20 text-red-400 border-red-500/50'
-                                          : 'bg-yellow-500/20 text-yellow-400 border-yellow-500/50'
-                                    }
-                                  >
-                                    {subscription.status.toUpperCase()}
-                                  </Badge>
+                                  {user.userType && (
+                                    <span className="px-3 py-1 text-xs bg-gray-800 text-gray-300 rounded-full">
+                                      {user.userType === 'USER' ? 'User Account' : 'Medical Facility'}
+                                    </span>
+                                  )}
                                 </div>
-                                <div className="bg-gradient-to-r from-blue-500/10 to-purple-500/10 rounded-lg p-6 border border-blue-500/20 mb-6">
-                                  <div className="flex items-center justify-between mb-4">
-                                    <div>
-                                      <h4 className="text-lg font-semibold text-white flex items-center gap-2">
-                                        <Sparkles className="h-5 w-5 text-blue-400" />
-                                        Available Credits
-                                      </h4>
-                                      <p className="text-sm text-gray-400 mt-1">Credits remaining this period</p>
+                              </div>
+                            </div>
+                          ) : activeSection === 'hospital' && user.userType === 'MEDICAL_FACILITY' && user.hospital ? (
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                              <div>
+                                <label className="block text-sm font-medium text-gray-300 mb-2">Facility Name</label>
+                                <div className="text-white">{user.hospital.facilityName}</div>
+                              </div>
+                              <div>
+                                <label className="block text-sm font-medium text-gray-300 mb-2">Facility ID</label>
+                                <div className="text-white">{user.hospital.facilityId}</div>
+                              </div>
+                              <div className="md:col-span-2">
+                                <label className="block text-sm font-medium text-gray-300 mb-2">Address</label>
+                                <div className="text-white">
+                                  {user.hospital.address}, {user.hospital.city}, {user.hospital.state} {user.hospital.zip}
+                                </div>
+                              </div>
+                              <div>
+                                <label className="block text-sm font-medium text-gray-300 mb-2">Phone</label>
+                                <div className="text-white">{user.hospital.telephone}</div>
+                              </div>
+                              <div>
+                                <label className="block text-sm font-medium text-gray-300 mb-2">Hospital Type</label>
+                                <div className="text-white">{user.hospital.hospitalType}</div>
+                              </div>
+                            </div>
+                          ) : activeSection === 'password' ? (
+                            <div className="max-w-md">
+                              <div className="space-y-6">
+                                <div>
+                                  <label className="block text-sm font-medium text-gray-300 mb-2">Current Password</label>
+                                  <input
+                                    type="password"
+                                    name="currentPassword"
+                                    value={passwordData.currentPassword}
+                                    onChange={handlePasswordChange}
+                                    className="w-full bg-[#0a0a0a] border border-gray-700 rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-1 focus:ring-blue-500"
+                                    placeholder="Enter your current password"
+                                  />
+                                </div>
+                                <div>
+                                  <label className="block text-sm font-medium text-gray-300 mb-2">New Password</label>
+                                  <input
+                                    type="password"
+                                    name="newPassword"
+                                    value={passwordData.newPassword}
+                                    onChange={handlePasswordChange}
+                                    className="w-full bg-[#0a0a0a] border border-gray-700 rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-1 focus:ring-blue-500"
+                                    placeholder="Enter your new password"
+                                    minLength={6}
+                                  />
+                                  <p className="mt-1 text-xs text-gray-500">Password must be at least 6 characters long</p>
+                                </div>
+                                <div>
+                                  <label className="block text-sm font-medium text-gray-300 mb-2">Confirm New Password</label>
+                                  <input
+                                    type="password"
+                                    name="confirmPassword"
+                                    value={passwordData.confirmPassword}
+                                    onChange={handlePasswordChange}
+                                    className="w-full bg-[#0a0a0a] border border-gray-700 rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-1 focus:ring-blue-500"
+                                    placeholder="Confirm your new password"
+                                    minLength={6}
+                                  />
+                                </div>
+                                <div className="flex justify-end">
+                                  <button
+                                    onClick={handleChangePassword}
+                                    disabled={isChangingPassword || !passwordData.currentPassword || !passwordData.newPassword || !passwordData.confirmPassword}
+                                    className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                                  >
+                                    {isChangingPassword ? 'Changing Password...' : 'Change Password'}
+                                  </button>
+                                </div>
+                              </div>
+                            </div>
+                          ) : null}
+                        </div>
+                      </div>
+                    )}
+
+                    {dashboardTab === 'settings' && (
+                      <div className="bg-[#0b0b0d] border border-gray-800 rounded-lg overflow-hidden">
+                        {/* Settings Header */}
+                        <div className="border-b border-gray-800 px-6 py-4 flex justify-between items-center">
+                          <div>
+                            <h2 className="text-xl font-semibold text-white">Settings</h2>
+                            <p className="text-sm text-gray-400 mt-1">Manage your account preferences</p>
+                          </div>
+                          <button
+                            onClick={saveSettings}
+                            disabled={isSavingSettings}
+                            className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${isSavingSettings
+                              ? 'bg-gray-700 text-gray-400 cursor-not-allowed'
+                              : 'bg-blue-600 hover:bg-blue-700 text-white'
+                              }`}
+                          >
+                            {isSavingSettings ? (
+                              <span className="flex items-center gap-2">
+                                <Loader className="w-4 h-4 animate-spin" />
+                                Saving...
+                              </span>
+                            ) : 'Save Settings'}
+                          </button>
+                        </div>
+
+                        {/* Saved Message */}
+                        {showSavedMessage && (
+                          <div className="mx-6 mt-4 bg-green-500/20 border border-green-500/50 p-4 rounded-lg">
+                            <div className="flex items-center gap-2 text-green-400">
+                              <CheckCircle className="w-5 h-5" />
+                              <p className="text-sm font-medium">Settings saved successfully!</p>
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Settings Tabs */}
+                        <div className="border-b border-gray-800 bg-gray-900/50">
+                          <nav className="flex">
+                            <button
+                              onClick={() => setSettingsTab('notifications')}
+                              className={`px-6 py-3 text-sm font-medium flex items-center gap-2 ${settingsTab === 'notifications'
+                                ? 'text-blue-400 border-b-2 border-blue-500 bg-[#1a1a1a]'
+                                : 'text-gray-400 hover:text-gray-300'
+                                }`}
+                            >
+                              <Bell className="w-4 h-4" />
+                              Notifications
+                            </button>
+                            <button
+                              onClick={() => setSettingsTab('privacy')}
+                              className={`px-6 py-3 text-sm font-medium flex items-center gap-2 ${settingsTab === 'privacy'
+                                ? 'text-blue-400 border-b-2 border-blue-500 bg-[#1a1a1a]'
+                                : 'text-gray-400 hover:text-gray-300'
+                                }`}
+                            >
+                              <Shield className="w-4 h-4" />
+                              Privacy
+                            </button>
+                            <button
+                              onClick={() => setSettingsTab('security')}
+                              className={`px-6 py-3 text-sm font-medium flex items-center gap-2 ${settingsTab === 'security'
+                                ? 'text-blue-400 border-b-2 border-blue-500 bg-[#1a1a1a]'
+                                : 'text-gray-400 hover:text-gray-300'
+                                }`}
+                            >
+                              <Shield className="w-4 h-4" />
+                              Security
+                            </button>
+                            <button
+                              onClick={() => setSettingsTab('preferences')}
+                              className={`px-6 py-3 text-sm font-medium flex items-center gap-2 ${settingsTab === 'preferences'
+                                ? 'text-blue-400 border-b-2 border-blue-500 bg-[#1a1a1a]'
+                                : 'text-gray-400 hover:text-gray-300'
+                                }`}
+                            >
+                              <Globe className="w-4 h-4" />
+                              Preferences
+                            </button>
+                          </nav>
+                        </div>
+
+                        {/* Settings Content */}
+                        <div className="p-6">
+                          {settingsTab === 'notifications' && (
+                            <div className="space-y-6">
+                              <div>
+                                <h3 className="text-lg font-medium text-white mb-1">Notification Methods</h3>
+                                <p className="text-sm text-gray-400 mb-4">Choose how you want to receive notifications</p>
+                                <div className="space-y-4">
+                                  {[
+                                    { key: 'email' as const, label: 'Email notifications' },
+                                    { key: 'sms' as const, label: 'SMS notifications' },
+                                    { key: 'browser' as const, label: 'Browser notifications' },
+                                  ].map(({ key, label }) => (
+                                    <div key={key} className="flex items-center">
+                                      <input
+                                        type="checkbox"
+                                        checked={settings.notifications[key]}
+                                        onChange={() => handleNotificationChange(key)}
+                                        className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-700 rounded bg-[#0a0a0a]"
+                                      />
+                                      <label className="ml-3 text-sm text-gray-300">{label}</label>
                                     </div>
-                                    <div className="text-right">
-                                      <div className="text-3xl font-bold text-blue-400">
-                                        {subscription.credits === -1 ? '∞' : subscription.creditsRemaining}
-                                      </div>
-                                      <div className="text-sm text-gray-400">
-                                        {subscription.credits === -1
-                                          ? 'Unlimited'
-                                          : `of ${subscription.credits} total`}
+                                  ))}
+                                </div>
+                              </div>
+                              <div>
+                                <h3 className="text-lg font-medium text-white mb-1">Notification Types</h3>
+                                <div className="space-y-4 mt-4">
+                                  {[
+                                    { key: 'appointments' as const, label: 'Appointment reminders and updates' },
+                                    { key: 'marketing' as const, label: 'Marketing and promotional messages' },
+                                    { key: 'updates' as const, label: 'Platform updates and new features' },
+                                  ].map(({ key, label }) => (
+                                    <div key={key} className="flex items-center">
+                                      <input
+                                        type="checkbox"
+                                        checked={settings.notifications[key]}
+                                        onChange={() => handleNotificationChange(key)}
+                                        className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-700 rounded bg-[#0a0a0a]"
+                                      />
+                                      <label className="ml-3 text-sm text-gray-300">{label}</label>
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                            </div>
+                          )}
+
+                          {settingsTab === 'privacy' && (
+                            <div className="space-y-6">
+                              <div>
+                                <h3 className="text-lg font-medium text-white mb-1">Profile Visibility</h3>
+                                <div className="space-y-4 mt-4">
+                                  {[
+                                    { key: 'shareProfile' as const, label: 'Share profile with partner hospitals', desc: 'Allow partner hospitals to view your profile information' },
+                                    { key: 'showDonationHistory' as const, label: 'Display donation history on profile', desc: 'Your donation history will be visible to other users' },
+                                  ].map(({ key, label, desc }) => (
+                                    <div key={key} className="flex items-start">
+                                      <input
+                                        type="checkbox"
+                                        checked={settings.privacy[key]}
+                                        onChange={() => handlePrivacyChange(key)}
+                                        className="h-4 w-4 mt-0.5 text-blue-600 focus:ring-blue-500 border-gray-700 rounded bg-[#0a0a0a]"
+                                      />
+                                      <div className="ml-3">
+                                        <label className="text-sm font-medium text-gray-300">{label}</label>
+                                        <p className="text-xs text-gray-500 mt-1">{desc}</p>
                                       </div>
                                     </div>
-                                  </div>
-                                  {subscription.credits !== -1 && (
+                                  ))}
+                                </div>
+                              </div>
+                              <div>
+                                <h3 className="text-lg font-medium text-white mb-1">Data Usage</h3>
+                                <div className="space-y-4 mt-4">
+                                  {[
+                                    { key: 'anonymizeData' as const, label: 'Anonymize my data in the blockchain', desc: 'Your personal details will be hashed and anonymized' },
+                                    { key: 'allowResearch' as const, label: 'Share anonymized data for research', desc: 'Allow your anonymized data to be used for fertility research' },
+                                  ].map(({ key, label, desc }) => (
+                                    <div key={key} className="flex items-start">
+                                      <input
+                                        type="checkbox"
+                                        checked={settings.privacy[key]}
+                                        onChange={() => handlePrivacyChange(key)}
+                                        className="h-4 w-4 mt-0.5 text-blue-600 focus:ring-blue-500 border-gray-700 rounded bg-[#0a0a0a]"
+                                      />
+                                      <div className="ml-3">
+                                        <label className="text-sm font-medium text-gray-300">{label}</label>
+                                        <p className="text-xs text-gray-500 mt-1">{desc}</p>
+                                        {key === 'allowResearch' && settings.privacy.allowResearch && (
+                                          <p className="text-xs text-green-400 mt-1 flex items-center gap-1">
+                                            <CheckCircle className="w-3 h-3" />
+                                            Earn 50 DATA tokens per month for participating
+                                          </p>
+                                        )}
+                                      </div>
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                            </div>
+                          )}
+
+                          {settingsTab === 'security' && (
+                            <div className="space-y-6">
+                              <div className="p-4 bg-[#0a0a0a] border border-gray-800 rounded-lg">
+                                <h4 className="text-sm font-medium text-white mb-2">Connected Wallet</h4>
+                                <div className="flex items-center gap-3">
+                                  {address && (
                                     <>
-                                      <div className="w-full bg-gray-800 rounded-full h-2">
-                                        <div
-                                          className="bg-blue-600 h-2 rounded-full transition-all"
-                                          style={{
-                                            width: `${Math.min((subscription.creditsRemaining / subscription.credits) * 100, 100)}%`,
-                                          }}
-                                        />
-                                      </div>
-                                      <div className="flex justify-between text-xs text-gray-500 mt-2">
-                                        <span>{subscription.creditsUsed} used</span>
-                                        <span>{subscription.creditsRemaining} remaining</span>
-                                      </div>
+                                      <Image src="/images/ethereum.svg" alt="Ethereum" width={24} height={24} />
+                                      <span className="text-sm text-gray-300 font-mono">
+                                        {address.substring(0, 8)}...{address.substring(address.length - 6)}
+                                      </span>
                                     </>
                                   )}
                                 </div>
-                                <div className="grid md:grid-cols-2 gap-4 mb-6">
-                                  <div>
-                                    <h4 className="text-sm font-medium text-gray-400 mb-1">Billing Period</h4>
-                                    <p className="text-white">
-                                      {format(new Date(subscription.currentPeriodStart), 'MMM d, yyyy')} -{' '}
-                                      {format(new Date(subscription.currentPeriodEnd), 'MMM d, yyyy')}
-                                    </p>
-                                  </div>
-                                  <div>
-                                    <h4 className="text-sm font-medium text-gray-400 mb-1">Next Billing Date</h4>
-                                    <p className="text-white">
-                                      {format(new Date(subscription.currentPeriodEnd), 'MMM d, yyyy')}
-                                    </p>
-                                  </div>
-                                </div>
-                                <div className="flex gap-3 pt-4 border-t border-gray-800">
-                                  {subscription.cancelAtPeriodEnd ? (
-                                    <button
-                                      className="px-4 py-2 border border-gray-700 text-gray-300 rounded-lg text-sm font-medium hover:bg-gray-800 transition-colors"
-                                      onClick={async () => {
-                                        try {
-                                          await pricingService.updateSubscription({ cancelAtPeriodEnd: false });
-                                          toast.success('Subscription reactivated');
-                                          await loadPricingData();
-                                        } catch (error: any) {
-                                          toast.error('Failed to reactivate subscription', {
-                                            description: error.message || 'Please try again.',
-                                          });
-                                        }
-                                      }}
-                                    >
-                                      Reactivate Subscription
-                                    </button>
-                                  ) : (
-                                    <button
-                                      className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg text-sm font-medium disabled:opacity-50 transition-colors"
-                                      onClick={handleCancelSubscription}
-                                      disabled={isProcessingPricing}
-                                    >
-                                      Cancel Subscription
-                                    </button>
-                                  )}
-                                  <button
-                                    className="px-4 py-2 border border-gray-700 text-gray-300 rounded-lg text-sm font-medium hover:bg-gray-800 transition-colors"
-                                    onClick={() => setPricingTab('plans')}
-                                  >
-                                    Change Plan
-                                  </button>
-                                </div>
                               </div>
-                            </div>
-                          ) : (
-                            <div className="bg-[#0a0a0a] border border-gray-800 rounded-lg p-12 text-center">
-                              <Crown className="h-12 w-12 text-gray-600 mx-auto mb-4" />
-                              <h3 className="text-lg font-medium text-white mb-2">No Active Subscription</h3>
-                              <p className="text-gray-400 mb-6">
-                                Subscribe to a plan to unlock premium features and credits
-                              </p>
-                              <button
-                                className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium"
-                                onClick={() => setPricingTab('plans')}
-                              >
-                                View Plans
-                              </button>
+                              <div className="space-y-4">
+                                {[
+                                  { key: 'twoFactorEnabled' as const, label: 'Enable two-factor authentication', desc: 'Add an extra layer of security to your account' },
+                                  { key: 'loginNotifications' as const, label: 'Receive login notifications', desc: 'Get notified when someone logs into your account' },
+                                  { key: 'allowMultipleDevices' as const, label: 'Allow multiple device logins', desc: 'Stay logged in on multiple devices at the same time' },
+                                ].map(({ key, label, desc }) => (
+                                  <div key={key} className="flex items-start">
+                                    <input
+                                      type="checkbox"
+                                      checked={settings.security[key] as boolean}
+                                      onChange={(e) => handleSecurityChange(key, e.target.checked)}
+                                      className="h-4 w-4 mt-0.5 text-blue-600 focus:ring-blue-500 border-gray-700 rounded bg-[#0a0a0a]"
+                                    />
+                                    <div className="ml-3">
+                                      <label className="text-sm font-medium text-gray-300">{label}</label>
+                                      <p className="text-xs text-gray-500 mt-1">{desc}</p>
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                              <div>
+                                <h4 className="text-sm font-medium text-white mb-2">Session Timeout</h4>
+                                <select
+                                  value={settings.security.sessionTimeout}
+                                  onChange={(e) => handleSecurityChange('sessionTimeout', e.target.value)}
+                                  className="w-full bg-[#0a0a0a] border border-gray-700 rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-1 focus:ring-blue-500"
+                                >
+                                  <option value="30m">30 minutes</option>
+                                  <option value="1h">1 hour</option>
+                                  <option value="4h">4 hours</option>
+                                  <option value="1d">1 day</option>
+                                  <option value="never">Never</option>
+                                </select>
+                              </div>
                             </div>
                           )}
-                        </TabsContent>
 
-                        <TabsContent value="payment">
-                          <div className="space-y-6">
-                            <div className="flex justify-between items-center">
+                          {settingsTab === 'preferences' && (
+                            <div className="space-y-6">
                               <div>
-                                <h3 className="text-lg font-semibold text-white">Payment Methods</h3>
-                                <p className="text-sm text-gray-400 mt-1">Manage your payment methods</p>
+                                <h4 className="text-sm font-medium text-white mb-3">Theme</h4>
+                                <div className="flex items-center space-x-4">
+                                  {['light', 'dark', 'system'].map((theme) => (
+                                    <div key={theme} className="flex items-center">
+                                      <input
+                                        type="radio"
+                                        name="theme"
+                                        checked={settings.preferences.theme === theme}
+                                        onChange={() => handlePreferenceChange('theme', theme)}
+                                        className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-700"
+                                      />
+                                      <label className="ml-2 text-sm text-gray-300 capitalize">{theme}</label>
+                                    </div>
+                                  ))}
+                                </div>
                               </div>
-                              <button
-                                className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium flex items-center gap-2"
-                                onClick={() => {
-                                  toast.info('Payment method integration', {
-                                    description: 'Payment method integration will be implemented with Stripe or similar service.',
-                                  });
-                                }}
-                              >
-                                <Plus className="h-4 w-4" />
-                                Add Payment Method
-                              </button>
-                            </div>
-
-                            {paymentMethods.length === 0 ? (
-                              <div className="bg-[#0a0a0a] border border-gray-800 rounded-lg p-12 text-center">
-                                <CreditCard className="h-12 w-12 text-gray-600 mx-auto mb-4" />
-                                <h3 className="text-lg font-medium text-white mb-2">No Payment Methods</h3>
-                                <p className="text-gray-400 mb-6">
-                                  Add a payment method to subscribe to a plan
-                                </p>
-                                <button
-                                  className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium flex items-center gap-2 mx-auto"
-                                  onClick={() => {
-                                    toast.info('Payment method integration', {
-                                      description: 'Payment method integration will be implemented with Stripe or similar service.',
-                                    });
-                                  }}
+                              <div>
+                                <h4 className="text-sm font-medium text-white mb-2">Language</h4>
+                                <select
+                                  value={settings.preferences.language}
+                                  onChange={(e) => handlePreferenceChange('language', e.target.value)}
+                                  className="w-full bg-[#0a0a0a] border border-gray-700 rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-1 focus:ring-blue-500"
                                 >
-                                  <Plus className="h-4 w-4" />
-                                  Add Payment Method
-                                </button>
+                                  <option value="en">English</option>
+                                  <option value="es">Español</option>
+                                  <option value="fr">Français</option>
+                                  <option value="zh">中文</option>
+                                </select>
                               </div>
-                            ) : (
-                              <div className="grid gap-4">
-                                {paymentMethods.map((method) => (
-                                  <div key={method.id} className="bg-[#0a0a0a] border border-gray-800 rounded-lg p-6">
-                                    <div className="flex items-center justify-between">
-                                      <div className="flex items-center gap-4">
-                                        <div className="w-12 h-12 rounded-lg bg-blue-500/20 flex items-center justify-center">
-                                          <CreditCard className="h-6 w-6 text-blue-400" />
-                                        </div>
-                                        <div>
-                                          <div className="flex items-center gap-2">
-                                            <h4 className="font-semibold text-white">
-                                              {method.type === 'card'
-                                                ? `${method.brand || 'Card'} •••• ${method.last4 || '****'}`
-                                                : method.type === 'crypto'
-                                                  ? `Crypto Wallet`
-                                                  : 'Bank Account'}
-                                            </h4>
-                                            {method.isDefault && (
+                              <div>
+                                <h4 className="text-sm font-medium text-white mb-3">Date Format</h4>
+                                <div className="flex items-center space-x-4">
+                                  {['MM/DD/YYYY', 'DD/MM/YYYY', 'YYYY-MM-DD'].map((format) => (
+                                    <div key={format} className="flex items-center">
+                                      <input
+                                        type="radio"
+                                        name="dateFormat"
+                                        checked={settings.preferences.dateFormat === format}
+                                        onChange={() => handlePreferenceChange('dateFormat', format)}
+                                        className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-700"
+                                      />
+                                      <label className="ml-2 text-sm text-gray-300">{format}</label>
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                              <div>
+                                <h4 className="text-sm font-medium text-white mb-2">Time Zone</h4>
+                                <select
+                                  value={settings.preferences.timeZone}
+                                  onChange={(e) => handlePreferenceChange('timeZone', e.target.value)}
+                                  className="w-full bg-[#0a0a0a] border border-gray-700 rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-1 focus:ring-blue-500"
+                                >
+                                  <option value="America/New_York">Eastern Time (US & Canada)</option>
+                                  <option value="America/Chicago">Central Time (US & Canada)</option>
+                                  <option value="America/Denver">Mountain Time (US & Canada)</option>
+                                  <option value="America/Los_Angeles">Pacific Time (US & Canada)</option>
+                                  <option value="Europe/London">London</option>
+                                  <option value="Europe/Paris">Paris</option>
+                                  <option value="Asia/Tokyo">Tokyo</option>
+                                  <option value="Australia/Sydney">Sydney</option>
+                                </select>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    )}
+
+                    {dashboardTab === 'pricing' && (
+                      <div className="bg-[#0b0b0d] border border-gray-800 rounded-lg overflow-hidden">
+                        <div className="border-b border-gray-800 px-6 py-4">
+                          <h2 className="text-xl font-semibold text-white">Pricing & Plans</h2>
+                          <p className="text-sm text-gray-400 mt-1">Choose the plan that works best for you</p>
+                        </div>
+
+                        <div className="p-6">
+                          <Tabs value={pricingTab} onValueChange={(value) => setPricingTab(value as 'plans' | 'subscription' | 'payment')}>
+                            <TabsList className="mb-6 bg-[#0a0a0a] border border-gray-800">
+                              <TabsTrigger value="plans" className="data-[state=active]:bg-blue-600 data-[state=active]:text-white">Plans</TabsTrigger>
+                              <TabsTrigger value="subscription" className="data-[state=active]:bg-blue-600 data-[state=active]:text-white">My Subscription</TabsTrigger>
+                              <TabsTrigger value="payment" className="data-[state=active]:bg-blue-600 data-[state=active]:text-white">Payment Methods</TabsTrigger>
+                            </TabsList>
+
+                            <TabsContent value="plans">
+                              {isLoadingPricing ? (
+                                <div className="flex items-center justify-center py-12">
+                                  <Loader2 className="w-6 h-6 animate-spin text-blue-500" />
+                                  <span className="ml-3 text-gray-400">Loading plans...</span>
+                                </div>
+                              ) : (
+                                <div className="grid md:grid-cols-3 gap-6">
+                                  {plans.map((plan) => {
+                                    const isCurrentPlan = subscription?.planId === plan.id;
+                                    const isPopular = plan.isPopular;
+
+                                    return (
+                                      <div
+                                        key={plan.id}
+                                        className={`relative bg-[#0a0a0a] border rounded-lg p-6 ${isPopular ? 'border-blue-500 border-2' : 'border-gray-800'} ${isCurrentPlan ? 'bg-blue-500/10' : ''}`}
+                                      >
+                                        {isPopular && (
+                                          <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
+                                            <Badge className="bg-blue-600 text-white">Most Popular</Badge>
+                                          </div>
+                                        )}
+                                        <div className="mb-4">
+                                          <div className="flex items-center justify-between mb-2">
+                                            <h3 className="text-2xl font-bold text-white">{plan.name}</h3>
+                                            {isCurrentPlan && (
                                               <Badge variant="outline" className="bg-green-500/20 text-green-400 border-green-500/50">
-                                                Default
+                                                Current Plan
                                               </Badge>
                                             )}
                                           </div>
-                                          {method.type === 'card' && method.expiryMonth && method.expiryYear && (
-                                            <p className="text-sm text-gray-400 mt-1">
-                                              Expires {method.expiryMonth}/{method.expiryYear}
-                                            </p>
+                                          <p className="text-gray-400 text-sm mb-4">{plan.description}</p>
+                                          <div className="mb-4">
+                                            <span className="text-4xl font-bold text-white">${plan.price}</span>
+                                            <span className="text-gray-400">/{plan.interval}</span>
+                                          </div>
+                                        </div>
+                                        <div className="space-y-2 mb-6">
+                                          {plan.features.map((feature, index) => (
+                                            <div key={index} className="flex items-start gap-2">
+                                              <Check className="h-5 w-5 text-green-500 flex-shrink-0 mt-0.5" />
+                                              <span className="text-sm text-gray-300">{feature}</span>
+                                            </div>
+                                          ))}
+                                        </div>
+                                        <div className="pt-4 border-t border-gray-800">
+                                          <div className="flex items-center gap-2 text-sm text-gray-400 mb-4">
+                                            <Sparkles className="h-4 w-4" />
+                                            <span>
+                                              {plan.credits === -1
+                                                ? 'Unlimited credits/month'
+                                                : `${plan.credits} credits/month included`}
+                                            </span>
+                                          </div>
+                                          {isCurrentPlan ? (
+                                            <button
+                                              className="w-full px-4 py-2 border border-gray-700 text-gray-400 rounded-lg text-sm font-medium cursor-not-allowed"
+                                              disabled
+                                            >
+                                              Current Plan
+                                            </button>
+                                          ) : (
+                                            <button
+                                              className="w-full px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium disabled:opacity-50 transition-colors"
+                                              onClick={() => handleSubscribe(plan.id)}
+                                              disabled={isProcessingPricing && selectedPlan === plan.id}
+                                            >
+                                              {isProcessingPricing && selectedPlan === plan.id ? (
+                                                <span className="flex items-center justify-center gap-2">
+                                                  <Loader2 className="h-4 w-4 animate-spin" />
+                                                  Processing...
+                                                </span>
+                                              ) : (
+                                                'Subscribe'
+                                              )}
+                                            </button>
                                           )}
                                         </div>
                                       </div>
-                                      <div className="flex gap-2">
-                                        {!method.isDefault && (
-                                          <button
-                                            className="px-3 py-1.5 border border-gray-700 text-gray-300 rounded-lg text-sm font-medium hover:bg-gray-800 transition-colors"
-                                            onClick={async () => {
-                                              try {
-                                                await pricingService.setDefaultPaymentMethod(method.id);
-                                                toast.success('Default payment method updated');
-                                                await loadPricingData();
-                                              } catch (error: any) {
-                                                toast.error('Failed to update payment method', {
-                                                  description: error.message || 'Please try again.',
-                                                });
-                                              }
-                                            }}
-                                          >
-                                            Set as Default
-                                          </button>
-                                        )}
+                                    );
+                                  })}
+                                </div>
+                              )}
+                            </TabsContent>
+
+                            <TabsContent value="subscription">
+                              {subscription ? (
+                                <div className="space-y-6">
+                                  <div className="bg-[#0a0a0a] border border-gray-800 rounded-lg p-6">
+                                    <div className="flex items-center justify-between mb-4">
+                                      <div>
+                                        <h3 className="text-2xl font-bold text-white">{subscription.planName}</h3>
+                                        <p className="text-gray-400 text-sm">Your current subscription plan</p>
+                                      </div>
+                                      <Badge
+                                        className={
+                                          subscription.status === 'active'
+                                            ? 'bg-green-500/20 text-green-400 border-green-500/50'
+                                            : subscription.status === 'cancelled'
+                                              ? 'bg-red-500/20 text-red-400 border-red-500/50'
+                                              : 'bg-yellow-500/20 text-yellow-400 border-yellow-500/50'
+                                        }
+                                      >
+                                        {subscription.status.toUpperCase()}
+                                      </Badge>
+                                    </div>
+                                    <div className="bg-gradient-to-r from-blue-500/10 to-purple-500/10 rounded-lg p-6 border border-blue-500/20 mb-6">
+                                      <div className="flex items-center justify-between mb-4">
+                                        <div>
+                                          <h4 className="text-lg font-semibold text-white flex items-center gap-2">
+                                            <Sparkles className="h-5 w-5 text-blue-400" />
+                                            Available Credits
+                                          </h4>
+                                          <p className="text-sm text-gray-400 mt-1">Credits remaining this period</p>
+                                        </div>
+                                        <div className="text-right">
+                                          <div className="text-3xl font-bold text-blue-400">
+                                            {subscription.credits === -1 ? '∞' : subscription.creditsRemaining}
+                                          </div>
+                                          <div className="text-sm text-gray-400">
+                                            {subscription.credits === -1
+                                              ? 'Unlimited'
+                                              : `of ${subscription.credits} total`}
+                                          </div>
+                                        </div>
+                                      </div>
+                                      {subscription.credits !== -1 && (
+                                        <>
+                                          <div className="w-full bg-gray-800 rounded-full h-2">
+                                            <div
+                                              className="bg-blue-600 h-2 rounded-full transition-all"
+                                              style={{
+                                                width: `${Math.min((subscription.creditsRemaining / subscription.credits) * 100, 100)}%`,
+                                              }}
+                                            />
+                                          </div>
+                                          <div className="flex justify-between text-xs text-gray-500 mt-2">
+                                            <span>{subscription.creditsUsed} used</span>
+                                            <span>{subscription.creditsRemaining} remaining</span>
+                                          </div>
+                                        </>
+                                      )}
+                                    </div>
+                                    <div className="grid md:grid-cols-2 gap-4 mb-6">
+                                      <div>
+                                        <h4 className="text-sm font-medium text-gray-400 mb-1">Billing Period</h4>
+                                        <p className="text-white">
+                                          {format(new Date(subscription.currentPeriodStart), 'MMM d, yyyy')} -{' '}
+                                          {format(new Date(subscription.currentPeriodEnd), 'MMM d, yyyy')}
+                                        </p>
+                                      </div>
+                                      <div>
+                                        <h4 className="text-sm font-medium text-gray-400 mb-1">Next Billing Date</h4>
+                                        <p className="text-white">
+                                          {format(new Date(subscription.currentPeriodEnd), 'MMM d, yyyy')}
+                                        </p>
+                                      </div>
+                                    </div>
+                                    <div className="flex gap-3 pt-4 border-t border-gray-800">
+                                      {subscription.cancelAtPeriodEnd ? (
                                         <button
-                                          className="px-3 py-1.5 border border-gray-700 text-gray-300 rounded-lg text-sm font-medium hover:bg-gray-800 transition-colors"
+                                          className="px-4 py-2 border border-gray-700 text-gray-300 rounded-lg text-sm font-medium hover:bg-gray-800 transition-colors"
                                           onClick={async () => {
-                                            if (!confirm('Are you sure you want to delete this payment method?')) {
-                                              return;
-                                            }
                                             try {
-                                              await pricingService.deletePaymentMethod(method.id);
-                                              toast.success('Payment method deleted');
+                                              await pricingService.updateSubscription({ cancelAtPeriodEnd: false });
+                                              toast.success('Subscription reactivated');
                                               await loadPricingData();
                                             } catch (error: any) {
-                                              toast.error('Failed to delete payment method', {
+                                              toast.error('Failed to reactivate subscription', {
                                                 description: error.message || 'Please try again.',
                                               });
                                             }
                                           }}
                                         >
-                                          <Trash2 className="h-4 w-4" />
+                                          Reactivate Subscription
                                         </button>
-                                      </div>
+                                      ) : (
+                                        <button
+                                          className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg text-sm font-medium disabled:opacity-50 transition-colors"
+                                          onClick={handleCancelSubscription}
+                                          disabled={isProcessingPricing}
+                                        >
+                                          Cancel Subscription
+                                        </button>
+                                      )}
+                                      <button
+                                        className="px-4 py-2 border border-gray-700 text-gray-300 rounded-lg text-sm font-medium hover:bg-gray-800 transition-colors"
+                                        onClick={() => setPricingTab('plans')}
+                                      >
+                                        Change Plan
+                                      </button>
                                     </div>
                                   </div>
-                                ))}
+                                </div>
+                              ) : (
+                                <div className="bg-[#0a0a0a] border border-gray-800 rounded-lg p-12 text-center">
+                                  <Crown className="h-12 w-12 text-gray-600 mx-auto mb-4" />
+                                  <h3 className="text-lg font-medium text-white mb-2">No Active Subscription</h3>
+                                  <p className="text-gray-400 mb-6">
+                                    Subscribe to a plan to unlock premium features and credits
+                                  </p>
+                                  <button
+                                    className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium"
+                                    onClick={() => setPricingTab('plans')}
+                                  >
+                                    View Plans
+                                  </button>
+                                </div>
+                              )}
+                            </TabsContent>
+
+                            <TabsContent value="payment">
+                              <div className="space-y-6">
+                                <div className="flex justify-between items-center">
+                                  <div>
+                                    <h3 className="text-lg font-semibold text-white">Payment Methods</h3>
+                                    <p className="text-sm text-gray-400 mt-1">Manage your payment methods</p>
+                                  </div>
+                                  <button
+                                    className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium flex items-center gap-2"
+                                    onClick={() => {
+                                      toast.info('Payment method integration', {
+                                        description: 'Payment method integration will be implemented with Stripe or similar service.',
+                                      });
+                                    }}
+                                  >
+                                    <Plus className="h-4 w-4" />
+                                    Add Payment Method
+                                  </button>
+                                </div>
+
+                                {paymentMethods.length === 0 ? (
+                                  <div className="bg-[#0a0a0a] border border-gray-800 rounded-lg p-12 text-center">
+                                    <CreditCard className="h-12 w-12 text-gray-600 mx-auto mb-4" />
+                                    <h3 className="text-lg font-medium text-white mb-2">No Payment Methods</h3>
+                                    <p className="text-gray-400 mb-6">
+                                      Add a payment method to subscribe to a plan
+                                    </p>
+                                    <button
+                                      className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium flex items-center gap-2 mx-auto"
+                                      onClick={() => {
+                                        toast.info('Payment method integration', {
+                                          description: 'Payment method integration will be implemented with Stripe or similar service.',
+                                        });
+                                      }}
+                                    >
+                                      <Plus className="h-4 w-4" />
+                                      Add Payment Method
+                                    </button>
+                                  </div>
+                                ) : (
+                                  <div className="grid gap-4">
+                                    {paymentMethods.map((method) => (
+                                      <div key={method.id} className="bg-[#0a0a0a] border border-gray-800 rounded-lg p-6">
+                                        <div className="flex items-center justify-between">
+                                          <div className="flex items-center gap-4">
+                                            <div className="w-12 h-12 rounded-lg bg-blue-500/20 flex items-center justify-center">
+                                              <CreditCard className="h-6 w-6 text-blue-400" />
+                                            </div>
+                                            <div>
+                                              <div className="flex items-center gap-2">
+                                                <h4 className="font-semibold text-white">
+                                                  {method.type === 'card'
+                                                    ? `${method.brand || 'Card'} •••• ${method.last4 || '****'}`
+                                                    : method.type === 'crypto'
+                                                      ? `Crypto Wallet`
+                                                      : 'Bank Account'}
+                                                </h4>
+                                                {method.isDefault && (
+                                                  <Badge variant="outline" className="bg-green-500/20 text-green-400 border-green-500/50">
+                                                    Default
+                                                  </Badge>
+                                                )}
+                                              </div>
+                                              {method.type === 'card' && method.expiryMonth && method.expiryYear && (
+                                                <p className="text-sm text-gray-400 mt-1">
+                                                  Expires {method.expiryMonth}/{method.expiryYear}
+                                                </p>
+                                              )}
+                                            </div>
+                                          </div>
+                                          <div className="flex gap-2">
+                                            {!method.isDefault && (
+                                              <button
+                                                className="px-3 py-1.5 border border-gray-700 text-gray-300 rounded-lg text-sm font-medium hover:bg-gray-800 transition-colors"
+                                                onClick={async () => {
+                                                  try {
+                                                    await pricingService.setDefaultPaymentMethod(method.id);
+                                                    toast.success('Default payment method updated');
+                                                    await loadPricingData();
+                                                  } catch (error: any) {
+                                                    toast.error('Failed to update payment method', {
+                                                      description: error.message || 'Please try again.',
+                                                    });
+                                                  }
+                                                }}
+                                              >
+                                                Set as Default
+                                              </button>
+                                            )}
+                                            <button
+                                              className="px-3 py-1.5 border border-gray-700 text-gray-300 rounded-lg text-sm font-medium hover:bg-gray-800 transition-colors"
+                                              onClick={async () => {
+                                                if (!confirm('Are you sure you want to delete this payment method?')) {
+                                                  return;
+                                                }
+                                                try {
+                                                  await pricingService.deletePaymentMethod(method.id);
+                                                  toast.success('Payment method deleted');
+                                                  await loadPricingData();
+                                                } catch (error: any) {
+                                                  toast.error('Failed to delete payment method', {
+                                                    description: error.message || 'Please try again.',
+                                                  });
+                                                }
+                                              }}
+                                            >
+                                              <Trash2 className="h-4 w-4" />
+                                            </button>
+                                          </div>
+                                        </div>
+                                      </div>
+                                    ))}
+                                  </div>
+                                )}
                               </div>
-                            )}
-                          </div>
-                        </TabsContent>
-                      </Tabs>
-                    </div>
+                            </TabsContent>
+                          </Tabs>
+                        </div>
+                      </div>
+                    )}
                   </div>
-                )}
-              </div>
-            )}
+                </div>
+              )
+            ) : null}
           </div>
         </div>
       </div>
