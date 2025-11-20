@@ -11,11 +11,13 @@ import {
   getRequestsByStatus,
 } from "../controllers/request.controller";
 import { authenticate } from "../middlewares/auth.middleware";
+import { requireSubscription } from "../middlewares/subscription.middleware";
 
 const router = Router();
 
-// All routes require authentication
+// All routes require authentication and subscription
 router.use(authenticate);
+router.use(requireSubscription);
 
 // Create a new request
 router.post("/", createRequest);

@@ -8,6 +8,9 @@ import requestRoutes from './routes/request.routes';
 import userPreferenceRoutes from './routes/user-preference.routes';
 import treatmentPreferenceRoutes from './routes/treatment-preference.routes';
 import mcpRoutes from './routes/mcp.routes';
+import subscriptionRoutes from './routes/subscription.routes';
+import creditRoutes from './routes/credit.routes';
+import { handleStripeWebhook } from './controllers/subscription.controller';
 import { errorHandler } from './middlewares/errorHandler';
 import cors from 'cors';
 
@@ -56,6 +59,10 @@ app.use(cors({
   maxAge: 86400 // Cache preflight requests for 24 hours
 }));
 
+// Stripe webhook route (must be before express.json() to receive raw body)
+app.post('/api/subscriptions/webhook', express.raw({ type: 'application/json' }), handleStripeWebhook);
+
+// JSON body parser for all other routes
 app.use(express.json());
 
 // Health check endpoint
@@ -69,6 +76,7 @@ app.get('/health', (req, res) => {
 
 // Routes
 app.use('/api/auth', authRoutes);
+app.use('/api/subscriptions', subscriptionRoutes);
 app.use('/api/facilities', facilityRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/hospitals', hospitalRoutes);
@@ -77,6 +85,7 @@ app.use('/api/requests', requestRoutes);
 app.use('/api/preferences', userPreferenceRoutes);
 app.use('/api/treatment-preferences', treatmentPreferenceRoutes);
 app.use('/api/mcp', mcpRoutes);
+app.use('/api/credits', creditRoutes);
 
 // Global error handler (should be after routes)
 app.use(errorHandler);

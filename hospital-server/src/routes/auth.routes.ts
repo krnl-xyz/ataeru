@@ -7,6 +7,7 @@ import {
   changePassword,
   googleSSO,
   appleSSO,
+  getAppleAuthorizationUrl,
 } from "../controllers/auth.controller";
 import { authenticate } from "../middlewares/auth.middleware";
 
@@ -18,7 +19,8 @@ router.post("/login", login);
 
 // SSO routes (for both signin and signup)
 router.post("/google", googleSSO);
-router.post("/apple", appleSSO);
+router.get("/apple", getAppleAuthorizationUrl); // GET: Get Apple authorization URL
+router.post("/apple", appleSSO); // POST: Handle Apple callback/token verification
 
 // Protected routes (require authentication)
 router.get("/me", authenticate, getCurrentUser);

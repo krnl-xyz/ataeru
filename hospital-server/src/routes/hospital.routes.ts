@@ -12,16 +12,18 @@ import {
   updateHospitalStatistics,
 } from "../controllers/hospital.controller";
 import { authenticate } from "../middlewares/auth.middleware";
+import { requireSubscription } from "../middlewares/subscription.middleware";
 
 const router = Router();
 
-// Public routes
+// Public routes (no subscription required)
 router.get("/", getAllHospitals);
 router.get("/search", searchHospitals);
 router.get("/:id", getHospitalById);
 
-// Protected routes (require authentication)
+// Protected routes (require authentication and subscription)
 router.use(authenticate);
+router.use(requireSubscription);
 router.post("/register", registerHospital);
 router.get("/me/hospital", getMyHospital);
 router.get("/:id/statistics", getHospitalStatistics);

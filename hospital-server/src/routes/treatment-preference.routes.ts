@@ -6,11 +6,13 @@ import {
   removeTreatmentPreference,
 } from "../controllers/treatment-preference.controller";
 import { authenticate } from "../middlewares/auth.middleware";
+import { requireSubscription } from "../middlewares/subscription.middleware";
 
 const router = Router();
 
-// All routes require authentication
+// All routes require authentication and subscription
 router.use(authenticate);
+router.use(requireSubscription);
 
 // Add a treatment preference
 router.post("/", addTreatmentPreference);

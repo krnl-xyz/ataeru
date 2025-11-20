@@ -106,6 +106,30 @@ model HospitalInformation {
   users                         User[]
 }
 
+enum SubscriptionStatus {
+  ACTIVE
+  CANCELED
+  PAST_DUE
+  UNPAID
+  TRIALING
+  INCOMPLETE
+  INCOMPLETE_EXPIRED
+}
+
+enum SubscriptionPlan {
+  USER_MONTHLY
+  USER_YEARLY
+  HOSPITAL_MONTHLY
+  HOSPITAL_YEARLY
+}
+
+enum CreditTransactionType {
+  ALLOCATION
+  DEDUCTION
+  REFUND
+  EXPIRATION
+}
+
 model User {
   id                 String               @id @default(uuid())
   fullname           String
@@ -124,6 +148,8 @@ model User {
   bookings           Booking[] // Bookings made by this user
   requests           HospitalRequest[] // Requests made by this user
   preferredHospitals UserPreference[] // Hospitals this user prefers to work with
+  subscription       Subscription? // User's subscription
+  credits            Credit? // User's credit balance
   createdAt          DateTime             @default(now())
   updatedAt          DateTime             @updatedAt
 }
@@ -226,4 +252,58 @@ model TreatmentPreference {
   @@unique([treatmentId, hospitalId])
   @@index([treatmentId])
   @@index([hospitalId])
+}
+
+model Subscription {
+  id                   String             @id @default(uuid())
+  userId               String             @unique // One subscription per user
+  user                 User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  stripeCustomerId     String             @unique // Stripe customer ID
+  stripeSubscriptionId String?            @unique // Stripe subscription ID
+  plan                 SubscriptionPlan // Which plan (USER_MONTHLY, USER_YEARLY, HOSPITAL_MONTHLY, HOSPITAL_YEARLY)
+  status               SubscriptionStatus @default(TRIALING) // Subscription status
+  currentPeriodStart   DateTime? // Current billing period start
+  currentPeriodEnd     DateTime? // Current billing period end
+  cancelAtPeriodEnd    Boolean            @default(false) // Whether to cancel at period end
+  canceledAt           DateTime? // When subscription was canceled
+  trialEnd             DateTime? // Trial period end date
+  priceId              String? // Stripe price ID
+  createdAt            DateTime           @default(now())
+  updatedAt            DateTime           @updatedAt
+
+  @@index([userId])
+  @@index([stripeCustomerId])
+  @@index([stripeSubscriptionId])
+  @@index([status])
+}
+
+model Credit {
+  id             String              @id @default(uuid())
+  userId         String              @unique // One credit account per user
+  user           User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  balance        Int                 @default(0) // Current credit balance
+  totalAllocated Int                 @default(0) // Total credits ever allocated
+  totalUsed      Int                 @default(0) // Total credits ever used
+  transactions   CreditTransaction[] // Credit transaction history
+  createdAt      DateTime            @default(now())
+  updatedAt      DateTime            @updatedAt
+
+  @@index([userId])
+}
+
+model CreditTransaction {
+  id           String                @id @default(uuid())
+  creditId     String // Reference to Credit account
+  credit       Credit                @relation(fields: [creditId], references: [id], onDelete: Cascade)
+  type         CreditTransactionType // Type of transaction
+  amount       Int // Amount (positive for allocation/refund, negative for deduction)
+  balanceAfter Int // Balance after this transaction
+  description  String? // Transaction description
+  referenceId  String? // Reference to related entity (e.g., subscription ID, booking ID)
+  metadata     String? // Additional metadata (JSON string)
+  createdAt    DateTime              @default(now())
+
+  @@index([creditId])
+  @@index([type])
+  @@index([createdAt])
 }

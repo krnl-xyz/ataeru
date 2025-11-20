@@ -5,7 +5,7 @@ import jwt from "jsonwebtoken";
 import config from "../config/config";
 import crypto from "crypto";
 import { OAuth2Client } from "google-auth-library";
-import jwksClient from "jwks-rsa";
+import appleSignin from "apple-signin-auth";
 // Import middleware to ensure type declarations are loaded
 import "../middlewares/auth.middleware";
 
@@ -846,7 +846,70 @@ export const googleSSO = async (req: Request, res: Response, next: NextFunction)
   }
 };
 
-// Apple SSO - Sign in/Sign up with Apple
+// Apple SSO - Get authorization URL (GET endpoint)
+export const getAppleAuthorizationUrl = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  try {
+    const { redirectUri, state, scope } = req.query;
+
+    // Validate required fields
+    if (!config.appleClientId) {
+      res.status(500).json({
+        message: "Apple Client ID is not configured",
+      });
+      return;
+    }
+
+    if (!redirectUri || typeof redirectUri !== 'string') {
+      res.status(400).json({
+        message: "redirectUri query parameter is required",
+      });
+      return;
+    }
+
+    // Generate authorization URL
+    const options: any = {
+      clientID: config.appleClientId,
+      redirectUri: redirectUri,
+    };
+
+    // Optional parameters
+    if (state && typeof state === 'string') {
+      options.state = state;
+    }
+
+    if (scope && typeof scope === 'string') {
+      options.scope = scope;
+    } else {
+      // Default to email scope if not provided
+      options.scope = 'email';
+    }
+
+    // If scope includes email, force responseMode to form_post
+    if (options.scope.includes('email')) {
+      options.responseMode = 'form_post';
+    }
+
+    try {
+      const authorizationUrl = appleSignin.getAuthorizationUrl(options);
+
+      res.status(200).json({
+        authorizationUrl,
+        clientId: config.appleClientId,
+        redirectUri: redirectUri,
+      });
+    } catch (error: any) {
+      res.status(500).json({
+        message: "Failed to generate Apple authorization URL",
+        error: error.message || String(error),
+      });
+      return;
+    }
+  } catch (error: any) {
+    next(error);
+  }
+};
+
+// Apple SSO - Sign in/Sign up with Apple (POST endpoint - handles callback)
 export const appleSSO = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   try {
     const { identityToken, userType, hospitalId, phone, address, about, fullname } = req.body;
@@ -873,44 +936,18 @@ export const appleSSO = async (req: Request, res: Response, next: NextFunction):
     //   return;
     // }
 
-    // Verify Apple identity token
+    // Verify Apple identity token using apple-signin-auth
     let decodedToken: any;
     try {
-      // Decode without verification first to get the key ID
-      const decoded = jwt.decode(identityToken, { complete: true });
-      if (!decoded || typeof decoded === 'string') {
-        res.status(401).json({
-          message: "Invalid Apple identity token format",
-        });
-        return;
-      }
-
-      const kid = decoded.header.kid;
-      if (!kid) {
-        res.status(401).json({
-          message: "Missing key ID in Apple token",
-        });
-        return;
-      }
-
-      // Get Apple's public keys
-      const client = jwksClient({
-        jwksUri: 'https://appleid.apple.com/auth/keys',
-        cache: true,
-        cacheMaxAge: 86400000, // 24 hours
+      decodedToken = await appleSignin.verifyIdToken(identityToken, {
+        audience: config.appleClientId, // client id
+        // Optional: can add nonce verification if needed
+        // nonce: 'NONCE', // if you're using nonce
       });
-
-      const key = await client.getSigningKey(kid);
-      const publicKey = key.getPublicKey();
-
-      // Verify the token
-      decodedToken = jwt.verify(identityToken, publicKey, {
-        audience: config.appleClientId,
-        issuer: 'https://appleid.apple.com',
-      }) as any;
-    } catch (error) {
+    } catch (error: any) {
       res.status(401).json({
         message: "Invalid or expired Apple identity token",
+        error: error.message || String(error),
       });
       return;
     }

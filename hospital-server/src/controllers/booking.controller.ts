@@ -3,20 +3,22 @@ import { prisma } from "../config/db";
 import "../middlewares/auth.middleware";
 
 // Create a new booking
-export const createBooking = async (req: Request, res: Response, next: NextFunction) => {
+export const createBooking = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   try {
     const userId = req.userId;
     if (!userId) {
-      return res.status(401).json({ message: "Authentication required" });
+      res.status(401).json({ message: "Authentication required" });
+      return;
     }
 
     const { hospitalId, date, time, duration, purpose, additionalNotes } = req.body;
 
     // Validate required fields
     if (!hospitalId || !date || !time || !purpose) {
-      return res.status(400).json({
+      res.status(400).json({
         message: "Missing required fields: hospitalId, date, time, and purpose are required",
       });
+      return;
     }
 
     // Verify user exists
@@ -25,7 +27,8 @@ export const createBooking = async (req: Request, res: Response, next: NextFunct
     });
 
     if (!user) {
-      return res.status(404).json({ message: "User not found" });
+      res.status(404).json({ message: "User not found" });
+      return;
     }
 
     // Verify hospital exists
@@ -34,7 +37,8 @@ export const createBooking = async (req: Request, res: Response, next: NextFunct
     });
 
     if (!hospital) {
-      return res.status(404).json({ message: "Hospital not found" });
+      res.status(404).json({ message: "Hospital not found" });
+      return;
     }
 
     // Parse date and time
@@ -45,9 +49,10 @@ export const createBooking = async (req: Request, res: Response, next: NextFunct
       // Parse time in HH:mm format
       const timeParts = time.split(':');
       if (timeParts.length !== 2 || !timeParts[0] || !timeParts[1]) {
-        return res.status(400).json({
+        res.status(400).json({
           message: "Invalid time format. Please use HH:mm format (24-hour, e.g., 14:30)",
         });
+        return;
       }
 
       const hours = parseInt(timeParts[0]);
@@ -55,9 +60,10 @@ export const createBooking = async (req: Request, res: Response, next: NextFunct
 
       // Validate time values
       if (isNaN(hours) || isNaN(minutes) || hours < 0 || hours > 23 || minutes < 0 || minutes > 59) {
-        return res.status(400).json({
+        res.status(400).json({
           message: "Invalid time values. Hours must be 0-23 and minutes must be 0-59",
         });
+        return;
       }
 
       // Parse date - try dd/mm/yyyy format first
@@ -69,9 +75,10 @@ export const createBooking = async (req: Request, res: Response, next: NextFunct
         const year = parseInt(dateParts[2]);
 
         if (isNaN(day) || isNaN(month) || isNaN(year)) {
-          return res.status(400).json({
+          res.status(400).json({
             message: "Invalid date format. Please use dd/mm/yyyy format (e.g., 25/12/2024)",
           });
+          return;
         }
 
         appointmentDateTime = new Date(year, month - 1, day, hours, minutes);
@@ -79,9 +86,10 @@ export const createBooking = async (req: Request, res: Response, next: NextFunct
         // Try other formats (yyyy-mm-dd, ISO, etc.)
         const dateObj = new Date(date);
         if (isNaN(dateObj.getTime())) {
-          return res.status(400).json({
+          res.status(400).json({
             message: "Invalid date format. Please use dd/mm/yyyy format (e.g., 25/12/2024)",
           });
+          return;
         }
         // Combine date with time
         appointmentDateTime = new Date(dateObj);
@@ -90,23 +98,26 @@ export const createBooking = async (req: Request, res: Response, next: NextFunct
 
       // Validate the date is valid
       if (isNaN(appointmentDateTime.getTime())) {
-        return res.status(400).json({
+        res.status(400).json({
           message: "Invalid date or time format",
         });
+        return;
       }
 
       // Check if the appointment date is in the past
       const now = new Date();
       now.setSeconds(0, 0); // Remove seconds and milliseconds for comparison
       if (appointmentDateTime < now) {
-        return res.status(400).json({
+        res.status(400).json({
           message: "Cannot book appointments in the past",
         });
+        return;
       }
     } catch (error) {
-      return res.status(400).json({
+      res.status(400).json({
         message: "Invalid date or time format. Please use dd/mm/yyyy for date (e.g., 25/12/2024) and HH:mm for time (e.g., 14:30)",
       });
+      return;
     }
 
     // Validate duration (default to 30 minutes)
@@ -156,11 +167,12 @@ export const createBooking = async (req: Request, res: Response, next: NextFunct
 };
 
 // Get all bookings for the authenticated user
-export const getMyBookings = async (req: Request, res: Response, next: NextFunction) => {
+export const getMyBookings = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   try {
     const userId = req.userId;
     if (!userId) {
-      return res.status(401).json({ message: "Authentication required" });
+      res.status(401).json({ message: "Authentication required" });
+      return;
     }
 
     const bookings = await prisma.booking.findMany({
@@ -190,11 +202,12 @@ export const getMyBookings = async (req: Request, res: Response, next: NextFunct
 };
 
 // Get booking by ID
-export const getBookingById = async (req: Request, res: Response, next: NextFunction) => {
+export const getBookingById = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   try {
     const userId = req.userId;
     if (!userId) {
-      return res.status(401).json({ message: "Authentication required" });
+      res.status(401).json({ message: "Authentication required" });
+      return;
     }
 
     const { id } = req.params;
@@ -225,7 +238,8 @@ export const getBookingById = async (req: Request, res: Response, next: NextFunc
     });
 
     if (!booking) {
-      return res.status(404).json({ message: "Booking not found" });
+      res.status(404).json({ message: "Booking not found" });
+      return;
     }
 
     // Verify user has access to this booking (either owner or hospital owner)
@@ -236,9 +250,10 @@ export const getBookingById = async (req: Request, res: Response, next: NextFunc
       });
 
       if (!hospital || hospital.ownerId !== userId) {
-        return res.status(403).json({
+        res.status(403).json({
           message: "You are not authorized to view this booking",
         });
+        return;
       }
     }
 
@@ -249,11 +264,12 @@ export const getBookingById = async (req: Request, res: Response, next: NextFunc
 };
 
 // Get bookings for a hospital (hospital owner only)
-export const getHospitalBookings = async (req: Request, res: Response, next: NextFunction) => {
+export const getHospitalBookings = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   try {
     const userId = req.userId;
     if (!userId) {
-      return res.status(401).json({ message: "Authentication required" });
+      res.status(401).json({ message: "Authentication required" });
+      return;
     }
 
     const { hospitalId } = req.params;
@@ -264,13 +280,15 @@ export const getHospitalBookings = async (req: Request, res: Response, next: Nex
     });
 
     if (!hospital) {
-      return res.status(404).json({ message: "Hospital not found" });
+      res.status(404).json({ message: "Hospital not found" });
+      return;
     }
 
     if (hospital.ownerId !== userId) {
-      return res.status(403).json({
+      res.status(403).json({
         message: "You are not authorized to view bookings for this hospital",
       });
+      return;
     }
 
     const bookings = await prisma.booking.findMany({
@@ -298,11 +316,12 @@ export const getHospitalBookings = async (req: Request, res: Response, next: Nex
 };
 
 // Get all bookings for hospitals owned by the authenticated user
-export const getMyHospitalBookings = async (req: Request, res: Response, next: NextFunction) => {
+export const getMyHospitalBookings = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   try {
     const userId = req.userId;
     if (!userId) {
-      return res.status(401).json({ message: "Authentication required" });
+      res.status(401).json({ message: "Authentication required" });
+      return;
     }
 
     // Get all hospitals owned by this user
@@ -314,7 +333,8 @@ export const getMyHospitalBookings = async (req: Request, res: Response, next: N
     const hospitalIds = hospitals.map(h => h.id);
 
     if (hospitalIds.length === 0) {
-      return res.status(200).json([]);
+      res.status(200).json([]);
+      return;
     }
 
     // Get all bookings for these hospitals
@@ -358,11 +378,12 @@ export const getMyHospitalBookings = async (req: Request, res: Response, next: N
 };
 
 // Update booking
-export const updateBooking = async (req: Request, res: Response, next: NextFunction) => {
+export const updateBooking = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   try {
     const userId = req.userId;
     if (!userId) {
-      return res.status(401).json({ message: "Authentication required" });
+      res.status(401).json({ message: "Authentication required" });
+      return;
     }
 
     const { id } = req.params;
@@ -377,7 +398,8 @@ export const updateBooking = async (req: Request, res: Response, next: NextFunct
     });
 
     if (!existingBooking) {
-      return res.status(404).json({ message: "Booking not found" });
+      res.status(404).json({ message: "Booking not found" });
+      return;
     }
 
     // Verify user has access (either booking owner or hospital owner)
@@ -385,9 +407,10 @@ export const updateBooking = async (req: Request, res: Response, next: NextFunct
     const isHospitalOwner = existingBooking.hospital.ownerId === userId;
 
     if (!isBookingOwner && !isHospitalOwner) {
-      return res.status(403).json({
+      res.status(403).json({
         message: "You are not authorized to update this booking",
       });
+      return;
     }
 
     // Build update data
@@ -399,9 +422,10 @@ export const updateBooking = async (req: Request, res: Response, next: NextFunct
         // Parse time in HH:mm format
         const timeParts = time.split(':');
         if (timeParts.length !== 2 || !timeParts[0] || !timeParts[1]) {
-          return res.status(400).json({
+          res.status(400).json({
             message: "Invalid time format. Please use HH:mm format (24-hour)",
           });
+          return;
         }
 
         const hours = parseInt(timeParts[0]);
@@ -409,9 +433,10 @@ export const updateBooking = async (req: Request, res: Response, next: NextFunct
 
         // Validate time values
         if (isNaN(hours) || isNaN(minutes) || hours < 0 || hours > 23 || minutes < 0 || minutes > 59) {
-          return res.status(400).json({
+          res.status(400).json({
             message: "Invalid time values. Hours must be 0-23 and minutes must be 0-59",
           });
+          return;
         }
 
         // Parse date - try dd/mm/yyyy format first
@@ -423,17 +448,19 @@ export const updateBooking = async (req: Request, res: Response, next: NextFunct
           const year = parseInt(dateParts[2]);
 
           if (isNaN(day) || isNaN(month) || isNaN(year)) {
-            return res.status(400).json({
+            res.status(400).json({
               message: "Invalid date format. Please use dd/mm/yyyy format",
             });
+            return;
           }
 
           const appointmentDateTime = new Date(year, month - 1, day, hours, minutes);
 
           if (isNaN(appointmentDateTime.getTime())) {
-            return res.status(400).json({
+            res.status(400).json({
               message: "Invalid date or time format",
             });
+            return;
           }
 
           updateData.appointmentDate = appointmentDateTime;
@@ -441,18 +468,20 @@ export const updateBooking = async (req: Request, res: Response, next: NextFunct
           // Try other formats
           const dateObj = new Date(date);
           if (isNaN(dateObj.getTime())) {
-            return res.status(400).json({
+            res.status(400).json({
               message: "Invalid date format. Please use dd/mm/yyyy format",
             });
+            return;
           }
           const appointmentDateTime = new Date(dateObj);
           appointmentDateTime.setHours(hours, minutes, 0, 0);
           updateData.appointmentDate = appointmentDateTime;
         }
       } catch (error) {
-        return res.status(400).json({
+        res.status(400).json({
           message: "Invalid date or time format",
         });
+        return;
       }
     }
 
@@ -504,11 +533,12 @@ export const updateBooking = async (req: Request, res: Response, next: NextFunct
 };
 
 // Cancel booking
-export const cancelBooking = async (req: Request, res: Response, next: NextFunction) => {
+export const cancelBooking = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   try {
     const userId = req.userId;
     if (!userId) {
-      return res.status(401).json({ message: "Authentication required" });
+      res.status(401).json({ message: "Authentication required" });
+      return;
     }
 
     const { id } = req.params;
@@ -522,7 +552,8 @@ export const cancelBooking = async (req: Request, res: Response, next: NextFunct
     });
 
     if (!existingBooking) {
-      return res.status(404).json({ message: "Booking not found" });
+      res.status(404).json({ message: "Booking not found" });
+      return;
     }
 
     // Verify user has access (either booking owner or hospital owner)
@@ -530,9 +561,10 @@ export const cancelBooking = async (req: Request, res: Response, next: NextFunct
     const isHospitalOwner = existingBooking.hospital.ownerId === userId;
 
     if (!isBookingOwner && !isHospitalOwner) {
-      return res.status(403).json({
+      res.status(403).json({
         message: "You are not authorized to cancel this booking",
       });
+      return;
     }
 
     // Update booking status to CANCELLED
@@ -572,11 +604,12 @@ export const cancelBooking = async (req: Request, res: Response, next: NextFunct
 };
 
 // Delete booking
-export const deleteBooking = async (req: Request, res: Response, next: NextFunction) => {
+export const deleteBooking = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   try {
     const userId = req.userId;
     if (!userId) {
-      return res.status(401).json({ message: "Authentication required" });
+      res.status(401).json({ message: "Authentication required" });
+      return;
     }
 
     const { id } = req.params;
@@ -590,7 +623,8 @@ export const deleteBooking = async (req: Request, res: Response, next: NextFunct
     });
 
     if (!existingBooking) {
-      return res.status(404).json({ message: "Booking not found" });
+      res.status(404).json({ message: "Booking not found" });
+      return;
     }
 
     // Verify user has access (either booking owner or hospital owner)
@@ -598,9 +632,10 @@ export const deleteBooking = async (req: Request, res: Response, next: NextFunct
     const isHospitalOwner = existingBooking.hospital.ownerId === userId;
 
     if (!isBookingOwner && !isHospitalOwner) {
-      return res.status(403).json({
+      res.status(403).json({
         message: "You are not authorized to delete this booking",
       });
+      return;
     }
 
     await prisma.booking.delete({

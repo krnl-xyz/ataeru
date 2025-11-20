@@ -10,11 +10,13 @@ import {
   deleteBooking,
 } from "../controllers/booking.controller";
 import { authenticate } from "../middlewares/auth.middleware";
+import { requireSubscription } from "../middlewares/subscription.middleware";
 
 const router = Router();
 
-// All booking routes require authentication
+// All booking routes require authentication and subscription
 router.use(authenticate);
+router.use(requireSubscription);
 
 // Get all bookings for the authenticated user
 router.get("/me", getMyBookings);
