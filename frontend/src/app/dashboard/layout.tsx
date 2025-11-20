@@ -41,7 +41,9 @@ export default function DashboardLayout({
     // In a real app, you would fetch the user type from your backend
     // For now, we'll check localStorage or default to 'user'
     const storedUserType = localStorage.getItem('userType') as 'user' | 'hospital' | null;
-    setUserType(storedUserType || 'user');
+    setTimeout(() => {
+      setUserType(storedUserType || 'user');
+    }, 0);
   }, [isConnected, router]);
 
   // Common navigation items for all user types

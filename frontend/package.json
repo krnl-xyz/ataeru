@@ -22,6 +22,7 @@
     "@radix-ui/react-slot": "^1.2.0",
     "@radix-ui/react-tabs": "^1.1.11",
     "@rainbow-me/rainbowkit": "^2.2.4",
+    "@react-native-async-storage/async-storage": "^2.2.0",
     "@sap/hana-client": "^2.24.24",
     "@selfxyz/core": "1.1.0-beta.7",
     "@selfxyz/qrcode": "^1.0.15",

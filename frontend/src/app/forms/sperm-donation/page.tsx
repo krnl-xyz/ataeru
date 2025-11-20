@@ -24,6 +24,7 @@ export default function SpermDonationForm() {
   const [step, setStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const [applicationId] = useState(() => `SPD-${Math.random().toString(36).substring(2, 10).toUpperCase()}`);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value, type } = e.target;
@@ -106,7 +107,7 @@ export default function SpermDonationForm() {
               <div className="bg-gray-50 p-4 rounded-lg mb-6 max-w-md mx-auto text-left">
                 <p className="text-sm text-gray-600 mb-2">
                   <span className="font-semibold">Application ID:</span>
-                  <span className="ml-2 font-mono text-blue-600">SPD-{Math.random().toString(36).substring(2, 10).toUpperCase()}</span>
+                  <span className="ml-2 font-mono text-blue-600">{applicationId}</span>
                 </p>
                 <p className="text-sm text-gray-600">
                   <span className="font-semibold">Submitted on:</span>

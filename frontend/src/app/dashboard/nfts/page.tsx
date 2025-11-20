@@ -63,7 +63,9 @@ export default function NFTsPage() {
   //   console.log(await nftDetails.json());
   // }, []);
   useEffect(() => {
-    setIsLoading(true);
+    setTimeout(() => {
+      setIsLoading(true);
+    }, 0);
     const fetchNftDetails = async (uri: string) => {
       const json = await fetch(uri);
       const data = await json.json();

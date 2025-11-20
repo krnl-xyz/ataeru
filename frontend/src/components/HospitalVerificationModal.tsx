@@ -57,15 +57,19 @@ export default function HospitalVerificationModal({
         }
       }).build();
 
-      setSelfApp(app);
-      setUniversalLink(getUniversalLink(app));
-      setVerificationStatus('idle');
+      setTimeout(() => {
+        setSelfApp(app);
+        setUniversalLink(getUniversalLink(app));
+        setVerificationStatus('idle');
+      }, 0);
     } catch (error) {
       console.error("Failed to initialize Self app:", error);
       toast.error('Failed to initialize verification', {
         description: 'Please check your Self Protocol configuration',
       });
-      setVerificationStatus('error');
+      setTimeout(() => {
+        setVerificationStatus('error');
+      }, 0);
     }
   }, [isOpen, address, hospitalId]);
 

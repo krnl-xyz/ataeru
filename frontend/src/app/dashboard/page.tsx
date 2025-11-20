@@ -80,49 +80,55 @@ export default function Dashboard() {
     // In a real app, you would fetch this data from your backend
     // For now, we'll set mock data
     const storedUserType = localStorage.getItem('userType') as 'user' | 'hospital' | null;
-    setUserType(storedUserType || 'user');
+    setTimeout(() => {
+      setUserType(storedUserType || 'user');
+    }, 0);
 
     // Mock stats data
-    setStats({
-      consultations: 3,
-      donations: userType === 'user' ? 2 : 0,
-      favoriteHospitals: 4,
-      nftsOwned: 2
-    });
+    setTimeout(() => {
+      setStats({
+        consultations: 3,
+        donations: storedUserType === 'user' ? 2 : 0,
+        favoriteHospitals: 4,
+        nftsOwned: 2
+      });
 
-    // Mock recent activity
-    setRecentActivity([
-      {
-        id: 1,
-        type: 'appointment',
-        title: 'Fertility Consultation',
-        date: '2023-11-15',
-        hospital: 'Synhealth Main Center',
-        status: 'Completed'
-      },
-      {
-        id: 2,
-        type: 'donation',
-        title: 'Sperm Donation',
-        date: '2023-10-28',
-        hospital: 'CryoBank Facility',
-        status: 'Completed'
-      },
-      {
-        id: 3,
-        type: 'nft',
-        title: 'Fertility Treatment Package NFT',
-        date: '2023-10-05',
-        transaction: '0x89e...3f2a',
-        status: 'Active'
-      }
-    ]);
+      // Mock recent activity
+      setRecentActivity([
+        {
+          id: 1,
+          type: 'appointment',
+          title: 'Fertility Consultation',
+          date: '2023-11-15',
+          hospital: 'Synhealth Main Center',
+          status: 'Completed'
+        },
+        {
+          id: 2,
+          type: 'donation',
+          title: 'Sperm Donation',
+          date: '2023-10-28',
+          hospital: 'CryoBank Facility',
+          status: 'Completed'
+        },
+        {
+          id: 3,
+          type: 'nft',
+          title: 'Fertility Treatment Package NFT',
+          date: '2023-10-05',
+          transaction: '0x89e...3f2a',
+          status: 'Active'
+        }
+      ]);
+    }, 0);
 
     if (currentRequest) {
-      setDonorRequests(prev => [...prev, currentRequest as DonorRequest]);
-      if (currentId < Number(totalId)) {
-        setCurrentId(prev => prev + 1);
-      }
+      setTimeout(() => {
+        setDonorRequests(prev => [...prev, currentRequest as DonorRequest]);
+        if (currentId < Number(totalId)) {
+          setCurrentId(prev => prev + 1);
+        }
+      }, 0);
     }
   }, [userType, currentRequest, totalId, currentId]);
 

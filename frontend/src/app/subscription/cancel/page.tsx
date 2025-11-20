@@ -21,7 +21,7 @@ export default function SubscriptionCancelPage() {
         <CardContent className="space-y-4">
           <div className="bg-orange-50 border border-orange-200 rounded-lg p-4">
             <p className="text-sm text-orange-800 text-center">
-              No charges were made. You can return to select a subscription plan whenever you're ready.
+              No charges were made. You can return to select a subscription plan whenever you&apos;re ready.
             </p>
           </div>
 

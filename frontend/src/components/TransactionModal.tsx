@@ -43,34 +43,38 @@ export default function TransactionModal({
 
   useEffect(() => {
     if (writeError) {
-      setStatus('error');
-      setError(writeError.message);
-      onError?.(writeError);
+      setTimeout(() => {
+        setStatus('error');
+        setError(writeError.message);
+        onError?.(writeError);
+      }, 0);
     }
   }, [writeError, onError]);
 
   useEffect(() => {
     if (isPending) {
-      setStatus('preparing');
+      setTimeout(() => setStatus('preparing'), 0);
     } else if (isConfirming) {
-      setStatus('confirming');
+      setTimeout(() => setStatus('confirming'), 0);
     } else if (isSuccess) {
-      setStatus('success');
-      // Get the transaction receipt to extract the registration ID
-      const getReceipt = async () => {
-        try {
-          const receipt = await fetch(`/api/transaction/${hash}`).then(res => res.json());
-          if (receipt.logs && receipt.logs[0]) {
-            const id = receipt.logs[0].data;
-            setRegistrationId(id);
+      setTimeout(() => {
+        setStatus('success');
+        // Get the transaction receipt to extract the registration ID
+        const getReceipt = async () => {
+          try {
+            const receipt = await fetch(`/api/transaction/${hash}`).then(res => res.json());
+            if (receipt.logs && receipt.logs[0]) {
+              const id = receipt.logs[0].data;
+              setRegistrationId(id);
+            }
+            onSuccess?.(receipt);
+          } catch (err) {
+            console.error('Error fetching transaction receipt:', err);
+            onSuccess?.(hash);
           }
-          onSuccess?.(receipt);
-        } catch (err) {
-          console.error('Error fetching transaction receipt:', err);
-          onSuccess?.(hash);
-        }
-      };
-      getReceipt();
+        };
+        getReceipt();
+      }, 0);
     }
   }, [isPending, isConfirming, isSuccess, hash, onSuccess]);
 
