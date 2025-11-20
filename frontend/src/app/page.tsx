@@ -167,11 +167,11 @@ export default function AppPage() {
 
   // Mock agents/apps list
   const allAgents = [
-    { id: 'fertility-ai', name: 'AI Assistant', icon: Sparkles, description: 'AI-powered fertility guidance', color: 'bg-blue-500' },
+    // { id: 'fertility-ai', name: 'AI Assistant', icon: Sparkles, description: 'AI-powered fertility guidance', color: 'bg-blue-500' },
     { id: 'hospital-manager', name: 'Hospital Manager', icon: Building2, description: 'Manage hospital operations', color: 'bg-green-500', requiresMedicalFacility: true },
     { id: 'consultations', name: 'Consultations', icon: Calendar, description: 'Book and manage consultations', color: 'bg-orange-500' },
-    { id: 'patient-portal', name: 'Patient Portal', icon: Users, description: 'Patient management system', color: 'bg-purple-500' },
-    { id: 'document-manager', name: 'Document Manager', icon: FileText, description: 'Medical records management', color: 'bg-pink-500' },
+    // { id: 'patient-portal', name: 'Patient Portal', icon: Users, description: 'Patient management system', color: 'bg-purple-500' },
+    // { id: 'document-manager', name: 'Document Manager', icon: FileText, description: 'Medical records management', color: 'bg-pink-500' },
   ];
 
   // Filter agents based on user type - only show hospital-manager to medical facilities
