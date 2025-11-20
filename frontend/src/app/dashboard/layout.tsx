@@ -53,6 +53,7 @@ export default function DashboardLayout({
     { name: 'History', href: '/dashboard/history', icon: Clock },
     { name: 'Settings', href: '/dashboard/settings', icon: Settings },
     { name: 'Booking', href: '/dashboard/booking', icon: Calendar },
+    { name: 'Subscription', href: '/subscription', icon: CreditCard },
   ];
 
   // User-specific navigation items

@@ -250,3 +250,52 @@ textarea:focus:not(:focus-visible) {
   transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
   transition-duration: 300ms;
 }
+
+/* Custom Font Variables */
+:root {
+  --font-orbitron: var(--font-orbitron), 'Orbitron', ui-sans-serif;
+  --font-rajdhani: var(--font-rajdhani), 'Rajdhani', ui-sans-serif;
+}
+
+.font-orbitron {
+  font-family: var(--font-orbitron);
+  letter-spacing: -0.01em;
+}
+
+.font-rajdhani {
+  font-family: var(--font-rajdhani);
+  letter-spacing: 0.01em;
+}
+
+/* Hero Title Animations */
+@keyframes fade-in-up {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes gradient-x {
+  0%, 100% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+}
+
+.animate-fade-in-up {
+  animation: fade-in-up 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.animate-gradient-x {
+  background-size: 200% 200%;
+  animation: gradient-x 3s ease infinite;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}

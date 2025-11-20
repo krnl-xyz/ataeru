@@ -2,6 +2,7 @@
 
 import React, { createContext, useState, useContext, useEffect, useCallback } from 'react';
 import { authService, User, SignupRequest, LoginRequest } from '@/lib/services/auth';
+import { subscriptionService, Subscription } from '@/lib/services/subscription';
 import { toast } from 'sonner';
 
 type UserType = 'USER' | 'MEDICAL_FACILITY' | null;
@@ -11,6 +12,9 @@ interface AuthContextType {
   user: User | null;
   isLoading: boolean;
   isAuthenticated: boolean;
+  subscription: Subscription | null;
+  hasActiveSubscription: boolean;
+  isLoadingSubscription: boolean;
 
   // Legacy properties for backward compatibility
   isOnboarded: boolean;
@@ -48,6 +52,9 @@ interface AuthContextType {
   setUserType: (type: 'user' | 'hospital' | null) => void;
   setIsHospitalVerified: (value: boolean) => void;
   completeOnboarding: (type: 'user' | 'hospital') => void;
+  
+  // Subscription methods
+  refreshSubscription: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -55,9 +62,33 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [subscription, setSubscription] = useState<Subscription | null>(null);
+  const [isLoadingSubscription, setIsLoadingSubscription] = useState<boolean>(false);
   const [isRegistrationModalOpen, setIsRegistrationModalOpen] = useState<boolean>(false);
   const [isLoginModalOpen, setIsLoginModalOpen] = useState<boolean>(false);
   const [isHospitalVerified, setIsHospitalVerified] = useState<boolean>(false);
+
+  // Refresh subscription data
+  const refreshSubscription = useCallback(async () => {
+    setIsLoadingSubscription(true);
+    try {
+      const response = await subscriptionService.getMySubscription();
+      if (response?.subscription) {
+        setSubscription(response.subscription);
+      } else {
+        setSubscription(null);
+      }
+    } catch (error: any) {
+      // Silently fail - subscription is optional
+      // Only log if it's not a 404 (which means no subscription exists)
+      if (error?.status !== 404) {
+        console.error('Error fetching subscription:', error);
+      }
+      setSubscription(null);
+    } finally {
+      setIsLoadingSubscription(false);
+    }
+  }, []);
 
   // Check if user is authenticated and fetch user data
   const refreshUser = useCallback(async () => {
@@ -66,15 +97,25 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       // Try to fetch user data - this will work if we have valid auth (token or cookie)
       const userData = await authService.getMe();
       setUser(userData);
+      // Load subscription if user is authenticated (non-blocking)
+      if (userData) {
+        // Don't await - let it load in background
+        refreshSubscription().catch(() => {
+          // Silently handle subscription errors
+        });
+      } else {
+        setSubscription(null);
+      }
     } catch (error) {
       console.error('Error fetching user data:', error);
       // If fetch fails, user is not authenticated
       authService.logout();
       setUser(null);
+      setSubscription(null);
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [refreshSubscription]);
 
   // Fetch user data on mount
   useEffect(() => {
@@ -204,6 +245,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   // Derived values
   const isAuthenticated = !!user;
   const isOnboarded = isAuthenticated;
+  const hasActiveSubscription = subscriptionService.hasActiveSubscription(subscription);
 
   // Map backend userType to legacy format
   const userType: 'user' | 'hospital' | null = user?.userType === 'USER'
@@ -218,6 +260,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         user,
         isLoading,
         isAuthenticated,
+        subscription,
+        hasActiveSubscription,
+        isLoadingSubscription,
         isOnboarded,
         userType,
         isRegistrationModalOpen,
@@ -237,6 +282,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setUserType,
         setIsHospitalVerified,
         completeOnboarding,
+        refreshSubscription,
       }}
     >
       {children}

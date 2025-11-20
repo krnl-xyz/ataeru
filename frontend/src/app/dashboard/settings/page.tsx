@@ -2,8 +2,15 @@
 
 import { useState, useEffect } from 'react';
 import Image from 'next/image';
+import { useRouter } from 'next/navigation';
 import { useAccount } from 'wagmi';
-import { CheckCircle, Loader } from 'lucide-react';
+import { CheckCircle, Loader, CreditCard, Calendar, X, RefreshCw, Loader2 } from 'lucide-react';
+import { subscriptionService, Subscription } from '@/lib/services/subscription';
+import { useAuth } from '@/app/contexts/use-auth';
+import { toast } from 'sonner';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { format } from 'date-fns';
 
 interface Settings {
   notifications: {
@@ -35,7 +42,12 @@ interface Settings {
 }
 
 export default function SettingsPage() {
+  const router = useRouter();
   const { address } = useAccount();
+  const { user } = useAuth();
+  const [subscription, setSubscription] = useState<Subscription | null>(null);
+  const [isLoadingSubscription, setIsLoadingSubscription] = useState(false);
+  const [isProcessingSubscription, setIsProcessingSubscription] = useState(false);
   const [settings, setSettings] = useState<Settings>({
     notifications: {
       email: true,
@@ -64,14 +76,106 @@ export default function SettingsPage() {
       timeZone: 'America/New_York',
     },
   });
-  const [activeTab, setActiveTab] = useState<'notifications' | 'privacy' | 'security' | 'preferences'>('notifications');
+  const [activeTab, setActiveTab] = useState<'notifications' | 'privacy' | 'security' | 'preferences' | 'subscription'>('notifications');
   const [isSaving, setIsSaving] = useState(false);
   const [showSavedMessage, setShowSavedMessage] = useState(false);
+
+  const loadSubscription = async () => {
+    setIsLoadingSubscription(true);
+    try {
+      const response = await subscriptionService.getMySubscription();
+      if (response?.subscription) {
+        setSubscription(response.subscription);
+      } else {
+        setSubscription(null);
+      }
+    } catch (error: any) {
+      // Silently handle errors - subscription is optional
+      if (error?.status !== 404) {
+        console.error('Error loading subscription:', error);
+      }
+      setSubscription(null);
+    } finally {
+      setIsLoadingSubscription(false);
+    }
+  };
 
   useEffect(() => {
     // In a real app, you would fetch the user's settings from your backend
     // For this demo, we'll just use the default settings defined above
-  }, []);
+    if (activeTab === 'subscription') {
+      loadSubscription();
+    }
+  }, [activeTab]);
+
+  const handleCancelSubscription = async () => {
+    if (!confirm('Are you sure you want to cancel your subscription? You will retain access until the end of your billing period.')) {
+      return;
+    }
+
+    setIsProcessingSubscription(true);
+    try {
+      await subscriptionService.cancel();
+      toast.success('Subscription will be canceled at the end of the billing period');
+      await loadSubscription();
+    } catch (error: any) {
+      console.error('Error canceling subscription:', error);
+      toast.error('Failed to cancel subscription', {
+        description: error.message || 'Please try again later',
+      });
+    } finally {
+      setIsProcessingSubscription(false);
+    }
+  };
+
+  const handleReactivateSubscription = async () => {
+    setIsProcessingSubscription(true);
+    try {
+      await subscriptionService.reactivate();
+      toast.success('Subscription reactivated successfully');
+      await loadSubscription();
+    } catch (error: any) {
+      console.error('Error reactivating subscription:', error);
+      toast.error('Failed to reactivate subscription', {
+        description: error.message || 'Please try again later',
+      });
+    } finally {
+      setIsProcessingSubscription(false);
+    }
+  };
+
+  const handleChangePlan = async (newPlan: string) => {
+    if (!confirm(`Are you sure you want to change to ${newPlan}? Your billing will be prorated.`)) {
+      return;
+    }
+
+    setIsProcessingSubscription(true);
+    try {
+      await subscriptionService.updatePlan(newPlan as any);
+      toast.success('Subscription plan updated successfully');
+      await loadSubscription();
+    } catch (error: any) {
+      console.error('Error updating plan:', error);
+      toast.error('Failed to update plan', {
+        description: error.message || 'Please try again later',
+      });
+    } finally {
+      setIsProcessingSubscription(false);
+    }
+  };
+
+  const getStatusBadge = (status: string) => {
+    const statusColors: Record<string, string> = {
+      ACTIVE: 'bg-green-100 text-green-800',
+      TRIALING: 'bg-blue-100 text-blue-800',
+      CANCELED: 'bg-gray-100 text-gray-800',
+      PAST_DUE: 'bg-red-100 text-red-800',
+      UNPAID: 'bg-red-100 text-red-800',
+      INCOMPLETE: 'bg-yellow-100 text-yellow-800',
+      INCOMPLETE_EXPIRED: 'bg-gray-100 text-gray-800',
+    };
+    return statusColors[status] || 'bg-gray-100 text-gray-800';
+  };
 
   const handleNotificationChange = (field: keyof Settings['notifications']) => {
     setSettings({
@@ -115,14 +219,14 @@ export default function SettingsPage() {
 
   const saveSettings = async () => {
     setIsSaving(true);
-    
+
     // In a real app, you would save the settings to your backend
     // For now, we'll simulate an API call with a delay
     await new Promise(resolve => setTimeout(resolve, 1000));
-    
+
     setIsSaving(false);
     setShowSavedMessage(true);
-    
+
     // Hide the saved message after 3 seconds
     setTimeout(() => {
       setShowSavedMessage(false);
@@ -190,43 +294,48 @@ export default function SettingsPage() {
           <nav className="-mb-px flex space-x-8 px-6" aria-label="Tabs">
             <button
               onClick={() => setActiveTab('notifications')}
-              className={`${
-                activeTab === 'notifications'
-                  ? 'border-blue-500 text-blue-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-              } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm`}
+              className={`${activeTab === 'notifications'
+                ? 'border-blue-500 text-blue-600'
+                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm`}
             >
               Notifications
             </button>
             <button
               onClick={() => setActiveTab('privacy')}
-              className={`${
-                activeTab === 'privacy'
-                  ? 'border-blue-500 text-blue-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-              } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm`}
+              className={`${activeTab === 'privacy'
+                ? 'border-blue-500 text-blue-600'
+                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm`}
             >
               Privacy
             </button>
             <button
               onClick={() => setActiveTab('security')}
-              className={`${
-                activeTab === 'security'
-                  ? 'border-blue-500 text-blue-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-              } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm`}
+              className={`${activeTab === 'security'
+                ? 'border-blue-500 text-blue-600'
+                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm`}
             >
               Security
             </button>
             <button
               onClick={() => setActiveTab('preferences')}
-              className={`${
-                activeTab === 'preferences'
-                  ? 'border-blue-500 text-blue-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-              } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm`}
+              className={`${activeTab === 'preferences'
+                ? 'border-blue-500 text-blue-600'
+                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm`}
             >
               Preferences
+            </button>
+            <button
+              onClick={() => setActiveTab('subscription')}
+              className={`${activeTab === 'subscription'
+                ? 'border-blue-500 text-blue-600'
+                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm`}
+            >
+              Subscription
             </button>
           </nav>
         </div>
@@ -724,6 +833,150 @@ export default function SettingsPage() {
                   </div>
                 </div>
               </div>
+            </div>
+          )}
+
+          {activeTab === 'subscription' && (
+            <div>
+              <div className="mb-6">
+                <h3 className="text-lg font-medium text-gray-900">Subscription Management</h3>
+                <p className="mt-1 text-sm text-gray-500">Manage your subscription and billing.</p>
+              </div>
+
+              {isLoadingSubscription ? (
+                <div className="flex items-center justify-center py-12">
+                  <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
+                </div>
+              ) : subscription ? (
+                <div className="space-y-6">
+                  {/* Current Subscription */}
+                  <div className="bg-gray-50 rounded-lg p-6">
+                    <div className="flex items-start justify-between mb-4">
+                      <div>
+                        <h4 className="text-lg font-semibold text-gray-900">Current Subscription</h4>
+                        <p className="text-sm text-gray-600 mt-1">
+                          {subscription.plan.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}
+                        </p>
+                      </div>
+                      <Badge className={getStatusBadge(subscription.status)}>
+                        {subscription.status}
+                      </Badge>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                      <div>
+                        <p className="text-sm text-gray-600">Current Period Start</p>
+                        <p className="text-sm font-medium text-gray-900">
+                          {format(new Date(subscription.currentPeriodStart), 'PPp')}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-gray-600">Current Period End</p>
+                        <p className="text-sm font-medium text-gray-900">
+                          {format(new Date(subscription.currentPeriodEnd), 'PPp')}
+                        </p>
+                      </div>
+                    </div>
+
+                    {subscription.cancelAtPeriodEnd && (
+                      <div className="mt-4 bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                        <p className="text-sm text-yellow-800">
+                          Your subscription will be canceled at the end of the current billing period ({format(new Date(subscription.currentPeriodEnd), 'PP')}).
+                        </p>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Actions */}
+                  <div className="flex flex-wrap gap-3">
+                    {subscription.cancelAtPeriodEnd ? (
+                      <Button
+                        onClick={handleReactivateSubscription}
+                        disabled={isProcessingSubscription}
+                        variant="default"
+                      >
+                        {isProcessingSubscription ? (
+                          <>
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            Processing...
+                          </>
+                        ) : (
+                          <>
+                            <RefreshCw className="mr-2 h-4 w-4" />
+                            Reactivate Subscription
+                          </>
+                        )}
+                      </Button>
+                    ) : (
+                      <Button
+                        onClick={handleCancelSubscription}
+                        disabled={isProcessingSubscription}
+                        variant="destructive"
+                      >
+                        {isProcessingSubscription ? (
+                          <>
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            Processing...
+                          </>
+                        ) : (
+                          <>
+                            <X className="mr-2 h-4 w-4" />
+                            Cancel Subscription
+                          </>
+                        )}
+                      </Button>
+                    )}
+
+                    {/* Change Plan */}
+                    {subscription.plan.includes('MONTHLY') ? (
+                      <Button
+                        onClick={() => {
+                          const yearlyPlan = subscription.plan.replace('MONTHLY', 'YEARLY') as any;
+                          handleChangePlan(yearlyPlan);
+                        }}
+                        disabled={isProcessingSubscription}
+                        variant="outline"
+                      >
+                        Upgrade to Yearly
+                      </Button>
+                    ) : subscription.plan.includes('YEARLY') ? (
+                      <Button
+                        onClick={() => {
+                          const monthlyPlan = subscription.plan.replace('YEARLY', 'MONTHLY') as any;
+                          handleChangePlan(monthlyPlan);
+                        }}
+                        disabled={isProcessingSubscription}
+                        variant="outline"
+                      >
+                        Switch to Monthly
+                      </Button>
+                    ) : null}
+
+                    <Button
+                      onClick={() => router.push('/subscription')}
+                      variant="outline"
+                    >
+                      <CreditCard className="mr-2 h-4 w-4" />
+                      View All Plans
+                    </Button>
+                  </div>
+                </div>
+              ) : (
+                <div className="text-center py-12">
+                  <CreditCard className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                  <h4 className="text-lg font-medium text-gray-900 mb-2">No Active Subscription</h4>
+                  <p className="text-sm text-gray-600 mb-6">
+                    Subscribe to unlock all premium features and access to our services.
+                  </p>
+                  <Button
+                    onClick={() => router.push('/subscription')}
+                    size="lg"
+                  >
+                    <CreditCard className="mr-2 h-4 w-4" />
+                    View Subscription Plans
+                  </Button>
+                </div>
+              )}
             </div>
           )}
         </div>

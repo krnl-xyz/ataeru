@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Outfit } from "next/font/google";
+import { Outfit, Orbitron, Rajdhani } from "next/font/google";
 import "./globals.css";
 import RainbowProvider from "./contexts/rainbowkit";
 import { Toaster } from "sonner";
@@ -9,6 +9,22 @@ const outfit = Outfit({
   subsets: ["latin"],
   variable: "--font-outfit",
   display: "swap",
+});
+
+// Load Orbitron font for hero title (futuristic tech font)
+const orbitron = Orbitron({
+  subsets: ["latin"],
+  variable: "--font-orbitron",
+  display: "swap",
+  weight: ["400", "500", "600", "700", "800", "900"],
+});
+
+// Load Rajdhani font as alternative tech font
+const rajdhani = Rajdhani({
+  subsets: ["latin"],
+  variable: "--font-rajdhani",
+  display: "swap",
+  weight: ["300", "400", "500", "600", "700"],
 });
 
 // const lato = Lato({
@@ -44,7 +60,7 @@ export default function RootLayout({
         /> */}
       </head>
       <body
-        className={`${outfit.variable} font-outfit antialiased`}
+        className={`${outfit.variable} ${orbitron.variable} ${rajdhani.variable} font-outfit antialiased`}
         suppressHydrationWarning
       >
         <RainbowProvider>

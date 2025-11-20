@@ -15,10 +15,12 @@ import { entryPointABI, entryPointAddress, hospitalRequestABI } from '@/contract
 import { hospitalService, RegisteredHospital } from '@/lib/services/hospital';
 import { bookingService, Booking } from '@/lib/services/booking';
 import { pricingService, Plan, Subscription, PaymentMethod } from '@/lib/services/pricing';
+import { subscriptionService, Subscription as NewSubscription, SubscriptionPlan } from '@/lib/services/subscription';
 import { requestsService, Request } from '@/lib/services/requests';
 import SidebarUserDropdown from '@/components/app/SidebarUserDropdown';
 import AppTabsNavigation from '@/components/app/AppTabsNavigation';
 import ConsultationManager from '@/components/consultations/ConsultationManager';
+import DashboardTab from '@/components/dashboard/DashboardTab';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -154,7 +156,9 @@ export default function AppPage() {
 
   // Pricing state
   const [plans, setPlans] = useState<Plan[]>([]);
+  const [subscriptionPlans, setSubscriptionPlans] = useState<SubscriptionPlan[]>([]);
   const [subscription, setSubscription] = useState<Subscription | null>(null);
+  const [newSubscription, setNewSubscription] = useState<NewSubscription | null>(null);
   const [paymentMethods, setPaymentMethods] = useState<PaymentMethod[]>([]);
   const [isLoadingPricing, setIsLoadingPricing] = useState(false);
   const [pricingTab, setPricingTab] = useState<'plans' | 'subscription' | 'payment'>('plans');
@@ -386,71 +390,52 @@ export default function AppPage() {
     try {
       let plansData: Plan[] = [];
       let subscriptionData: Subscription | null = null;
+      let newSubscriptionData: NewSubscription | null = null;
+      let subscriptionPlansData: SubscriptionPlan[] = [];
       let paymentMethodsData: PaymentMethod[] = [];
 
       try {
-        [plansData, subscriptionData, paymentMethodsData] = await Promise.all([
-          pricingService.getPlans(),
-          pricingService.getSubscription().catch(() => null),
-          pricingService.getPaymentMethods().catch(() => []),
-        ]);
+        // Try to load from new subscription service first
+        try {
+          const subscriptionPlansResponse = await subscriptionService.getPlans();
+          subscriptionPlansData = subscriptionPlansResponse.plans.filter(
+            plan => plan.userType === user?.userType
+          );
+        } catch (e) {
+          console.log('Subscription plans API not available');
+        }
+
+        try {
+          const newSubResponse = await subscriptionService.getMySubscription();
+          if (newSubResponse?.subscription) {
+            newSubscriptionData = newSubResponse.subscription;
+          }
+        } catch (e) {
+          // Silently fail - no subscription exists
+        }
+
+        // Also try old pricing service for backward compatibility
+        try {
+          [plansData, subscriptionData, paymentMethodsData] = await Promise.all([
+            pricingService.getPlans().catch(() => []),
+            pricingService.getSubscription().catch(() => null),
+            pricingService.getPaymentMethods().catch(() => []),
+          ]);
+        } catch (apiError) {
+          console.log('Old pricing API not available');
+        }
       } catch (apiError) {
         console.log('API not available, using default plans');
-        plansData = [
-          {
-            id: 'free',
-            name: 'Free',
-            description: 'Perfect for getting started',
-            price: 0,
-            currency: 'USD',
-            interval: 'month',
-            features: [
-              'Basic AI consultations',
-              '5 credits per month',
-              'Access to hospital directory',
-              'Basic booking features',
-            ],
-            credits: 5,
-          },
-          {
-            id: 'pro',
-            name: 'Pro',
-            description: 'For power users and professionals',
-            price: 29.99,
-            currency: 'USD',
-            interval: 'month',
-            features: [
-              'Unlimited AI consultations',
-              '100 credits per month',
-              'Priority booking',
-              'Advanced analytics',
-              '24/7 support',
-              'Early access to new features',
-            ],
-            credits: 100,
-            isPopular: true,
-          },
-          {
-            id: 'enterprise',
-            name: 'Enterprise',
-            description: 'For hospitals and large organizations',
-            price: 99.99,
-            currency: 'USD',
-            interval: 'month',
-            features: [
-              'Everything in Pro',
-              'Unlimited credits',
-              'Custom integrations',
-              'Dedicated account manager',
-              'SLA guarantee',
-              'Custom training',
-            ],
-            credits: -1,
-          },
-        ];
       }
 
-      setPlans(plansData);
+      // Use subscription plans if available, otherwise fall back to old plans
+      if (subscriptionPlansData.length > 0) {
+        setSubscriptionPlans(subscriptionPlansData);
+      } else if (plansData.length > 0) {
+        setPlans(plansData);
+      }
+
+      setNewSubscription(newSubscriptionData);
       setSubscription(subscriptionData);
       setPaymentMethods(paymentMethodsData);
     } catch (error: any) {
@@ -475,33 +460,43 @@ export default function AppPage() {
     setSelectedPlan(planId);
 
     try {
-      if (paymentMethods.length === 0) {
-        toast.info('Payment Method Required', {
-          description: 'Please add a payment method first',
+      // Check if this is a new subscription plan ID
+      const isNewPlan = subscriptionPlans.some(p => p.id === planId);
+
+      if (isNewPlan) {
+        // Use new subscription service
+        const { url } = await subscriptionService.createCheckout(planId as any);
+        // Redirect to Stripe checkout
+        window.location.href = url;
+      } else {
+        // Use old pricing service for backward compatibility
+        if (paymentMethods.length === 0) {
+          toast.info('Payment Method Required', {
+            description: 'Please add a payment method first',
+          });
+          setPricingTab('payment');
+          return;
+        }
+
+        const defaultPaymentMethod = paymentMethods.find(pm => pm.isDefault) || paymentMethods[0];
+
+        const newSubscription = await pricingService.createSubscription({
+          planId,
+          paymentMethodId: defaultPaymentMethod.id,
         });
-        setPricingTab('payment');
-        return;
+
+        setSubscription(newSubscription);
+        toast.success('Subscription activated!', {
+          description: 'Your plan has been successfully activated.',
+        });
+
+        await loadPricingData();
       }
-
-      const defaultPaymentMethod = paymentMethods.find(pm => pm.isDefault) || paymentMethods[0];
-
-      const newSubscription = await pricingService.createSubscription({
-        planId,
-        paymentMethodId: defaultPaymentMethod.id,
-      });
-
-      setSubscription(newSubscription);
-      toast.success('Subscription activated!', {
-        description: 'Your plan has been successfully activated.',
-      });
-
-      await loadPricingData();
     } catch (error: any) {
       console.error('Error subscribing:', error);
       toast.error('Subscription failed', {
         description: error.message || 'Please try again later.',
       });
-    } finally {
       setIsProcessingPricing(false);
       setSelectedPlan(null);
     }
@@ -514,12 +509,22 @@ export default function AppPage() {
 
     setIsProcessingPricing(true);
     try {
-      const updatedSubscription = await pricingService.cancelSubscription();
-      setSubscription(updatedSubscription);
-      toast.success('Subscription cancelled', {
-        description: 'Your subscription will remain active until the end of your billing period.',
-      });
-      await loadPricingData();
+      // Try new subscription service first
+      if (newSubscription) {
+        await subscriptionService.cancel();
+        toast.success('Subscription cancelled', {
+          description: 'Your subscription will remain active until the end of your billing period.',
+        });
+        await loadPricingData();
+      } else if (subscription) {
+        // Fall back to old pricing service
+        const updatedSubscription = await pricingService.cancelSubscription();
+        setSubscription(updatedSubscription);
+        toast.success('Subscription cancelled', {
+          description: 'Your subscription will remain active until the end of your billing period.',
+        });
+        await loadPricingData();
+      }
     } catch (error: any) {
       console.error('Error cancelling subscription:', error);
       toast.error('Failed to cancel subscription', {
@@ -1029,47 +1034,156 @@ export default function AppPage() {
 
         {/* Main Panel */}
         <div className="flex-1 flex flex-col overflow-y-auto relative pb-20" style={{
-          backgroundImage: `linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px)`,
-          backgroundSize: '40px 40px'
+          backgroundImage: `
+            radial-gradient(circle at 0% 0%, rgba(59, 130, 246, 0.04) 0%, transparent 35%),
+            radial-gradient(circle at 100% 100%, rgba(16, 185, 129, 0.04) 0%, transparent 35%),
+            radial-gradient(circle at 50% 50%, rgba(139, 92, 246, 0.03) 0%, transparent 40%),
+            radial-gradient(circle at 25% 75%, rgba(236, 72, 153, 0.025) 0%, transparent 30%),
+            radial-gradient(circle at 75% 25%, rgba(59, 130, 246, 0.025) 0%, transparent 30%),
+            radial-gradient(circle at 15% 50%, rgba(16, 185, 129, 0.02) 0%, transparent 25%),
+            radial-gradient(circle at 85% 50%, rgba(139, 92, 246, 0.02) 0%, transparent 25%)
+          `,
+          backgroundSize: '600px 600px, 800px 800px, 700px 700px, 500px 500px, 550px 550px, 400px 400px, 450px 450px',
+          backgroundPosition: '0% 0%, 100% 100%, 50% 50%, 25% 75%, 75% 25%, 15% 50%, 85% 50%',
+          backgroundRepeat: 'no-repeat'
         }}>
           <div className="flex-1 flex flex-col items-center justify-center p-8 max-w-full mx-auto w-full scale-[0.95] -mt-12">
             {activeView === 'agents' ? (
               <>
                 <div className="max-w-4xl mx-auto w-full">
                   {/* Main Title */}
-                  <div className="text-center mb-50 mt-20">
-                    <h1 className="text-5xl font-bold text-white mb-4 leading-tight">
-                      Your <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-blue-400">Health</span> questions answered
-                      {/* <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-blue-400">Understanding</span> */}
+                  <div className="text-center mb-50 mt-20 px-4">
+                    <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl 2xl:text-7xl font-bold text-white mb-4 leading-tight font-orbitron tracking-tight">
+                      <span className="inline-block animate-fade-in-up opacity-0" style={{ animationDelay: '0.1s', animationFillMode: 'forwards' }}>
+                        AI-Powered{' '}
+                      </span>
+                      <span
+                        className="inline-block animate-fade-in-up opacity-0 text-transparent bg-clip-text bg-gradient-to-r from-purple-400 via-pink-400 to-blue-400 animate-gradient-x"
+                        style={{
+                          animationDelay: '0.2s',
+                          animationFillMode: 'forwards',
+                          WebkitBackgroundClip: 'text',
+                          WebkitTextFillColor: 'transparent',
+                          backgroundClip: 'text'
+                        }}
+                      >
+                        Health{' '}
+                      </span>
+                      <span className="inline-block animate-fade-in-up opacity-0" style={{ animationDelay: '0.3s', animationFillMode: 'forwards' }}>
+                        Intelligence,
+                      </span>
+                      <span className="inline-block animate-fade-in-up opacity-0" style={{ animationDelay: '0.4s', animationFillMode: 'forwards' }}>
+                        Secured by{' '}
+                      </span>
+                      <span
+                        // className="inline-block animate-fade-in-up opacity-0 text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-blue-400 to-purple-400 animate-gradient-x"
+                        className="inline-block animate-fade-in-up opacity-0 text-white"
+                        style={{
+                          animationDelay: '0.5s',
+                          animationFillMode: 'forwards',
+                          WebkitBackgroundClip: 'text',
+                          WebkitTextFillColor: 'transparent',
+                          backgroundClip: 'text'
+                        }}
+                      >
+                        Blockchain
+                      </span>
                     </h1>
                   </div>
 
-                  {/* Input Options */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-                    <button className="bg-[#1a1a1a]/60 border border-gray-800 rounded-lg py-4 px-4 hover:border-purple-500 transition-colors group h-26 flex items-center justify-start">
-                      <div className="flex flex-col items-left justify-center gap-3">
-                        <div className="w-8 h-8 rounded-lg flex items-center justify-center">
-                          <Upload className="w-4 h-4 text-blue-400" />
-                        </div>
-                        <div className="text-left">
-                          <div className="text-white font-medium">Upload</div>
-                          <p className="text-gray-400 text-sm">PDF, or image</p>
-                        </div>
-                      </div>
-                    </button>
-                    <button className="bg-[#1a1a1a]/60 border border-gray-800 rounded-lg py-4 px-4 hover:border-purple-500 transition-colors group h-26 flex items-center justify-start">
-                      <div className="flex flex-col items-left justify-center gap-3">
-                        <div className="w-8 h-8 rounded-lg flex items-center justify-center">
-                          <LinkIcon className="w-6 h-6 text-blue-400" />
-                        </div>
-                        <div className="text-left">
-                          <div className="text-white font-medium">Paste Blog, website, url</div>
-                          <p className="text-gray-400 text-sm">Paste blog, website, or url</p>
-                        </div>
-                      </div>
-                    </button>
-
+                  {/* Articles, Trends & Highlights - Moved to top */}
+                  <div className="mb-6">
+                    <div className="text-sm text-gray-400 mb-3">Articles, Trends & Highlights</div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                      {[
+                        {
+                          title: "You're walking less than you do on a typical day.",
+                          query: "Why is it important to maintain daily walking activity for health?",
+                          image: "https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?w=400&h=200&fit=crop"
+                        },
+                        {
+                          title: "You burned an average of 47.1 calories a day over the last 7 days.",
+                          query: "How does daily calorie burn impact overall health and metabolism?",
+                          image: "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=400&h=200&fit=crop"
+                        },
+                        {
+                          title: "Why hearing Health Matters",
+                          description: "Get insights into your hearing and how to look after it.",
+                          query: "Why is hearing health important and how can I maintain good hearing health?",
+                          image: "https://images.unsplash.com/photo-1576091160399-112ba8d25d1f?w=400&h=200&fit=crop"
+                        },
+                        {
+                          title: "Heart rate variability insights",
+                          description: "Understanding what your heart rate patterns tell you about your health.",
+                          query: "What is heart rate variability and what can it tell me about my health?",
+                          image: "https://images.unsplash.com/photo-1559757175-0eb30cd8c063?w=400&h=200&fit=crop"
+                        }
+                      ].map((item, index) => (
+                        <button
+                          key={index}
+                          onClick={() => {
+                            const queryText = item.query || item.title;
+                            setChatInput(queryText);
+                            setTimeout(() => {
+                              textareaRef.current?.focus();
+                            }, 0);
+                          }}
+                          className="bg-[#1a1a1a]/60 border border-gray-800 rounded-lg overflow-hidden hover:border-purple-500 transition-all duration-300 group text-left hover:scale-[1.02] hover:shadow-lg hover:shadow-purple-500/10 animate-fade-in-up opacity-0 cursor-pointer"
+                          style={{ animationDelay: `${0.6 + index * 0.1}s`, animationFillMode: 'forwards' }}
+                        >
+                          {item.image && (
+                            <div className="relative w-full h-32 bg-gray-800 overflow-hidden">
+                              <Image
+                                src={item.image}
+                                alt={item.title}
+                                fill
+                                className="object-cover group-hover:scale-105 transition-transform duration-300"
+                              />
+                              <div className="absolute inset-0 bg-gradient-to-t from-[#1a1a1a]/80 to-transparent" />
+                            </div>
+                          )}
+                          <div className="flex flex-col gap-1 p-4">
+                            <div className="text-white font-medium text-sm group-hover:text-purple-300 transition-colors">
+                              {item.title}
+                            </div>
+                            {item.description && (
+                              <p className="text-gray-400 text-xs mt-1">
+                                {item.description}
+                              </p>
+                            )}
+                          </div>
+                        </button>
+                      ))}
+                    </div>
                   </div>
+
+                  {/* Chat Messages Display */}
+                  {chatMessages.length > 0 && (
+                    <div id="chat-messages" className="mb-6 space-y-4 max-h-[500px] overflow-y-auto scroll-smooth">
+                      {chatMessages.map((msg, idx) => (
+                        <div
+                          key={idx}
+                          className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
+                        >
+                          <div
+                            className={`max-w-[85%] rounded-lg px-4 py-3 ${msg.role === 'user'
+                              ? 'bg-blue-600 text-white'
+                              : 'bg-gray-800 text-gray-100'
+                              }`}
+                          >
+                            <p className="text-sm whitespace-pre-wrap break-words">{msg.content}</p>
+                          </div>
+                        </div>
+                      ))}
+                      {isChatLoading && (
+                        <div className="flex justify-start">
+                          <div className="bg-gray-800 text-gray-100 rounded-lg px-4 py-3">
+                            <Loader2 className="w-4 h-4 animate-spin" />
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
 
                   {/* Idea Description Input */}
                   <div className="mb-6">
@@ -1142,6 +1256,10 @@ export default function AppPage() {
                             <ChevronDown className={`w-5 h-5 transition-transform ${isModelDropdownOpen ? 'rotate-180' : ''}`} />
                             {/* <span>Infinite</span> */}
                           </Button>
+                          <Button variant="outline" className='bg-transparent hover:bg-transparent cursor-pointer bg-blend-darken'>
+                            Share with a doctor
+                          </Button>
+
 
                           {/* Model Selection Dropdown */}
                           {isModelDropdownOpen && (
@@ -1184,33 +1302,7 @@ export default function AppPage() {
                     </div>
                   </div>
 
-                  {/* Chat Messages Display */}
-                  {chatMessages.length > 0 && (
-                    <div id="chat-messages" className="mb-6 space-y-4 max-h-[500px] overflow-y-auto scroll-smooth">
-                      {chatMessages.map((msg, idx) => (
-                        <div
-                          key={idx}
-                          className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
-                        >
-                          <div
-                            className={`max-w-[85%] rounded-lg px-4 py-3 ${msg.role === 'user'
-                              ? 'bg-blue-600 text-white'
-                              : 'bg-gray-800 text-gray-100'
-                              }`}
-                          >
-                            <p className="text-sm whitespace-pre-wrap break-words">{msg.content}</p>
-                          </div>
-                        </div>
-                      ))}
-                      {isChatLoading && (
-                        <div className="flex justify-start">
-                          <div className="bg-gray-800 text-gray-100 rounded-lg px-4 py-3">
-                            <Loader2 className="w-4 h-4 animate-spin" />
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  )}
+
 
                   {/* Action Bar */}
                   {/* <div className="flex items-center gap-3 mb-8 flex-wrap">
@@ -1261,15 +1353,21 @@ export default function AppPage() {
                     <div className="text-sm text-gray-400 mb-3">Try these examples:</div>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-[12px]">
                       {[
-                        "Explain black holes like I'm 12",
+                        "Explain how the immune system works like I'm 12",
                         "How does sleep deprivation impact the immune system?",
-                        "How does sharding work in databases?",
-                        "How is SIP different from lump-sum investing?"
+                        "What are the benefits of regular exercise for heart health?",
+                        "How does stress affect mental and physical health?"
                       ].map((question, index) => (
                         <button
                           key={index}
-                          onClick={() => setIdeaDescription(question)}
-                          className="bg-[#1a1a1a] border border-gray-800 rounded-lg px-3 py-1 text-left text-gray-300 hover:border-purple-500 hover:text-white transition-colors text-[13px]"
+                          onClick={() => {
+                            setChatInput(question);
+                            // Focus the textarea after setting the value
+                            setTimeout(() => {
+                              textareaRef.current?.focus();
+                            }, 0);
+                          }}
+                          className="bg-[#1a1a1a] border border-gray-800 rounded-lg px-3 py-2 text-left text-gray-300 hover:border-purple-500 hover:text-white transition-colors text-[13px] cursor-pointer"
                         >
                           {question}
                         </button>
@@ -1279,172 +1377,12 @@ export default function AppPage() {
 
 
                 </div>
-                {/* From the Community */}
-                <div className="border-t border-gray-800 pt-8 bg-[#101011] px-6 rounded-xl w-full max-w-5xl mx-auto pb-10">
-                  <h3 className="text-xl font-bold text-white mb-6">From the Community</h3>
-
-                  {/* Category Filters */}
-                  <div className="flex flex-wrap gap-3 mb-6">
-                    {['All', 'Health NFTs', 'Hospitals', 'Fertility', 'Medical Research', 'Patient Care'].map((category) => (
-                      <button
-                        key={category}
-                        onClick={() => setSelectedCategory(category === 'All' ? null : category)}
-                        className={`px-4 py-2 rounded-lg text-[12px] font-medium transition-colors ${(selectedCategory === null && category === 'All') || selectedCategory === category
-                          ? 'bg-blue-600 text-white'
-                          : 'bg-gray-200 text-gray-900 hover:bg-gray-300'
-                          }`}
-                      >
-                        {category}
-                      </button>
-                    ))}
-                  </div>
-
-                  {/* Content Grid */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {[
-                      {
-                        id: 1,
-                        title: "Understanding Health NFTs: A Complete Guide",
-                        thumbnail: "https://images.unsplash.com/photo-1559757148-5c350d0d3c56?w=400&h=300&fit=crop",
-                        videoCount: 3,
-                        tags: ["Health NFTs", "Blockchain", "Digital Health"],
-                        author: "Dr. Sarah Chen",
-                        date: "9/27/2025",
-                        category: "Health NFTs"
-                      },
-                      {
-                        id: 2,
-                        title: "Hospital Management in the Digital Age",
-                        thumbnail: "https://images.unsplash.com/photo-1519494026892-80bbd2d6fd0d?w=400&h=300&fit=crop",
-                        videoCount: 1,
-                        tags: ["Hospitals", "Healthcare Technology", "Management"],
-                        author: "Michael Rodriguez",
-                        date: "9/27/2025",
-                        category: "Hospitals"
-                      },
-                      {
-                        id: 3,
-                        title: "IVF Treatment Explained: From Start to Finish",
-                        thumbnail: "https://images.unsplash.com/photo-1551190822-a9333d879b1f?w=400&h=300&fit=crop",
-                        videoCount: 5,
-                        tags: ["Fertility", "IVF", "Reproductive Health"],
-                        author: "Dr. Emily Watson",
-                        date: "9/26/2025",
-                        category: "Fertility"
-                      },
-                      {
-                        id: 4,
-                        title: "How Blockchain Secures Medical Records",
-                        thumbnail: "https://images.unsplash.com/photo-1639322537228-f710d846310a?w=400&h=300&fit=crop",
-                        videoCount: 2,
-                        tags: ["Health NFTs", "Blockchain", "Data Security"],
-                        author: "James Park",
-                        date: "9/25/2025",
-                        category: "Health NFTs"
-                      },
-                      {
-                        id: 5,
-                        title: "Patient-Centered Care: Best Practices",
-                        thumbnail: "https://images.unsplash.com/photo-1576091160399-112ba8d25d1f?w=400&h=300&fit=crop",
-                        videoCount: 1,
-                        tags: ["Patient Care", "Healthcare", "Best Practices"],
-                        author: "Dr. Lisa Thompson",
-                        date: "9/24/2025",
-                        category: "Patient Care"
-                      },
-                      {
-                        id: 6,
-                        title: "Surrogacy Process: A Comprehensive Overview",
-                        thumbnail: "https://images.unsplash.com/photo-1519494026892-80bbd2d6fd0d?w=400&h=300&fit=crop",
-                        videoCount: 4,
-                        tags: ["Fertility", "Surrogacy", "Family Planning"],
-                        author: "Dr. Robert Kim",
-                        date: "9/23/2025",
-                        category: "Fertility"
-                      },
-                      {
-                        id: 7,
-                        title: "AI in Medical Diagnosis: Current Applications",
-                        thumbnail: "https://images.unsplash.com/photo-1559757175-0eb30cd8c063?w=400&h=300&fit=crop",
-                        videoCount: 3,
-                        tags: ["Medical Research", "AI", "Diagnostics"],
-                        author: "Dr. Amanda Foster",
-                        date: "9/22/2025",
-                        category: "Medical Research"
-                      },
-                      {
-                        id: 8,
-                        title: "Hospital Accreditation: What You Need to Know",
-                        thumbnail: "https://images.unsplash.com/photo-1519494026892-80bbd2d6fd0d?w=400&h=300&fit=crop",
-                        videoCount: 1,
-                        tags: ["Hospitals", "Accreditation", "Quality"],
-                        author: "Patricia Martinez",
-                        date: "9/21/2025",
-                        category: "Hospitals"
-                      }
-                    ]
-                      .filter(item => !selectedCategory || item.category === selectedCategory)
-                      .map((item) => (
-                        <div
-                          key={item.id}
-                          className="bg-black border border-gray-800 rounded-lg overflow-hidden hover:border-purple-500 transition-colors cursor-pointer group"
-                        >
-                          {/* Thumbnail */}
-                          <div className="relative w-full h-48 bg-gray-800 overflow-hidden">
-                            <Image
-                              src={item.thumbnail}
-                              alt={item.title}
-                              fill
-                              className="object-cover group-hover:scale-105 transition-transform duration-300"
-                            />
-                            <div className="absolute top-2 right-2 bg-black/70 text-white text-xs px-2 py-1 rounded">
-                              {item.videoCount} {item.videoCount === 1 ? 'video' : 'videos'}
-                            </div>
-                          </div>
-
-                          {/* Content */}
-                          <div className="p-4">
-                            <h4 className="text-white font-semibold text-sm mb-2 line-clamp-2 group-hover:text-purple-400 transition-colors">
-                              {item.title}
-                            </h4>
-
-                            {/* Tags */}
-                            <div className="flex flex-wrap gap-1 mb-3">
-                              {item.tags.slice(0, 2).map((tag, idx) => (
-                                <span
-                                  key={idx}
-                                  className="text-xs px-2 py-0.5 bg-gray-800 text-gray-300 rounded"
-                                >
-                                  {tag}
-                                </span>
-                              ))}
-                              {item.tags.length > 2 && (
-                                <span className="text-xs px-2 py-0.5 text-gray-500">
-                                  +{item.tags.length - 2} more
-                                </span>
-                              )}
-                            </div>
-
-                            {/* Author and Date */}
-                            <div className="flex items-center justify-between text-xs text-gray-400">
-                              <span>by {item.author}</span>
-                              <span>{item.date}</span>
-                            </div>
-                          </div>
-                        </div>
-                      ))}
-                  </div>
-
-                  {/* Load More Button */}
-                  <div className="mt-8 text-center">
-                    <button className="text-white underline">
-                      Load More
-                    </button>
-                  </div>
-                </div>
+                {/* <CommunityQuery /> */}
               </>
             ) : activeView === 'consultations' ? (
               <ConsultationManager />
+            ) : activeView === 'dashboard' ? (
+              <DashboardTab />
             ) : activeView === 'hospital-manager' ? (
               // Access control: Only medical facilities can view hospital dashboard
               user?.userType !== 'MEDICAL_FACILITY' ? (
@@ -2147,962 +2085,6 @@ export default function AppPage() {
                         onSuccess={handleVerificationSuccess}
                         hospitalId={hospital.id}
                       />
-                    )}
-                  </div>
-                  )
-                  ) : activeView === 'dashboard' ? (
-                  <div className="w-full max-w-6xl mx-auto">
-                    {/* Dashboard Header */}
-                    <div className="mb-6">
-                      <h1 className="text-3xl font-bold text-white mb-2">Dashboard</h1>
-                      <p className="text-gray-400">Manage your profile and settings</p>
-                    </div>
-
-                    {/* Horizontal Tabs */}
-                    <div className="border-b border-gray-800 mb-6">
-                      <nav className="flex space-x-8" aria-label="Tabs">
-                        <button
-                          onClick={() => setDashboardTab('profile')}
-                          className={`${dashboardTab === 'profile'
-                            ? 'border-blue-500 text-white'
-                            : 'border-transparent text-gray-400 hover:text-gray-300 hover:border-gray-700'
-                            } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm flex items-center gap-2`}
-                        >
-                          <User className="w-4 h-4" />
-                          Profile
-                        </button>
-                        <button
-                          onClick={() => setDashboardTab('settings')}
-                          className={`${dashboardTab === 'settings'
-                            ? 'border-blue-500 text-white'
-                            : 'border-transparent text-gray-400 hover:text-gray-300 hover:border-gray-700'
-                            } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm flex items-center gap-2`}
-                        >
-                          <Settings className="w-4 h-4" />
-                          Settings
-                        </button>
-                        <button
-                          onClick={() => {
-                            setDashboardTab('pricing');
-                            if (plans.length === 0) {
-                              loadPricingData();
-                            }
-                          }}
-                          className={`${dashboardTab === 'pricing'
-                            ? 'border-blue-500 text-white'
-                            : 'border-transparent text-gray-400 hover:text-gray-300 hover:border-gray-700'
-                            } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm flex items-center gap-2`}
-                        >
-                          <CreditCard className="w-4 h-4" />
-                          Pricing
-                        </button>
-                      </nav>
-                    </div>
-
-                    {/* Tab Content */}
-                    {dashboardTab === 'profile' && (
-                      <div className="bg-[#0b0b0d] border border-gray-800 rounded-lg overflow-hidden">
-                        {/* Profile Header */}
-                        <div className="border-b border-gray-800 px-6 py-4 flex justify-between items-center">
-                          <div>
-                            <h2 className="text-xl font-semibold text-white">My Profile</h2>
-                            <p className="text-sm text-gray-400 mt-1">Manage your personal information</p>
-                          </div>
-                          {!isEditing ? (
-                            <button
-                              onClick={() => setIsEditing(true)}
-                              className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium transition-colors"
-                            >
-                              Edit Profile
-                            </button>
-                          ) : (
-                            <div className="flex gap-3">
-                              <button
-                                onClick={handleCancel}
-                                className="px-4 py-2 border border-gray-700 text-gray-300 rounded-lg text-sm font-medium hover:bg-gray-800 transition-colors"
-                              >
-                                Cancel
-                              </button>
-                              <button
-                                onClick={handleSaveProfile}
-                                disabled={isSaving}
-                                className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium disabled:opacity-50 transition-colors"
-                              >
-                                {isSaving ? 'Saving...' : 'Save Changes'}
-                              </button>
-                            </div>
-                          )}
-                        </div>
-
-                        {/* Profile Tabs */}
-                        <div className="border-b border-gray-800 bg-gray-900/50">
-                          <nav className="flex">
-                            <button
-                              onClick={() => setActiveSection('personal')}
-                              className={`px-6 py-3 text-sm font-medium ${activeSection === 'personal'
-                                ? 'text-blue-400 border-b-2 border-blue-500 bg-[#1a1a1a]'
-                                : 'text-gray-400 hover:text-gray-300'
-                                }`}
-                            >
-                              Personal Info
-                            </button>
-                            {user?.userType === 'MEDICAL_FACILITY' && (
-                              <button
-                                onClick={() => setActiveSection('hospital')}
-                                className={`px-6 py-3 text-sm font-medium ${activeSection === 'hospital'
-                                  ? 'text-blue-400 border-b-2 border-blue-500 bg-[#1a1a1a]'
-                                  : 'text-gray-400 hover:text-gray-300'
-                                  }`}
-                              >
-                                Hospital Info
-                              </button>
-                            )}
-                            <button
-                              onClick={() => setActiveSection('password')}
-                              className={`px-6 py-3 text-sm font-medium ${activeSection === 'password'
-                                ? 'text-blue-400 border-b-2 border-blue-500 bg-[#1a1a1a]'
-                                : 'text-gray-400 hover:text-gray-300'
-                                }`}
-                            >
-                              Change Password
-                            </button>
-                          </nav>
-                        </div>
-
-                        {/* Profile Content */}
-                        <div className="p-6">
-                          {authLoading ? (
-                            <div className="flex items-center justify-center py-12">
-                              <Loader className="w-6 h-6 animate-spin text-blue-500" />
-                              <span className="ml-3 text-gray-400">Loading profile...</span>
-                            </div>
-                          ) : !user ? (
-                            <div className="text-center py-12">
-                              <p className="text-gray-400">Please log in to view your profile</p>
-                            </div>
-                          ) : activeSection === 'personal' ? (
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                              <div>
-                                <label className="block text-sm font-medium text-gray-300 mb-2">Full Name</label>
-                                <input
-                                  type="text"
-                                  name="fullname"
-                                  value={profile.fullname}
-                                  onChange={handleInputChange}
-                                  disabled={!isEditing}
-                                  className={`w-full bg-transparent border rounded-lg px-4 py-2 text-white ${isEditing ? 'border-gray-700' : 'border-none'
-                                    } focus:outline-none focus:ring-1 focus:ring-blue-500`}
-                                />
-                              </div>
-                              <div>
-                                <label className="block text-sm font-medium text-gray-300 mb-2">Email Address</label>
-                                <input
-                                  type="email"
-                                  name="email"
-                                  value={profile.email}
-                                  onChange={handleInputChange}
-                                  disabled={!isEditing}
-                                  className={`w-full bg-transparent border rounded-lg px-4 py-2 text-white ${isEditing ? 'border-gray-700' : 'border-none'
-                                    } focus:outline-none focus:ring-1 focus:ring-blue-500`}
-                                />
-                              </div>
-                              <div>
-                                <label className="block text-sm font-medium text-gray-300 mb-2">Phone Number</label>
-                                <input
-                                  type="tel"
-                                  name="phone"
-                                  value={profile.phone}
-                                  onChange={handleInputChange}
-                                  disabled={!isEditing}
-                                  placeholder="+1234567890"
-                                  className={`w-full bg-transparent border rounded-lg px-4 py-2 text-white ${isEditing ? 'border-gray-700' : 'border-none'
-                                    } focus:outline-none focus:ring-1 focus:ring-blue-500`}
-                                />
-                              </div>
-                              <div>
-                                <label className="block text-sm font-medium text-gray-300 mb-2">Hospital ID</label>
-                                <input
-                                  type="text"
-                                  name="hospitalId"
-                                  value={profile.hospitalId}
-                                  onChange={handleInputChange}
-                                  disabled={!isEditing}
-                                  className={`w-full bg-transparent border rounded-lg px-4 py-2 text-white ${isEditing ? 'border-gray-700' : 'border-none'
-                                    } focus:outline-none focus:ring-1 focus:ring-blue-500`}
-                                />
-                              </div>
-                              <div className="md:col-span-2">
-                                <label className="block text-sm font-medium text-gray-300 mb-2">Address</label>
-                                <textarea
-                                  name="address"
-                                  rows={3}
-                                  value={profile.address}
-                                  onChange={handleInputChange}
-                                  disabled={!isEditing}
-                                  className={`w-full bg-transparent border rounded-lg px-4 py-2 text-white ${isEditing ? 'border-gray-700' : 'border-none'
-                                    } focus:outline-none focus:ring-1 focus:ring-blue-500`}
-                                />
-                              </div>
-                              <div className="md:col-span-2">
-                                <label className="block text-sm font-medium text-gray-300 mb-2">About</label>
-                                <textarea
-                                  name="about"
-                                  rows={4}
-                                  value={profile.about}
-                                  onChange={handleInputChange}
-                                  disabled={!isEditing}
-                                  placeholder="Tell us about yourself..."
-                                  className={`w-full bg-transparent border rounded-lg px-4 py-2 text-white ${isEditing ? 'border-gray-700' : 'border-none'
-                                    } focus:outline-none focus:ring-1 focus:ring-blue-500`}
-                                />
-                              </div>
-                              <div className="md:col-span-2 pt-4 border-t border-gray-800">
-                                <label className="block text-sm font-medium text-gray-300 mb-2">Connected Wallet</label>
-                                <div className="flex items-center gap-3">
-                                  <div className="bg-blue-600/20 text-blue-400 px-4 py-2 rounded-lg font-mono text-sm">
-                                    {address ? `${address.substring(0, 8)}...${address.substring(address.length - 6)}` : 'No wallet connected'}
-                                  </div>
-                                  {user.userType && (
-                                    <span className="px-3 py-1 text-xs bg-gray-800 text-gray-300 rounded-full">
-                                      {user.userType === 'USER' ? 'User Account' : 'Medical Facility'}
-                                    </span>
-                                  )}
-                                </div>
-                              </div>
-                            </div>
-                          ) : activeSection === 'hospital' && user.userType === 'MEDICAL_FACILITY' && user.hospital ? (
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                              <div>
-                                <label className="block text-sm font-medium text-gray-300 mb-2">Facility Name</label>
-                                <div className="text-white">{user.hospital.facilityName}</div>
-                              </div>
-                              <div>
-                                <label className="block text-sm font-medium text-gray-300 mb-2">Facility ID</label>
-                                <div className="text-white">{user.hospital.facilityId}</div>
-                              </div>
-                              <div className="md:col-span-2">
-                                <label className="block text-sm font-medium text-gray-300 mb-2">Address</label>
-                                <div className="text-white">
-                                  {user.hospital.address}, {user.hospital.city}, {user.hospital.state} {user.hospital.zip}
-                                </div>
-                              </div>
-                              <div>
-                                <label className="block text-sm font-medium text-gray-300 mb-2">Phone</label>
-                                <div className="text-white">{user.hospital.telephone}</div>
-                              </div>
-                              <div>
-                                <label className="block text-sm font-medium text-gray-300 mb-2">Hospital Type</label>
-                                <div className="text-white">{user.hospital.hospitalType}</div>
-                              </div>
-                            </div>
-                          ) : activeSection === 'password' ? (
-                            <div className="max-w-md">
-                              <div className="space-y-6">
-                                <div>
-                                  <label className="block text-sm font-medium text-gray-300 mb-2">Current Password</label>
-                                  <input
-                                    type="password"
-                                    name="currentPassword"
-                                    value={passwordData.currentPassword}
-                                    onChange={handlePasswordChange}
-                                    className="w-full bg-[#0a0a0a] border border-gray-700 rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-1 focus:ring-blue-500"
-                                    placeholder="Enter your current password"
-                                  />
-                                </div>
-                                <div>
-                                  <label className="block text-sm font-medium text-gray-300 mb-2">New Password</label>
-                                  <input
-                                    type="password"
-                                    name="newPassword"
-                                    value={passwordData.newPassword}
-                                    onChange={handlePasswordChange}
-                                    className="w-full bg-[#0a0a0a] border border-gray-700 rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-1 focus:ring-blue-500"
-                                    placeholder="Enter your new password"
-                                    minLength={6}
-                                  />
-                                  <p className="mt-1 text-xs text-gray-500">Password must be at least 6 characters long</p>
-                                </div>
-                                <div>
-                                  <label className="block text-sm font-medium text-gray-300 mb-2">Confirm New Password</label>
-                                  <input
-                                    type="password"
-                                    name="confirmPassword"
-                                    value={passwordData.confirmPassword}
-                                    onChange={handlePasswordChange}
-                                    className="w-full bg-[#0a0a0a] border border-gray-700 rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-1 focus:ring-blue-500"
-                                    placeholder="Confirm your new password"
-                                    minLength={6}
-                                  />
-                                </div>
-                                <div className="flex justify-end">
-                                  <button
-                                    onClick={handleChangePassword}
-                                    disabled={isChangingPassword || !passwordData.currentPassword || !passwordData.newPassword || !passwordData.confirmPassword}
-                                    className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                                  >
-                                    {isChangingPassword ? 'Changing Password...' : 'Change Password'}
-                                  </button>
-                                </div>
-                              </div>
-                            </div>
-                          ) : null}
-                        </div>
-                      </div>
-                    )}
-
-                    {dashboardTab === 'settings' && (
-                      <div className="bg-[#0b0b0d] border border-gray-800 rounded-lg overflow-hidden">
-                        {/* Settings Header */}
-                        <div className="border-b border-gray-800 px-6 py-4 flex justify-between items-center">
-                          <div>
-                            <h2 className="text-xl font-semibold text-white">Settings</h2>
-                            <p className="text-sm text-gray-400 mt-1">Manage your account preferences</p>
-                          </div>
-                          <button
-                            onClick={saveSettings}
-                            disabled={isSavingSettings}
-                            className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${isSavingSettings
-                              ? 'bg-gray-700 text-gray-400 cursor-not-allowed'
-                              : 'bg-blue-600 hover:bg-blue-700 text-white'
-                              }`}
-                          >
-                            {isSavingSettings ? (
-                              <span className="flex items-center gap-2">
-                                <Loader className="w-4 h-4 animate-spin" />
-                                Saving...
-                              </span>
-                            ) : 'Save Settings'}
-                          </button>
-                        </div>
-
-                        {/* Saved Message */}
-                        {showSavedMessage && (
-                          <div className="mx-6 mt-4 bg-green-500/20 border border-green-500/50 p-4 rounded-lg">
-                            <div className="flex items-center gap-2 text-green-400">
-                              <CheckCircle className="w-5 h-5" />
-                              <p className="text-sm font-medium">Settings saved successfully!</p>
-                            </div>
-                          </div>
-                        )}
-
-                        {/* Settings Tabs */}
-                        <div className="border-b border-gray-800 bg-gray-900/50">
-                          <nav className="flex">
-                            <button
-                              onClick={() => setSettingsTab('notifications')}
-                              className={`px-6 py-3 text-sm font-medium flex items-center gap-2 ${settingsTab === 'notifications'
-                                ? 'text-blue-400 border-b-2 border-blue-500 bg-[#1a1a1a]'
-                                : 'text-gray-400 hover:text-gray-300'
-                                }`}
-                            >
-                              <Bell className="w-4 h-4" />
-                              Notifications
-                            </button>
-                            <button
-                              onClick={() => setSettingsTab('privacy')}
-                              className={`px-6 py-3 text-sm font-medium flex items-center gap-2 ${settingsTab === 'privacy'
-                                ? 'text-blue-400 border-b-2 border-blue-500 bg-[#1a1a1a]'
-                                : 'text-gray-400 hover:text-gray-300'
-                                }`}
-                            >
-                              <Shield className="w-4 h-4" />
-                              Privacy
-                            </button>
-                            <button
-                              onClick={() => setSettingsTab('security')}
-                              className={`px-6 py-3 text-sm font-medium flex items-center gap-2 ${settingsTab === 'security'
-                                ? 'text-blue-400 border-b-2 border-blue-500 bg-[#1a1a1a]'
-                                : 'text-gray-400 hover:text-gray-300'
-                                }`}
-                            >
-                              <Shield className="w-4 h-4" />
-                              Security
-                            </button>
-                            <button
-                              onClick={() => setSettingsTab('preferences')}
-                              className={`px-6 py-3 text-sm font-medium flex items-center gap-2 ${settingsTab === 'preferences'
-                                ? 'text-blue-400 border-b-2 border-blue-500 bg-[#1a1a1a]'
-                                : 'text-gray-400 hover:text-gray-300'
-                                }`}
-                            >
-                              <Globe className="w-4 h-4" />
-                              Preferences
-                            </button>
-                          </nav>
-                        </div>
-
-                        {/* Settings Content */}
-                        <div className="p-6">
-                          {settingsTab === 'notifications' && (
-                            <div className="space-y-6">
-                              <div>
-                                <h3 className="text-lg font-medium text-white mb-1">Notification Methods</h3>
-                                <p className="text-sm text-gray-400 mb-4">Choose how you want to receive notifications</p>
-                                <div className="space-y-4">
-                                  {[
-                                    { key: 'email' as const, label: 'Email notifications' },
-                                    { key: 'sms' as const, label: 'SMS notifications' },
-                                    { key: 'browser' as const, label: 'Browser notifications' },
-                                  ].map(({ key, label }) => (
-                                    <div key={key} className="flex items-center">
-                                      <input
-                                        type="checkbox"
-                                        checked={settings.notifications[key]}
-                                        onChange={() => handleNotificationChange(key)}
-                                        className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-700 rounded bg-[#0a0a0a]"
-                                      />
-                                      <label className="ml-3 text-sm text-gray-300">{label}</label>
-                                    </div>
-                                  ))}
-                                </div>
-                              </div>
-                              <div>
-                                <h3 className="text-lg font-medium text-white mb-1">Notification Types</h3>
-                                <div className="space-y-4 mt-4">
-                                  {[
-                                    { key: 'appointments' as const, label: 'Appointment reminders and updates' },
-                                    { key: 'marketing' as const, label: 'Marketing and promotional messages' },
-                                    { key: 'updates' as const, label: 'Platform updates and new features' },
-                                  ].map(({ key, label }) => (
-                                    <div key={key} className="flex items-center">
-                                      <input
-                                        type="checkbox"
-                                        checked={settings.notifications[key]}
-                                        onChange={() => handleNotificationChange(key)}
-                                        className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-700 rounded bg-[#0a0a0a]"
-                                      />
-                                      <label className="ml-3 text-sm text-gray-300">{label}</label>
-                                    </div>
-                                  ))}
-                                </div>
-                              </div>
-                            </div>
-                          )}
-
-                          {settingsTab === 'privacy' && (
-                            <div className="space-y-6">
-                              <div>
-                                <h3 className="text-lg font-medium text-white mb-1">Profile Visibility</h3>
-                                <div className="space-y-4 mt-4">
-                                  {[
-                                    { key: 'shareProfile' as const, label: 'Share profile with partner hospitals', desc: 'Allow partner hospitals to view your profile information' },
-                                    { key: 'showDonationHistory' as const, label: 'Display donation history on profile', desc: 'Your donation history will be visible to other users' },
-                                  ].map(({ key, label, desc }) => (
-                                    <div key={key} className="flex items-start">
-                                      <input
-                                        type="checkbox"
-                                        checked={settings.privacy[key]}
-                                        onChange={() => handlePrivacyChange(key)}
-                                        className="h-4 w-4 mt-0.5 text-blue-600 focus:ring-blue-500 border-gray-700 rounded bg-[#0a0a0a]"
-                                      />
-                                      <div className="ml-3">
-                                        <label className="text-sm font-medium text-gray-300">{label}</label>
-                                        <p className="text-xs text-gray-500 mt-1">{desc}</p>
-                                      </div>
-                                    </div>
-                                  ))}
-                                </div>
-                              </div>
-                              <div>
-                                <h3 className="text-lg font-medium text-white mb-1">Data Usage</h3>
-                                <div className="space-y-4 mt-4">
-                                  {[
-                                    { key: 'anonymizeData' as const, label: 'Anonymize my data in the blockchain', desc: 'Your personal details will be hashed and anonymized' },
-                                    { key: 'allowResearch' as const, label: 'Share anonymized data for research', desc: 'Allow your anonymized data to be used for fertility research' },
-                                  ].map(({ key, label, desc }) => (
-                                    <div key={key} className="flex items-start">
-                                      <input
-                                        type="checkbox"
-                                        checked={settings.privacy[key]}
-                                        onChange={() => handlePrivacyChange(key)}
-                                        className="h-4 w-4 mt-0.5 text-blue-600 focus:ring-blue-500 border-gray-700 rounded bg-[#0a0a0a]"
-                                      />
-                                      <div className="ml-3">
-                                        <label className="text-sm font-medium text-gray-300">{label}</label>
-                                        <p className="text-xs text-gray-500 mt-1">{desc}</p>
-                                        {key === 'allowResearch' && settings.privacy.allowResearch && (
-                                          <p className="text-xs text-green-400 mt-1 flex items-center gap-1">
-                                            <CheckCircle className="w-3 h-3" />
-                                            Earn 50 DATA tokens per month for participating
-                                          </p>
-                                        )}
-                                      </div>
-                                    </div>
-                                  ))}
-                                </div>
-                              </div>
-                            </div>
-                          )}
-
-                          {settingsTab === 'security' && (
-                            <div className="space-y-6">
-                              <div className="p-4 bg-[#0a0a0a] border border-gray-800 rounded-lg">
-                                <h4 className="text-sm font-medium text-white mb-2">Connected Wallet</h4>
-                                <div className="flex items-center gap-3">
-                                  {address && (
-                                    <>
-                                      <Image src="/images/ethereum.svg" alt="Ethereum" width={24} height={24} />
-                                      <span className="text-sm text-gray-300 font-mono">
-                                        {address.substring(0, 8)}...{address.substring(address.length - 6)}
-                                      </span>
-                                    </>
-                                  )}
-                                </div>
-                              </div>
-                              <div className="space-y-4">
-                                {[
-                                  { key: 'twoFactorEnabled' as const, label: 'Enable two-factor authentication', desc: 'Add an extra layer of security to your account' },
-                                  { key: 'loginNotifications' as const, label: 'Receive login notifications', desc: 'Get notified when someone logs into your account' },
-                                  { key: 'allowMultipleDevices' as const, label: 'Allow multiple device logins', desc: 'Stay logged in on multiple devices at the same time' },
-                                ].map(({ key, label, desc }) => (
-                                  <div key={key} className="flex items-start">
-                                    <input
-                                      type="checkbox"
-                                      checked={settings.security[key] as boolean}
-                                      onChange={(e) => handleSecurityChange(key, e.target.checked)}
-                                      className="h-4 w-4 mt-0.5 text-blue-600 focus:ring-blue-500 border-gray-700 rounded bg-[#0a0a0a]"
-                                    />
-                                    <div className="ml-3">
-                                      <label className="text-sm font-medium text-gray-300">{label}</label>
-                                      <p className="text-xs text-gray-500 mt-1">{desc}</p>
-                                    </div>
-                                  </div>
-                                ))}
-                              </div>
-                              <div>
-                                <h4 className="text-sm font-medium text-white mb-2">Session Timeout</h4>
-                                <select
-                                  value={settings.security.sessionTimeout}
-                                  onChange={(e) => handleSecurityChange('sessionTimeout', e.target.value)}
-                                  className="w-full bg-[#0a0a0a] border border-gray-700 rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-1 focus:ring-blue-500"
-                                >
-                                  <option value="30m">30 minutes</option>
-                                  <option value="1h">1 hour</option>
-                                  <option value="4h">4 hours</option>
-                                  <option value="1d">1 day</option>
-                                  <option value="never">Never</option>
-                                </select>
-                              </div>
-                            </div>
-                          )}
-
-                          {settingsTab === 'preferences' && (
-                            <div className="space-y-6">
-                              <div>
-                                <h4 className="text-sm font-medium text-white mb-3">Theme</h4>
-                                <div className="flex items-center space-x-4">
-                                  {['light', 'dark', 'system'].map((theme) => (
-                                    <div key={theme} className="flex items-center">
-                                      <input
-                                        type="radio"
-                                        name="theme"
-                                        checked={settings.preferences.theme === theme}
-                                        onChange={() => handlePreferenceChange('theme', theme)}
-                                        className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-700"
-                                      />
-                                      <label className="ml-2 text-sm text-gray-300 capitalize">{theme}</label>
-                                    </div>
-                                  ))}
-                                </div>
-                              </div>
-                              <div>
-                                <h4 className="text-sm font-medium text-white mb-2">Language</h4>
-                                <select
-                                  value={settings.preferences.language}
-                                  onChange={(e) => handlePreferenceChange('language', e.target.value)}
-                                  className="w-full bg-[#0a0a0a] border border-gray-700 rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-1 focus:ring-blue-500"
-                                >
-                                  <option value="en">English</option>
-                                  <option value="es">Español</option>
-                                  <option value="fr">Français</option>
-                                  <option value="zh">中文</option>
-                                </select>
-                              </div>
-                              <div>
-                                <h4 className="text-sm font-medium text-white mb-3">Date Format</h4>
-                                <div className="flex items-center space-x-4">
-                                  {['MM/DD/YYYY', 'DD/MM/YYYY', 'YYYY-MM-DD'].map((format) => (
-                                    <div key={format} className="flex items-center">
-                                      <input
-                                        type="radio"
-                                        name="dateFormat"
-                                        checked={settings.preferences.dateFormat === format}
-                                        onChange={() => handlePreferenceChange('dateFormat', format)}
-                                        className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-700"
-                                      />
-                                      <label className="ml-2 text-sm text-gray-300">{format}</label>
-                                    </div>
-                                  ))}
-                                </div>
-                              </div>
-                              <div>
-                                <h4 className="text-sm font-medium text-white mb-2">Time Zone</h4>
-                                <select
-                                  value={settings.preferences.timeZone}
-                                  onChange={(e) => handlePreferenceChange('timeZone', e.target.value)}
-                                  className="w-full bg-[#0a0a0a] border border-gray-700 rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-1 focus:ring-blue-500"
-                                >
-                                  <option value="America/New_York">Eastern Time (US & Canada)</option>
-                                  <option value="America/Chicago">Central Time (US & Canada)</option>
-                                  <option value="America/Denver">Mountain Time (US & Canada)</option>
-                                  <option value="America/Los_Angeles">Pacific Time (US & Canada)</option>
-                                  <option value="Europe/London">London</option>
-                                  <option value="Europe/Paris">Paris</option>
-                                  <option value="Asia/Tokyo">Tokyo</option>
-                                  <option value="Australia/Sydney">Sydney</option>
-                                </select>
-                              </div>
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    )}
-
-                    {dashboardTab === 'pricing' && (
-                      <div className="bg-[#0b0b0d] border border-gray-800 rounded-lg overflow-hidden">
-                        <div className="border-b border-gray-800 px-6 py-4">
-                          <h2 className="text-xl font-semibold text-white">Pricing & Plans</h2>
-                          <p className="text-sm text-gray-400 mt-1">Choose the plan that works best for you</p>
-                        </div>
-
-                        <div className="p-6">
-                          <Tabs value={pricingTab} onValueChange={(value) => setPricingTab(value as 'plans' | 'subscription' | 'payment')}>
-                            <TabsList className="mb-6 bg-[#0a0a0a] border border-gray-800">
-                              <TabsTrigger value="plans" className="data-[state=active]:bg-blue-600 data-[state=active]:text-white">Plans</TabsTrigger>
-                              <TabsTrigger value="subscription" className="data-[state=active]:bg-blue-600 data-[state=active]:text-white">My Subscription</TabsTrigger>
-                              <TabsTrigger value="payment" className="data-[state=active]:bg-blue-600 data-[state=active]:text-white">Payment Methods</TabsTrigger>
-                            </TabsList>
-
-                            <TabsContent value="plans">
-                              {isLoadingPricing ? (
-                                <div className="flex items-center justify-center py-12">
-                                  <Loader2 className="w-6 h-6 animate-spin text-blue-500" />
-                                  <span className="ml-3 text-gray-400">Loading plans...</span>
-                                </div>
-                              ) : (
-                                <div className="grid md:grid-cols-3 gap-6">
-                                  {plans.map((plan) => {
-                                    const isCurrentPlan = subscription?.planId === plan.id;
-                                    const isPopular = plan.isPopular;
-
-                                    return (
-                                      <div
-                                        key={plan.id}
-                                        className={`relative bg-[#0a0a0a] border rounded-lg p-6 ${isPopular ? 'border-blue-500 border-2' : 'border-gray-800'} ${isCurrentPlan ? 'bg-blue-500/10' : ''}`}
-                                      >
-                                        {isPopular && (
-                                          <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
-                                            <Badge className="bg-blue-600 text-white">Most Popular</Badge>
-                                          </div>
-                                        )}
-                                        <div className="mb-4">
-                                          <div className="flex items-center justify-between mb-2">
-                                            <h3 className="text-2xl font-bold text-white">{plan.name}</h3>
-                                            {isCurrentPlan && (
-                                              <Badge variant="outline" className="bg-green-500/20 text-green-400 border-green-500/50">
-                                                Current Plan
-                                              </Badge>
-                                            )}
-                                          </div>
-                                          <p className="text-gray-400 text-sm mb-4">{plan.description}</p>
-                                          <div className="mb-4">
-                                            <span className="text-4xl font-bold text-white">${plan.price}</span>
-                                            <span className="text-gray-400">/{plan.interval}</span>
-                                          </div>
-                                        </div>
-                                        <div className="space-y-2 mb-6">
-                                          {plan.features.map((feature, index) => (
-                                            <div key={index} className="flex items-start gap-2">
-                                              <Check className="h-5 w-5 text-green-500 flex-shrink-0 mt-0.5" />
-                                              <span className="text-sm text-gray-300">{feature}</span>
-                                            </div>
-                                          ))}
-                                        </div>
-                                        <div className="pt-4 border-t border-gray-800">
-                                          <div className="flex items-center gap-2 text-sm text-gray-400 mb-4">
-                                            <Sparkles className="h-4 w-4" />
-                                            <span>
-                                              {plan.credits === -1
-                                                ? 'Unlimited credits/month'
-                                                : `${plan.credits} credits/month included`}
-                                            </span>
-                                          </div>
-                                          {isCurrentPlan ? (
-                                            <button
-                                              className="w-full px-4 py-2 border border-gray-700 text-gray-400 rounded-lg text-sm font-medium cursor-not-allowed"
-                                              disabled
-                                            >
-                                              Current Plan
-                                            </button>
-                                          ) : (
-                                            <button
-                                              className="w-full px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium disabled:opacity-50 transition-colors"
-                                              onClick={() => handleSubscribe(plan.id)}
-                                              disabled={isProcessingPricing && selectedPlan === plan.id}
-                                            >
-                                              {isProcessingPricing && selectedPlan === plan.id ? (
-                                                <span className="flex items-center justify-center gap-2">
-                                                  <Loader2 className="h-4 w-4 animate-spin" />
-                                                  Processing...
-                                                </span>
-                                              ) : (
-                                                'Subscribe'
-                                              )}
-                                            </button>
-                                          )}
-                                        </div>
-                                      </div>
-                                    );
-                                  })}
-                                </div>
-                              )}
-                            </TabsContent>
-
-                            <TabsContent value="subscription">
-                              {subscription ? (
-                                <div className="space-y-6">
-                                  <div className="bg-[#0a0a0a] border border-gray-800 rounded-lg p-6">
-                                    <div className="flex items-center justify-between mb-4">
-                                      <div>
-                                        <h3 className="text-2xl font-bold text-white">{subscription.planName}</h3>
-                                        <p className="text-gray-400 text-sm">Your current subscription plan</p>
-                                      </div>
-                                      <Badge
-                                        className={
-                                          subscription.status === 'active'
-                                            ? 'bg-green-500/20 text-green-400 border-green-500/50'
-                                            : subscription.status === 'cancelled'
-                                              ? 'bg-red-500/20 text-red-400 border-red-500/50'
-                                              : 'bg-yellow-500/20 text-yellow-400 border-yellow-500/50'
-                                        }
-                                      >
-                                        {subscription.status.toUpperCase()}
-                                      </Badge>
-                                    </div>
-                                    <div className="bg-gradient-to-r from-blue-500/10 to-purple-500/10 rounded-lg p-6 border border-blue-500/20 mb-6">
-                                      <div className="flex items-center justify-between mb-4">
-                                        <div>
-                                          <h4 className="text-lg font-semibold text-white flex items-center gap-2">
-                                            <Sparkles className="h-5 w-5 text-blue-400" />
-                                            Available Credits
-                                          </h4>
-                                          <p className="text-sm text-gray-400 mt-1">Credits remaining this period</p>
-                                        </div>
-                                        <div className="text-right">
-                                          <div className="text-3xl font-bold text-blue-400">
-                                            {subscription.credits === -1 ? '∞' : subscription.creditsRemaining}
-                                          </div>
-                                          <div className="text-sm text-gray-400">
-                                            {subscription.credits === -1
-                                              ? 'Unlimited'
-                                              : `of ${subscription.credits} total`}
-                                          </div>
-                                        </div>
-                                      </div>
-                                      {subscription.credits !== -1 && (
-                                        <>
-                                          <div className="w-full bg-gray-800 rounded-full h-2">
-                                            <div
-                                              className="bg-blue-600 h-2 rounded-full transition-all"
-                                              style={{
-                                                width: `${Math.min((subscription.creditsRemaining / subscription.credits) * 100, 100)}%`,
-                                              }}
-                                            />
-                                          </div>
-                                          <div className="flex justify-between text-xs text-gray-500 mt-2">
-                                            <span>{subscription.creditsUsed} used</span>
-                                            <span>{subscription.creditsRemaining} remaining</span>
-                                          </div>
-                                        </>
-                                      )}
-                                    </div>
-                                    <div className="grid md:grid-cols-2 gap-4 mb-6">
-                                      <div>
-                                        <h4 className="text-sm font-medium text-gray-400 mb-1">Billing Period</h4>
-                                        <p className="text-white">
-                                          {format(new Date(subscription.currentPeriodStart), 'MMM d, yyyy')} -{' '}
-                                          {format(new Date(subscription.currentPeriodEnd), 'MMM d, yyyy')}
-                                        </p>
-                                      </div>
-                                      <div>
-                                        <h4 className="text-sm font-medium text-gray-400 mb-1">Next Billing Date</h4>
-                                        <p className="text-white">
-                                          {format(new Date(subscription.currentPeriodEnd), 'MMM d, yyyy')}
-                                        </p>
-                                      </div>
-                                    </div>
-                                    <div className="flex gap-3 pt-4 border-t border-gray-800">
-                                      {subscription.cancelAtPeriodEnd ? (
-                                        <button
-                                          className="px-4 py-2 border border-gray-700 text-gray-300 rounded-lg text-sm font-medium hover:bg-gray-800 transition-colors"
-                                          onClick={async () => {
-                                            try {
-                                              await pricingService.updateSubscription({ cancelAtPeriodEnd: false });
-                                              toast.success('Subscription reactivated');
-                                              await loadPricingData();
-                                            } catch (error: any) {
-                                              toast.error('Failed to reactivate subscription', {
-                                                description: error.message || 'Please try again.',
-                                              });
-                                            }
-                                          }}
-                                        >
-                                          Reactivate Subscription
-                                        </button>
-                                      ) : (
-                                        <button
-                                          className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg text-sm font-medium disabled:opacity-50 transition-colors"
-                                          onClick={handleCancelSubscription}
-                                          disabled={isProcessingPricing}
-                                        >
-                                          Cancel Subscription
-                                        </button>
-                                      )}
-                                      <button
-                                        className="px-4 py-2 border border-gray-700 text-gray-300 rounded-lg text-sm font-medium hover:bg-gray-800 transition-colors"
-                                        onClick={() => setPricingTab('plans')}
-                                      >
-                                        Change Plan
-                                      </button>
-                                    </div>
-                                  </div>
-                                </div>
-                              ) : (
-                                <div className="bg-[#0a0a0a] border border-gray-800 rounded-lg p-12 text-center">
-                                  <Crown className="h-12 w-12 text-gray-600 mx-auto mb-4" />
-                                  <h3 className="text-lg font-medium text-white mb-2">No Active Subscription</h3>
-                                  <p className="text-gray-400 mb-6">
-                                    Subscribe to a plan to unlock premium features and credits
-                                  </p>
-                                  <button
-                                    className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium"
-                                    onClick={() => setPricingTab('plans')}
-                                  >
-                                    View Plans
-                                  </button>
-                                </div>
-                              )}
-                            </TabsContent>
-
-                            <TabsContent value="payment">
-                              <div className="space-y-6">
-                                <div className="flex justify-between items-center">
-                                  <div>
-                                    <h3 className="text-lg font-semibold text-white">Payment Methods</h3>
-                                    <p className="text-sm text-gray-400 mt-1">Manage your payment methods</p>
-                                  </div>
-                                  <button
-                                    className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium flex items-center gap-2"
-                                    onClick={() => {
-                                      toast.info('Payment method integration', {
-                                        description: 'Payment method integration will be implemented with Stripe or similar service.',
-                                      });
-                                    }}
-                                  >
-                                    <Plus className="h-4 w-4" />
-                                    Add Payment Method
-                                  </button>
-                                </div>
-
-                                {paymentMethods.length === 0 ? (
-                                  <div className="bg-[#0a0a0a] border border-gray-800 rounded-lg p-12 text-center">
-                                    <CreditCard className="h-12 w-12 text-gray-600 mx-auto mb-4" />
-                                    <h3 className="text-lg font-medium text-white mb-2">No Payment Methods</h3>
-                                    <p className="text-gray-400 mb-6">
-                                      Add a payment method to subscribe to a plan
-                                    </p>
-                                    <button
-                                      className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium flex items-center gap-2 mx-auto"
-                                      onClick={() => {
-                                        toast.info('Payment method integration', {
-                                          description: 'Payment method integration will be implemented with Stripe or similar service.',
-                                        });
-                                      }}
-                                    >
-                                      <Plus className="h-4 w-4" />
-                                      Add Payment Method
-                                    </button>
-                                  </div>
-                                ) : (
-                                  <div className="grid gap-4">
-                                    {paymentMethods.map((method) => (
-                                      <div key={method.id} className="bg-[#0a0a0a] border border-gray-800 rounded-lg p-6">
-                                        <div className="flex items-center justify-between">
-                                          <div className="flex items-center gap-4">
-                                            <div className="w-12 h-12 rounded-lg bg-blue-500/20 flex items-center justify-center">
-                                              <CreditCard className="h-6 w-6 text-blue-400" />
-                                            </div>
-                                            <div>
-                                              <div className="flex items-center gap-2">
-                                                <h4 className="font-semibold text-white">
-                                                  {method.type === 'card'
-                                                    ? `${method.brand || 'Card'} •••• ${method.last4 || '****'}`
-                                                    : method.type === 'crypto'
-                                                      ? `Crypto Wallet`
-                                                      : 'Bank Account'}
-                                                </h4>
-                                                {method.isDefault && (
-                                                  <Badge variant="outline" className="bg-green-500/20 text-green-400 border-green-500/50">
-                                                    Default
-                                                  </Badge>
-                                                )}
-                                              </div>
-                                              {method.type === 'card' && method.expiryMonth && method.expiryYear && (
-                                                <p className="text-sm text-gray-400 mt-1">
-                                                  Expires {method.expiryMonth}/{method.expiryYear}
-                                                </p>
-                                              )}
-                                            </div>
-                                          </div>
-                                          <div className="flex gap-2">
-                                            {!method.isDefault && (
-                                              <button
-                                                className="px-3 py-1.5 border border-gray-700 text-gray-300 rounded-lg text-sm font-medium hover:bg-gray-800 transition-colors"
-                                                onClick={async () => {
-                                                  try {
-                                                    await pricingService.setDefaultPaymentMethod(method.id);
-                                                    toast.success('Default payment method updated');
-                                                    await loadPricingData();
-                                                  } catch (error: any) {
-                                                    toast.error('Failed to update payment method', {
-                                                      description: error.message || 'Please try again.',
-                                                    });
-                                                  }
-                                                }}
-                                              >
-                                                Set as Default
-                                              </button>
-                                            )}
-                                            <button
-                                              className="px-3 py-1.5 border border-gray-700 text-gray-300 rounded-lg text-sm font-medium hover:bg-gray-800 transition-colors"
-                                              onClick={async () => {
-                                                if (!confirm('Are you sure you want to delete this payment method?')) {
-                                                  return;
-                                                }
-                                                try {
-                                                  await pricingService.deletePaymentMethod(method.id);
-                                                  toast.success('Payment method deleted');
-                                                  await loadPricingData();
-                                                } catch (error: any) {
-                                                  toast.error('Failed to delete payment method', {
-                                                    description: error.message || 'Please try again.',
-                                                  });
-                                                }
-                                              }}
-                                            >
-                                              <Trash2 className="h-4 w-4" />
-                                            </button>
-                                          </div>
-                                        </div>
-                                      </div>
-                                    ))}
-                                  </div>
-                                )}
-                              </div>
-                            </TabsContent>
-                          </Tabs>
-                        </div>
-                      </div>
                     )}
                   </div>
                 </div>

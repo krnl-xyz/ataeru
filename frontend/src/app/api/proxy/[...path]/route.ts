@@ -48,11 +48,14 @@ async function proxyRequest(
   method: string
 ) {
   try {
+    // If the path already starts with 'api', don't add it again
     const pathString = path.join('/');
     const url = new URL(request.url);
     const queryString = url.search;
 
-    const targetUrl = `${API_BASE_URL}/api/${pathString}${queryString}`;
+    // Check if path already starts with 'api'
+    const targetPath = pathString.startsWith('api/') ? pathString : `api/${pathString}`;
+    const targetUrl = `${API_BASE_URL}/${targetPath}${queryString}`;
 
     // Get headers from the request
     const headers: HeadersInit = {
