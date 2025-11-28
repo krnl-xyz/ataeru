@@ -11,6 +11,7 @@ import DonorRequestModal from '@/components/DonorRequestModal';
 import HospitalVerificationModal from '@/components/HospitalVerificationModal';
 import LoginModal from '@/components/LoginModal';
 import RegistrationModal from '@/components/RegistrationModal';
+import ShareWithDoctorModal from '@/components/ShareWithDoctorModal';
 import { entryPointABI, entryPointAddress, hospitalRequestABI } from '@/contract/web3';
 import { hospitalService, RegisteredHospital } from '@/lib/services/hospital';
 import { bookingService, Booking } from '@/lib/services/booking';
@@ -84,6 +85,7 @@ export default function AppPage() {
   const [hospital, setHospital] = useState<RegisteredHospital | null>(null);
   const [isLoadingHospital, setIsLoadingHospital] = useState(true);
   const [isVerificationModalOpen, setIsVerificationModalOpen] = useState(false);
+  const [isShareWithDoctorModalOpen, setIsShareWithDoctorModalOpen] = useState(false);
   const [isEditingHospital, setIsEditingHospital] = useState(false);
   const [editFormData, setEditFormData] = useState<Partial<RegisteredHospital>>({});
   const [isSavingHospital, setIsSavingHospital] = useState(false);
@@ -1256,7 +1258,11 @@ export default function AppPage() {
                             <ChevronDown className={`w-5 h-5 transition-transform ${isModelDropdownOpen ? 'rotate-180' : ''}`} />
                             {/* <span>Infinite</span> */}
                           </Button>
-                          <Button variant="outline" className='bg-transparent hover:bg-transparent cursor-pointer bg-blend-darken'>
+                          <Button 
+                            variant="outline" 
+                            className='bg-transparent hover:bg-transparent cursor-pointer bg-blend-darken'
+                            onClick={() => setIsShareWithDoctorModalOpen(true)}
+                          >
                             Share with a doctor
                           </Button>
 
@@ -2099,6 +2105,12 @@ export default function AppPage() {
 
       {/* Registration Modal */}
       <RegistrationModal />
+
+      {/* Share with Doctor Modal */}
+      <ShareWithDoctorModal 
+        isOpen={isShareWithDoctorModalOpen}
+        onClose={() => setIsShareWithDoctorModalOpen(false)}
+      />
     </div>
   );
 }
