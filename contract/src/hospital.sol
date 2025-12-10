@@ -25,32 +25,38 @@ contract Hospital is AccessControlUpgradeable, OwnableUpgradeable, UUPSUpgradeab
     function _authorizeUpgrade(address newImplementation) internal override onlyRole(DEFAULT_ADMIN_ROLE) {}
 
     struct HospitalInfo {
-      string name;
-      address hospitalAddress;
-      string publicKey;
-      bytes32  hospitalId;
-      bytes32 proofId;
-      HospitalStatus status;
+        string name;
+        address hospitalAddress;
+        string publicKey;
+        bytes32 hospitalId;
+        bytes32 proofId;
+        HospitalStatus status;
     }
 
     enum HospitalStatus {
-      NOT_VERIFIED,
-      VERIFIED,
-      ACTIVE,
-      INACTIVE,
-      SUSPENDED
+        NOT_VERIFIED,
+        VERIFIED,
+        ACTIVE,
+        INACTIVE,
+        SUSPENDED
     }
 
     mapping(bytes32 => HospitalInfo) public hospitals;
 
-
     // events
 
-    event HospitalMinted(address indexed hospitalAddress, string name, string publicKey, bytes32 indexed hospitalId, bytes32 proofId);
+    event HospitalMinted(
+        address indexed hospitalAddress, string name, string publicKey, bytes32 indexed hospitalId, bytes32 proofId
+    );
     event HospitalVerified(address indexed hospitalAddress, bytes32 indexed hospitalId, bytes32 proofId);
 
-
-    function mint(string memory _name, address _address, string memory _publicKey, bytes32 _hospitalId, bytes32 _proofId) internal onlyOwner {
+    function mint(
+        string memory _name,
+        address _address,
+        string memory _publicKey,
+        bytes32 _hospitalId,
+        bytes32 _proofId
+    ) internal onlyOwner {
         require(hospitals[_hospitalId].hospitalId == bytes32(0), "Hospital already minted");
         hospitals[_hospitalId] = HospitalInfo({
             name: _name,
@@ -66,10 +72,14 @@ contract Hospital is AccessControlUpgradeable, OwnableUpgradeable, UUPSUpgradeab
         emit HospitalMinted(msg.sender, _name, _publicKey, _hospitalId, _proofId);
     }
 
-
-// request health data to the hospital, verifier will sign the request and send it to the hospital
-// sign message will contain e.g ( hosptialId, requestId, requestType, requestData)
-    function requestHData(bytes32 _hospitalId, bytes32 _requestId, string memory _requestType, string memory _requestData) internal onlyRole(HOSPITAL_ROLE) returns (bool) {
+    // request health data to the hospital, verifier will sign the request and send it to the hospital
+    // sign message will contain e.g ( hosptialId, requestId, requestType, requestData)
+    function requestHData(
+        bytes32 _hospitalId,
+        bytes32 _requestId,
+        string memory _requestType,
+        string memory _requestData
+    ) internal onlyRole(HOSPITAL_ROLE) returns (bool) {
         require(hospitals[_hospitalId].status == HospitalStatus.ACTIVE, "Hospital not active");
         // sign message
         bytes32 message = keccak256(abi.encodePacked(_hospitalId, _requestId, _requestType, _requestData));
@@ -106,11 +116,9 @@ contract Hospital is AccessControlUpgradeable, OwnableUpgradeable, UUPSUpgradeab
         return true;
     }
 
-
     function deactivateHospital(bytes32 _hospitalId) internal onlyRole(VERIFIER_ROLE) returns (bool) {
         hospitals[_hospitalId].status = HospitalStatus.INACTIVE;
         revokeHRole(_hospitalId);
         return true;
     }
-
 }

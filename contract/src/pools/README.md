@@ -271,3 +271,5 @@ All contracts use UUPS (Universal Upgradeable Proxy Standard):
 - [ ] Dynamic threshold adjustment
 - [ ] Multi-signature requirements for critical actions
 
+
+
